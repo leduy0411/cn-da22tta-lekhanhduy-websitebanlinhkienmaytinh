@@ -1,0 +1,119 @@
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { CartProvider } from './context/CartContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Header from './components/Header';
+import Home from './pages/Home';
+import ProductDetail from './pages/ProductDetail';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import OrderSuccess from './pages/OrderSuccess';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import AdminLayout from './pages/Admin/AdminLayout';
+import Dashboard from './pages/Admin/Dashboard';
+import AdminProducts from './pages/Admin/AdminProducts';
+import AdminCategories from './pages/Admin/AdminCategories';
+import './App.css';
+
+// Protected Route cho Admin
+const AdminRoute = ({ children }) => {
+  const { isAdmin, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="loading">Đang tải...</div>;
+  }
+  
+  return isAdmin() ? children : <Navigate to="/login" />;
+};
+
+// Layout cho trang customer
+const CustomerLayout = ({ children, onSearch }) => {
+  return (
+    <>
+      <Header onSearch={onSearch} />
+      {children}
+      <footer className="footer">
+        <div className="container">
+          <p>&copy; 2024 Cửa Hàng Điện Tử. All rights reserved.</p>
+        </div>
+      </footer>
+    </>
+  );
+};
+
+function AppContent() {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
+  return (
+    <div className="App">
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }>
+          <Route index element={<Dashboard />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="orders" element={<div className="coming-soon">Đang phát triển...</div>} />
+          <Route path="users" element={<div className="coming-soon">Đang phát triển...</div>} />
+        </Route>
+
+        {/* Customer Routes */}
+        <Route path="/" element={
+          <CustomerLayout onSearch={handleSearch}>
+            <Home searchQuery={searchQuery} />
+          </CustomerLayout>
+        } />
+        <Route path="/product/:id" element={
+          <CustomerLayout onSearch={handleSearch}>
+            <ProductDetail />
+          </CustomerLayout>
+        } />
+        <Route path="/cart" element={
+          <CustomerLayout onSearch={handleSearch}>
+            <Cart />
+          </CustomerLayout>
+        } />
+        <Route path="/checkout" element={
+          <CustomerLayout onSearch={handleSearch}>
+            <Checkout />
+          </CustomerLayout>
+        } />
+        <Route path="/order-success/:orderId" element={
+          <CustomerLayout onSearch={handleSearch}>
+            <OrderSuccess />
+          </CustomerLayout>
+        } />
+      </Routes>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </CartProvider>
+    </AuthProvider>
+  );
+}
+
+export default App;

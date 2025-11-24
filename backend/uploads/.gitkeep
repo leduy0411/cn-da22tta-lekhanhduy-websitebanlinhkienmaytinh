@@ -1,0 +1,3 @@
+# uploads/
+# Thư mục này chứa các file ảnh được upload bởi người dùng
+# Nên thêm vào .gitignore để tránh commit file ảnh lên git
