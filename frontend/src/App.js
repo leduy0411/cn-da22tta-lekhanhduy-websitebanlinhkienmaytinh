@@ -16,6 +16,7 @@ import AdminLayout from './pages/Admin/AdminLayout';
 import Dashboard from './pages/Admin/Dashboard';
 import AdminProducts from './pages/Admin/AdminProducts';
 import AdminCategories from './pages/Admin/AdminCategories';
+import AdminOrders from './pages/Admin/AdminOrders';
 import './App.css';
 
 // Protected Route cho Admin
@@ -69,7 +70,7 @@ function AppContent() {
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="categories" element={<AdminCategories />} />
-          <Route path="orders" element={<div className="coming-soon">Đang phát triển...</div>} />
+          <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<div className="coming-soon">Đang phát triển...</div>} />
         </Route>
 
