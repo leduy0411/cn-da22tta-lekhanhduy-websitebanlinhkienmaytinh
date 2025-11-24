@@ -3,6 +3,8 @@ import axios from 'axios';
 import { FiUpload, FiX, FiImage } from 'react-icons/fi';
 import './ImageUpload.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function ImageUpload({ value, onChange, multiple = false }) {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -23,7 +25,7 @@ function ImageUpload({ value, onChange, multiple = false }) {
         });
 
         const response = await axios.post(
-          'http://localhost:5000/api/upload/multiple',
+          `${API_URL}/api/upload/multiple`,
           formData,
           {
             headers: {
@@ -34,7 +36,7 @@ function ImageUpload({ value, onChange, multiple = false }) {
         );
 
         const newUrls = response.data.images.map(img => 
-          `http://localhost:5000${img.url}`
+          `${API_URL}${img.url}`
         );
         
         onChange([...(value || []), ...newUrls]);
@@ -42,7 +44,7 @@ function ImageUpload({ value, onChange, multiple = false }) {
         formData.append('image', files[0]);
 
         const response = await axios.post(
-          'http://localhost:5000/api/upload/single',
+          `${API_URL}/api/upload/single`,
           formData,
           {
             headers: {
@@ -52,7 +54,7 @@ function ImageUpload({ value, onChange, multiple = false }) {
           }
         );
 
-        onChange(`http://localhost:5000${response.data.imageUrl}`);
+        onChange(`${API_URL}${response.data.imageUrl}`);
       }
 
       alert('Upload ảnh thành công!');

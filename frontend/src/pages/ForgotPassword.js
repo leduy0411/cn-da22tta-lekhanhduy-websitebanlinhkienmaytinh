@@ -4,6 +4,8 @@ import axios from 'axios';
 import { FiMail, FiArrowLeft } from 'react-icons/fi';
 import './ForgotPassword.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ function ForgotPassword() {
     setResetUrl('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/forgot-password', {
+      const response = await axios.post(`${API_URL}/api/auth/forgot-password`, {
         email
       });
 

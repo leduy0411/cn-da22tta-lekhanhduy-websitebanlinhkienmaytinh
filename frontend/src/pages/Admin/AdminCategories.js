@@ -3,6 +3,8 @@ import axios from 'axios';
 import { FiPlus, FiEdit2, FiTrash2, FiPackage, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 import './AdminCategories.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function AdminCategories() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,7 @@ function AdminCategories() {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/categories/all', {
+      const response = await axios.get(`${API_URL}/api/categories/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories(response.data);
@@ -84,7 +86,7 @@ function AdminCategories() {
       if (editingCategory) {
         // Cập nhật
         await axios.put(
-          `http://localhost:5000/api/categories/${editingCategory._id}`,
+          `${API_URL}/api/categories/${editingCategory._id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -92,7 +94,7 @@ function AdminCategories() {
       } else {
         // Tạo mới
         await axios.post(
-          'http://localhost:5000/api/categories',
+          `${API_URL}/api/categories`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -113,7 +115,7 @@ function AdminCategories() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/categories/${id}`, {
+      await axios.delete(`${API_URL}/api/categories/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Xóa danh mục thành công!');
@@ -127,7 +129,7 @@ function AdminCategories() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:5000/api/categories/${category._id}`,
+        `${API_URL}/api/categories/${category._id}`,
         { isActive: !category.isActive },
         { headers: { Authorization: `Bearer ${token}` } }
       );
