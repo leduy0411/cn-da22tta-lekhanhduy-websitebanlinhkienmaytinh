@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { orderAPI } from '../services/api';
 import './Checkout.css';
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { cart, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
+  
+  // Kiểm tra nếu là mua ngay
+  const buyNowItem = location.state?.buyNowItem;
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,7 +44,8 @@ const Checkout = () => {
       return;
     }
 
-    if (cart.items.length === 0) {
+    // Kiểm tra: Nếu không phải mua ngay và giỏ hàng trống
+    if (!buyNowItem && (!cart || !cart.items || cart.items.length === 0)) {
       alert('Giỏ hàng trống!');
       navigate('/');
       return;
@@ -58,12 +64,22 @@ const Checkout = () => {
         note: formData.note,
       };
 
+      // Nếu là mua ngay, thêm thông tin sản phẩm
+      if (buyNowItem) {
+        orderData.buyNowItem = {
+          productId: buyNowItem.productId,
+          quantity: buyNowItem.quantity
+        };
+      }
+
       const response = await orderAPI.createOrder(orderData);
       
       alert(`✅ ${response.data.message}\nMã đơn hàng: ${response.data.order.orderNumber}`);
       
-      // Xóa giỏ hàng đã được xử lý ở backend, nhưng cập nhật lại state
-      await clearCart();
+      // Nếu thanh toán từ giỏ hàng, xóa giỏ hàng
+      if (!buyNowItem) {
+        await clearCart();
+      }
       
       // Chuyển đến trang xác nhận
       navigate(`/order-success/${response.data.order._id}`);
@@ -74,7 +90,8 @@ const Checkout = () => {
     }
   };
 
-  if (cart.items.length === 0) {
+  // Kiểm tra nếu cả hai đều trống
+  if (!buyNowItem && (!cart || !cart.items || cart.items.length === 0)) {
     return (
       <div className="checkout-empty">
         <div className="container">
@@ -89,6 +106,33 @@ const Checkout = () => {
       </div>
     );
   }
+
+  // Tính tổng tiền
+  const getTotalAmount = () => {
+    if (buyNowItem) {
+      return buyNowItem.price * buyNowItem.quantity;
+    }
+    return cart?.totalAmount || 0;
+  };
+
+  // Lấy danh sách items để hiển thị
+  const getDisplayItems = () => {
+    if (buyNowItem) {
+      return [{
+        _id: buyNowItem.productId,
+        product: {
+          name: buyNowItem.name,
+          price: buyNowItem.price,
+          image: buyNowItem.image
+        },
+        quantity: buyNowItem.quantity
+      }];
+    }
+    return cart?.items || [];
+  };
+
+  const displayItems = getDisplayItems();
+  const totalAmount = getTotalAmount();
 
   return (
     <div className="checkout-page">
@@ -190,9 +234,13 @@ const Checkout = () => {
           <div className="order-summary-section">
             <div className="order-summary">
               <h2>Đơn hàng của bạn</h2>
+              
+              {buyNowItem && (
+                <div className="buy-now-badge">🚀 Mua ngay - Thanh toán nhanh</div>
+              )}
 
               <div className="order-items">
-                {cart.items.map((item) => (
+                {displayItems.map((item) => (
                   <div key={item._id} className="order-item">
                     <img src={item.product.image} alt={item.product.name} />
                     <div className="order-item-info">
@@ -209,7 +257,7 @@ const Checkout = () => {
               <div className="order-totals">
                 <div className="total-row">
                   <span>Tạm tính:</span>
-                  <span>{formatPrice(cart.totalAmount)}</span>
+                  <span>{formatPrice(totalAmount)}</span>
                 </div>
                 <div className="total-row">
                   <span>Phí vận chuyển:</span>
@@ -218,7 +266,7 @@ const Checkout = () => {
                 <div className="total-divider"></div>
                 <div className="total-row grand-total">
                   <span>Tổng cộng:</span>
-                  <span className="total-price">{formatPrice(cart.totalAmount)}</span>
+                  <span className="total-price">{formatPrice(totalAmount)}</span>
                 </div>
               </div>
             </div>

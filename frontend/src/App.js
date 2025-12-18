@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
+import ChatBox from './components/ChatBox';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
+import MyOrders from './pages/MyOrders';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -16,7 +18,10 @@ import AdminLayout from './pages/Admin/AdminLayout';
 import Dashboard from './pages/Admin/Dashboard';
 import AdminProducts from './pages/Admin/AdminProducts';
 import AdminCategories from './pages/Admin/AdminCategories';
+import AdminFilters from './pages/Admin/AdminFilters';
 import AdminOrders from './pages/Admin/AdminOrders';
+import AdminUsers from './pages/Admin/AdminUsers';
+import AdminChat from './pages/Admin/AdminChat';
 import './App.css';
 
 // Protected Route cho Admin
@@ -32,13 +37,23 @@ const AdminRoute = ({ children }) => {
 
 // Layout cho trang customer
 const CustomerLayout = ({ children, onSearch }) => {
+  const navigate = useNavigate();
+  
+  const handleSearchWithRedirect = (query) => {
+    onSearch(query);
+    if (query && window.location.pathname !== '/') {
+      navigate('/');
+    }
+  };
+
   return (
     <>
-      <Header onSearch={onSearch} />
+      <Header onSearch={handleSearchWithRedirect} />
       {children}
+      <ChatBox />
       <footer className="footer">
         <div className="container">
-          <p>&copy; 2024 Cửa Hàng Điện Tử. All rights reserved.</p>
+          <p>&copy; Shop linh kiện - máy tính</p>
         </div>
       </footer>
     </>
@@ -70,8 +85,10 @@ function AppContent() {
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="categories" element={<AdminCategories />} />
+          <Route path="filters" element={<AdminFilters />} />
           <Route path="orders" element={<AdminOrders />} />
-          <Route path="users" element={<div className="coming-soon">Đang phát triển...</div>} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="chat" element={<AdminChat />} />
         </Route>
 
         {/* Customer Routes */}
@@ -98,6 +115,11 @@ function AppContent() {
         <Route path="/order-success/:orderId" element={
           <CustomerLayout onSearch={handleSearch}>
             <OrderSuccess />
+          </CustomerLayout>
+        } />
+        <Route path="/my-orders" element={
+          <CustomerLayout onSearch={handleSearch}>
+            <MyOrders />
           </CustomerLayout>
         } />
       </Routes>

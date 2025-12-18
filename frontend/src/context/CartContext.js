@@ -20,13 +20,44 @@ export const CartProvider = ({ children }) => {
     fetchCart();
   }, []);
 
+  // Lắng nghe thay đổi token (login/logout) để reload giỏ hàng
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'token') {
+        // Token thay đổi -> reload giỏ hàng
+        fetchCart();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Lắng nghe event custom từ login/logout
+    window.addEventListener('auth-change', fetchCart);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth-change', fetchCart);
+    };
+  }, []);
+
   const fetchCart = async () => {
     try {
       setLoading(true);
       const response = await cartAPI.getCart();
-      setCart(response.data);
+      // Đảm bảo cart luôn có cấu trúc đúng
+      if (response.data && typeof response.data === 'object') {
+        setCart({
+          items: response.data.items || [],
+          totalAmount: response.data.totalAmount || 0,
+          ...response.data
+        });
+      } else {
+        setCart({ items: [], totalAmount: 0 });
+      }
     } catch (error) {
       console.error('Lỗi khi lấy giỏ hàng:', error);
+      // Giữ nguyên cart hiện tại hoặc reset về mặc định
+      setCart({ items: [], totalAmount: 0 });
     } finally {
       setLoading(false);
     }
@@ -35,12 +66,20 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (productId, quantity = 1) => {
     try {
       const response = await cartAPI.addToCart(productId, quantity);
-      setCart(response.data.cart);
+      if (response.data.cart) {
+        setCart({
+          items: response.data.cart.items || [],
+          totalAmount: response.data.cart.totalAmount || 0,
+          ...response.data.cart
+        });
+      }
       return { success: true, message: response.data.message };
     } catch (error) {
+      console.error('Chi tiết lỗi addToCart:', error);
+      console.error('Error response:', error.response);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Lỗi khi thêm vào giỏ hàng' 
+        message: error.response?.data?.message || error.message || 'Lỗi khi thêm vào giỏ hàng' 
       };
     }
   };
@@ -76,6 +115,9 @@ export const CartProvider = ({ children }) => {
   };
 
   const getCartItemCount = () => {
+    if (!cart || !cart.items || !Array.isArray(cart.items)) {
+      return 0;
+    }
     return cart.items.reduce((total, item) => total + item.quantity, 0);
   };
 

@@ -5,13 +5,19 @@ import './ImageUpload.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-function ImageUpload({ value, onChange, multiple = false }) {
+function ImageUpload({ value, onChange, multiple = false, maxFiles = 10 }) {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleUpload = async (files) => {
     if (!files || files.length === 0) return;
+
+    // Kiểm tra số lượng file nếu multiple
+    if (multiple && value && value.length + files.length > maxFiles) {
+      alert(`Bạn chỉ có thể upload tối đa ${maxFiles} ảnh!`);
+      return;
+    }
 
     setUploading(true);
     const formData = new FormData();
@@ -161,29 +167,34 @@ function ImageUpload({ value, onChange, multiple = false }) {
           </div>
         ))}
         
-        <div
-          className={`upload-area-small ${dragActive ? 'drag-active' : ''}`}
-          onClick={handleClick}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
-          <FiImage className="upload-icon-small" />
-          <p className="upload-text-small">
-            {uploading ? 'Uploading...' : 'Thêm ảnh'}
-          </p>
-        </div>
+        {(!value || value.length < maxFiles) && (
+          <div
+            className={`upload-area-small ${dragActive ? 'drag-active' : ''}`}
+            onClick={handleClick}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+            <FiImage className="upload-icon-small" />
+            <p className="upload-text-small">
+              {uploading ? 'Uploading...' : 'Thêm ảnh'}
+            </p>
+          </div>
+        )}
       </div>
-      <p className="upload-hint">Click hoặc kéo thả để thêm ảnh (max. 5MB mỗi ảnh)</p>
+      <p className="upload-hint">
+        Click hoặc kéo thả để thêm ảnh (max. {maxFiles} ảnh, 5MB mỗi ảnh)
+        {value && value.length > 0 && ` - Đã có ${value.length}/${maxFiles} ảnh`}
+      </p>
     </div>
   );
 }

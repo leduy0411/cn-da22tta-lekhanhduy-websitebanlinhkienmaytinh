@@ -18,10 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/thietbidientu', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/thietbidientu')
 .then(() => console.log('✅ Kết nối MongoDB thành công!'))
 .catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
 
@@ -33,6 +30,8 @@ const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const categoryRoutes = require('./routes/categories');
 const uploadRoutes = require('./routes/upload');
+const chatRoutes = require('./routes/chat');
+const filterRoutes = require('./routes/filters');
 
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -41,6 +40,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/filters', filterRoutes);
 
 // Home route
 app.get('/', (req, res) => {

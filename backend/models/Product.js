@@ -15,18 +15,26 @@ const productSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  originalPrice: {
+    type: Number,
+    min: 0
+  },
   category: {
     type: String,
-    required: true,
-    enum: ['Điện thoại', 'Laptop', 'Tablet', 'Phụ kiện', 'Âm thanh', 'Smartwatch', 'Khác']
+    required: true
   },
   brand: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   image: {
     type: String,
     default: 'https://via.placeholder.com/300'
+  },
+  images: {
+    type: [String],
+    default: []
   },
   stock: {
     type: Number,

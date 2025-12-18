@@ -33,14 +33,14 @@ const Cart = () => {
   };
 
   const handleCheckout = () => {
-    if (cart.items.length === 0) {
+    if (!cart || !cart.items || cart.items.length === 0) {
       alert('Giỏ hàng trống!');
       return;
     }
     navigate('/checkout');
   };
 
-  if (cart.items.length === 0) {
+  if (!cart || !cart.items || cart.items.length === 0) {
     return (
       <div className="cart-empty">
         <div className="container">
@@ -112,9 +112,10 @@ const Cart = () => {
 
                   <button
                     onClick={() => handleRemove(item.product._id)}
-                    className="remove-btn"
+                    className="remove-item-btn"
                   >
-                    <FiTrash2 />
+                    <FiTrash2 size={18} />
+                    <span>Xóa</span>
                   </button>
                 </div>
               </div>

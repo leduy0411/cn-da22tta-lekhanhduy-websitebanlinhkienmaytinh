@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, clearSessionId } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -41,9 +41,15 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login(email, password);
       const { token, user } = response.data;
       
+      // Xóa sessionId cũ khi đăng nhập
+      clearSessionId();
+      
       localStorage.setItem('token', token);
       setToken(token);
       setUser(user);
+      
+      // Trigger event để reload giỏ hàng
+      window.dispatchEvent(new Event('auth-change'));
       
       return { success: true, user };
     } catch (error) {
@@ -59,9 +65,15 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.register(userData);
       const { token, user } = response.data;
       
+      // Xóa sessionId cũ khi đăng ký
+      clearSessionId();
+      
       localStorage.setItem('token', token);
       setToken(token);
       setUser(user);
+      
+      // Trigger event để reload giỏ hàng
+      window.dispatchEvent(new Event('auth-change'));
       
       return { success: true, user };
     } catch (error) {
@@ -76,6 +88,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    
+    // Trigger event để reload giỏ hàng với sessionId mới
+    window.dispatchEvent(new Event('auth-change'));
   };
 
   const updateProfile = async (userData) => {

@@ -18,6 +18,7 @@ const auth = async (req, res, next) => {
     }
 
     req.user = user;
+    req.userId = decoded.userId;
     req.token = token;
     next();
   } catch (error) {
@@ -41,4 +42,38 @@ const isCustomerOrAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { auth, isAdmin, isCustomerOrAdmin };
+// Middleware xác thực token nhưng không bắt buộc (cho phép cả guest)
+const optionalAuth = async (req, res, next) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key_here');
+        const user = await User.findById(decoded.userId);
+
+        if (user && user.isActive) {
+          req.user = user;
+          // Đảm bảo userId là ObjectId, không phải string
+          req.userId = user._id;
+        } else {
+          // User không active hoặc không tồn tại → không set userId
+          req.userId = undefined;
+        }
+      } catch (error) {
+        // Token không hợp lệ, bỏ qua và tiếp tục như guest
+        req.userId = undefined;
+      }
+    } else {
+      // Không có token → không set userId
+      req.userId = undefined;
+    }
+    
+    next();
+  } catch (error) {
+    req.userId = undefined;
+    next();
+  }
+};
+
+module.exports = { auth, isAdmin, isCustomerOrAdmin, optionalAuth };

@@ -13,14 +13,15 @@ router.get('/stats', async (req, res) => {
   try {
     const totalUsers = await User.countDocuments({ role: 'customer' });
     const totalProducts = await Product.countDocuments();
-    const totalOrders = await Order.countDocuments();
+    // Chỉ đếm đơn hàng chưa bị hủy
+    const totalOrders = await Order.countDocuments({ status: { $ne: 'cancelled' } });
     
     const totalRevenue = await Order.aggregate([
-      { $match: { status: { $ne: 'Cancelled' } } },
+      { $match: { status: { $ne: 'cancelled' } } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]);
 
-    const pendingOrders = await Order.countDocuments({ status: 'Pending' });
+    const pendingOrders = await Order.countDocuments({ status: 'pending' });
     const lowStockProducts = await Product.countDocuments({ stock: { $lte: 10 } });
 
     res.json({
@@ -108,16 +109,25 @@ router.put('/users/:id/toggle-status', async (req, res) => {
   }
 });
 
-// DELETE: Xóa user
+// DELETE: Xóa user và tất cả đơn hàng liên quan
 router.delete('/users/:id', async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const userId = req.params.id;
+    
+    // Xóa tất cả đơn hàng của user này
+    const deletedOrders = await Order.deleteMany({ user: userId });
+    
+    // Xóa user
+    const user = await User.findByIdAndDelete(userId);
 
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy user!' });
     }
 
-    res.json({ message: 'Đã xóa user!' });
+    res.json({ 
+      message: 'Đã xóa user và tất cả đơn hàng liên quan!',
+      deletedOrdersCount: deletedOrders.deletedCount
+    });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi xóa user!', error: error.message });
   }
@@ -151,6 +161,34 @@ router.get('/orders', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi lấy đơn hàng!', error: error.message });
+  }
+});
+
+// DELETE: Xóa đơn hàng
+router.delete('/orders/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Không tìm thấy đơn hàng!' });
+    }
+
+    // Nếu đơn hàng chưa giao hoặc đã hủy, hoàn trả sản phẩm vào kho
+    if (order.status !== 'delivered' && order.status !== 'cancelled') {
+      for (const item of order.items) {
+        const product = await Product.findById(item.product);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+        }
+      }
+    }
+
+    await Order.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Đã xóa đơn hàng!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi xóa đơn hàng!', error: error.message });
   }
 });
 

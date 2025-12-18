@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiShoppingBag, FiEye, FiRefreshCw, FiFilter, FiPackage, FiTruck, FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import { FiShoppingBag, FiEye, FiRefreshCw, FiFilter, FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiTrash2 } from 'react-icons/fi';
 import './AdminOrders.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -15,8 +15,8 @@ function AdminOrders() {
 
   const statusColors = {
     pending: { bg: '#fff3cd', color: '#856404', label: 'Chờ xử lý' },
-    confirmed: { bg: '#cfe2ff', color: '#084298', label: 'Đã xác nhận' },
-    shipping: { bg: '#d1ecf1', color: '#0c5460', label: 'Đang giao' },
+    processing: { bg: '#cfe2ff', color: '#084298', label: 'Đang xử lý' },
+    shipped: { bg: '#d1ecf1', color: '#0c5460', label: 'Đang giao' },
     delivered: { bg: '#d4edda', color: '#155724', label: 'Đã giao' },
     cancelled: { bg: '#f8d7da', color: '#721c24', label: 'Đã hủy' }
   };
@@ -24,8 +24,8 @@ function AdminOrders() {
   const statusOptions = [
     { value: 'all', label: 'Tất cả đơn hàng' },
     { value: 'pending', label: 'Chờ xử lý' },
-    { value: 'confirmed', label: 'Đã xác nhận' },
-    { value: 'shipping', label: 'Đang giao' },
+    { value: 'processing', label: 'Đang xử lý' },
+    { value: 'shipped', label: 'Đang giao' },
     { value: 'delivered', label: 'Đã giao' },
     { value: 'cancelled', label: 'Đã hủy' }
   ];
@@ -38,7 +38,7 @@ function AdminOrders() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/admin/orders`, {
+      const response = await axios.get(`${API_URL}/admin/orders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrders(response.data.orders || response.data);
@@ -58,7 +58,7 @@ function AdminOrders() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API_URL}/api/orders/${orderId}/status`,
+        `${API_URL}/orders/${orderId}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -66,6 +66,71 @@ function AdminOrders() {
       fetchOrders();
     } catch (error) {
       alert(error.response?.data?.message || 'Có lỗi khi cập nhật trạng thái!');
+    }
+  };
+
+  const handleDeliverOrder = async (orderId) => {
+    if (!window.confirm('Xác nhận đơn hàng đã được giao thành công?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API_URL}/orders/${orderId}/deliver`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Đã xác nhận giao hàng thành công!');
+      fetchOrders();
+      if (showDetailModal) setShowDetailModal(false);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Có lỗi khi xác nhận giao hàng!');
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    const reason = prompt('Nhập lý do hủy đơn hàng:');
+    if (!reason) {
+      alert('Vui lòng nhập lý do hủy đơn!');
+      return;
+    }
+
+    if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API_URL}/orders/${orderId}/cancel`,
+        { reason },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Đã hủy đơn hàng và hoàn trả sản phẩm vào kho!');
+      fetchOrders();
+      if (showDetailModal) setShowDetailModal(false);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Có lỗi khi hủy đơn hàng!');
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Bạn có chắc muốn XÓA VĨNH VIỄN đơn hàng này? Hành động này không thể hoàn tác!')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${API_URL}/admin/orders/${orderId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Đã xóa đơn hàng!');
+      fetchOrders();
+      if (showDetailModal) setShowDetailModal(false);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Có lỗi khi xóa đơn hàng!');
     }
   };
 
@@ -103,8 +168,8 @@ function AdminOrders() {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'pending': return <FiShoppingBag />;
-      case 'confirmed': return <FiCheckCircle />;
-      case 'shipping': return <FiTruck />;
+      case 'processing': return <FiCheckCircle />;
+      case 'shipped': return <FiTruck />;
       case 'delivered': return <FiPackage />;
       case 'cancelled': return <FiXCircle />;
       default: return <FiShoppingBag />;
@@ -218,29 +283,45 @@ function AdminOrders() {
                       <FiEye />
                     </button>
                     {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                      <select
-                        className="status-select"
-                        value={order.status}
-                        onChange={(e) => handleUpdateStatus(order._id, e.target.value)}
-                      >
-                        <option value={order.status}>Cập nhật...</option>
-                        {order.status === 'pending' && (
-                          <>
-                            <option value="confirmed">Xác nhận</option>
-                            <option value="cancelled">Hủy đơn</option>
-                          </>
+                      <>
+                        <select
+                          className="status-select"
+                          value={order.status}
+                          onChange={(e) => handleUpdateStatus(order._id, e.target.value)}
+                        >
+                          <option value={order.status}>Cập nhật...</option>
+                          {order.status === 'pending' && (
+                            <option value="processing">Xử lý</option>
+                          )}
+                          {order.status === 'processing' && (
+                            <option value="shipped">Giao hàng</option>
+                          )}
+                        </select>
+                        {(order.status === 'shipped' || order.status === 'processing') && (
+                          <button
+                            className="btn-deliver"
+                            onClick={() => handleDeliverOrder(order._id)}
+                            title="Xác nhận giao hàng"
+                          >
+                            <FiCheckCircle />
+                          </button>
                         )}
-                        {order.status === 'confirmed' && (
-                          <>
-                            <option value="shipping">Bắt đầu giao</option>
-                            <option value="cancelled">Hủy đơn</option>
-                          </>
-                        )}
-                        {order.status === 'shipping' && (
-                          <option value="delivered">Đã giao hàng</option>
-                        )}
-                      </select>
+                        <button
+                          className="btn-cancel-order"
+                          onClick={() => handleCancelOrder(order._id)}
+                          title="Hủy đơn hàng"
+                        >
+                          <FiXCircle />
+                        </button>
+                      </>
                     )}
+                    <button
+                      className="btn-delete-order"
+                      onClick={() => handleDeleteOrder(order._id)}
+                      title="Xóa đơn hàng"
+                    >
+                      <FiTrash2 />
+                    </button>
                   </td>
                 </tr>
               ))
@@ -274,9 +355,9 @@ function AdminOrders() {
                   <div className="info-item full-width">
                     <strong>Địa chỉ:</strong> {selectedOrder.customerInfo.address}
                   </div>
-                  {selectedOrder.customerInfo.note && (
+                  {selectedOrder.note && (
                     <div className="info-item full-width">
-                      <strong>Ghi chú:</strong> {selectedOrder.customerInfo.note}
+                      <strong>Ghi chú:</strong> {selectedOrder.note}
                     </div>
                   )}
                 </div>
@@ -285,18 +366,38 @@ function AdminOrders() {
               <div className="detail-section">
                 <h3>Sản phẩm đã đặt</h3>
                 <div className="order-items">
-                  {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="order-item-row">
-                      <img src={item.image} alt={item.name} />
-                      <div className="item-info">
-                        <h4>{item.name}</h4>
-                        <p>Số lượng: {item.quantity}</p>
+                  {selectedOrder.items.map((item, index) => {
+                    const imageUrl = item.image || item.product?.image;
+                    const isExternalImage = imageUrl?.startsWith('http');
+                    const finalImageUrl = imageUrl 
+                      ? (isExternalImage ? imageUrl : `${API_URL}${imageUrl}`)
+                      : null;
+
+                    return (
+                      <div key={index} className="order-item-row">
+                        {finalImageUrl ? (
+                          <img 
+                            src={finalImageUrl} 
+                            alt={item.name}
+                            onError={(e) => {
+                              e.target.src = 'https://via.placeholder.com/80?text=No+Image';
+                            }}
+                          />
+                        ) : (
+                          <div className="no-image">
+                            <FiPackage size={40} />
+                          </div>
+                        )}
+                        <div className="item-info">
+                          <h4>{item.name}</h4>
+                          <p>Số lượng: {item.quantity}</p>
+                        </div>
+                        <div className="item-price">
+                          {formatPrice(item.price * item.quantity)}
+                        </div>
                       </div>
-                      <div className="item-price">
-                        {formatPrice(item.price * item.quantity)}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -306,6 +407,10 @@ function AdminOrders() {
                   <div className="summary-row">
                     <span>Tổng tiền hàng:</span>
                     <strong>{formatPrice(selectedOrder.totalAmount)}</strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Phương thức thanh toán:</span>
+                    <strong>{selectedOrder.paymentMethod}</strong>
                   </div>
                   <div className="summary-row total">
                     <span>Tổng thanh toán:</span>
@@ -330,11 +435,52 @@ function AdminOrders() {
                   <p className="order-time">
                     Đặt lúc: {formatDate(selectedOrder.createdAt)}
                   </p>
+                  {selectedOrder.deliveredAt && (
+                    <p className="order-time">
+                      Giao hàng lúc: {formatDate(selectedOrder.deliveredAt)}
+                    </p>
+                  )}
+                  {selectedOrder.cancelledAt && (
+                    <>
+                      <p className="order-time">
+                        Hủy lúc: {formatDate(selectedOrder.cancelledAt)}
+                      </p>
+                      {selectedOrder.cancelReason && (
+                        <p className="order-time">
+                          Lý do hủy: <strong>{selectedOrder.cancelReason}</strong>
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="modal-footer">
+              {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && (
+                <>
+                  {(selectedOrder.status === 'shipped' || selectedOrder.status === 'processing') && (
+                    <button 
+                      className="btn-deliver-modal"
+                      onClick={() => handleDeliverOrder(selectedOrder._id)}
+                    >
+                      <FiCheckCircle /> Xác nhận đã giao hàng
+                    </button>
+                  )}
+                  <button 
+                    className="btn-cancel-order-modal"
+                    onClick={() => handleCancelOrder(selectedOrder._id)}
+                  >
+                    <FiXCircle /> Hủy đơn hàng
+                  </button>
+                </>
+              )}
+              <button 
+                className="btn-delete-order-modal"
+                onClick={() => handleDeleteOrder(selectedOrder._id)}
+              >
+                <FiTrash2 /> Xóa đơn hàng
+              </button>
               <button className="btn-cancel" onClick={() => setShowDetailModal(false)}>
                 Đóng
               </button>

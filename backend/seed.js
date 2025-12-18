@@ -217,7 +217,7 @@ const sampleProducts = [
 // Kết nối MongoDB và thêm dữ liệu
 const seedDatabase = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/electronics-store', {
+    await mongoose.connect('mongodb://localhost:27017/laptop-shop', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

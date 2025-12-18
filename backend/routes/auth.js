@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const Cart = require('../models/Cart');
 const { auth } = require('../middleware/auth');
 
 // POST: Đăng ký user mới
@@ -74,6 +75,54 @@ router.post('/login', async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng!' });
+    }
+
+    // Chuyển giỏ hàng từ session sang user (nếu có)
+    const sessionId = req.headers['x-session-id'];
+    if (sessionId) {
+      try {
+        const sessionCart = await Cart.findOne({ sessionId });
+        if (sessionCart && sessionCart.items.length > 0) {
+          // Tìm hoặc tạo cart của user
+          let userCart = await Cart.findOne({ userId: user._id });
+          
+          if (userCart) {
+            // Merge items từ session cart vào user cart
+            for (const sessionItem of sessionCart.items) {
+              const existingIndex = userCart.items.findIndex(
+                item => item.product.toString() === sessionItem.product.toString()
+              );
+              
+              if (existingIndex > -1) {
+                userCart.items[existingIndex].quantity += sessionItem.quantity;
+              } else {
+                userCart.items.push(sessionItem);
+              }
+            }
+          } else {
+            // Chuyển session cart thành user cart
+            sessionCart.userId = user._id;
+            sessionCart.sessionId = null;
+            userCart = sessionCart;
+          }
+          
+          // Tính lại tổng tiền
+          await userCart.populate('items.product');
+          userCart.totalAmount = userCart.items.reduce((total, item) => {
+            return total + (item.product.price * item.quantity);
+          }, 0);
+          
+          await userCart.save();
+          
+          // Xóa session cart nếu đã chuyển thành user cart
+          if (sessionCart._id.toString() !== userCart._id.toString()) {
+            await Cart.deleteOne({ sessionId });
+          }
+        }
+      } catch (cartError) {
+        console.error('Lỗi khi chuyển giỏ hàng:', cartError);
+        // Không block login nếu có lỗi cart
+      }
     }
 
     // Tạo token

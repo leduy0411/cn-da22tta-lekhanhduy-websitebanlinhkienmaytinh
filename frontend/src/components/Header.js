@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiShoppingCart, FiSearch, FiUser, FiLogOut, FiSettings } from 'react-icons/fi';
+import { FiShoppingCart, FiSearch, FiUser, FiLogOut, FiSettings, FiCpu, FiPackage, FiPhone, FiMenu } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
@@ -19,19 +19,75 @@ const Header = ({ onSearch }) => {
     }
   };
 
+  const handleLogoClick = () => {
+    setSearchTerm('');
+    if (onSearch) {
+      onSearch('');
+    }
+  };
+
+  const handleHomeClick = () => {
+    setSearchTerm('');
+    if (onSearch) {
+      onSearch('');
+    }
+    // Scroll về đầu trang
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   const handleLogout = () => {
     logout();
     setShowUserMenu(false);
     navigate('/');
   };
 
+  const handleCategoriesClick = () => {
+    // Nếu không ở trang chủ, chuyển về trang chủ trước
+    if (window.location.pathname !== '/') {
+      navigate('/');
+      // Chờ 1 chút để trang load xong rồi scroll
+      setTimeout(() => {
+        scrollToSidebar();
+      }, 100);
+    } else {
+      scrollToSidebar();
+    }
+  };
+
+  const scrollToSidebar = () => {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+      const headerHeight = 80; // Chiều cao của header
+      const sidebarTop = sidebar.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+      window.scrollTo({
+        top: sidebarTop,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <header className="header">
       <div className="container">
         <div className="header-content">
-          <Link to="/" className="logo">
-            <h1>🛒 Cửa Hàng Điện Tử</h1>
+          <Link to="/" className="logo" onClick={handleLogoClick}>
+            <FiCpu className="logo-icon" />
+            <div className="logo-text">
+              <span className="logo-title">TechStore</span>
+              <span className="logo-subtitle">Linh kiện máy tính</span>
+            </div>
           </Link>
+
+          <button 
+            className="categories-button"
+            onClick={handleCategoriesClick}
+          >
+            <FiMenu size={18} />
+            <span>Danh mục</span>
+          </button>
 
           <form className="search-form" onSubmit={handleSearch}>
             <input
@@ -47,7 +103,12 @@ const Header = ({ onSearch }) => {
           </form>
 
           <nav className="nav">
-            <Link to="/" className="nav-link">Trang chủ</Link>
+            <Link to="/" className="nav-link" onClick={handleHomeClick}>Trang chủ</Link>
+            
+            <a href="tel:0348137209" className="hotline-link">
+              <FiPhone size={18} />
+              <span>Hotline: 0348137209</span>
+            </a>
             
             {isAuthenticated ? (
               <div className="user-menu-container">
@@ -72,6 +133,12 @@ const Header = ({ onSearch }) => {
                     {isAdmin() && (
                       <Link to="/admin" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
                         <FiSettings /> Quản trị
+                      </Link>
+                    )}
+                    
+                    {!isAdmin() && (
+                      <Link to="/my-orders" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
+                        <FiPackage /> Đơn hàng của tôi
                       </Link>
                     )}
                     

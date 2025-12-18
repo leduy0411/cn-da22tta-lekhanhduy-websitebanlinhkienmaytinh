@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Price Filter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #b91c1c;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .product-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-left: 3px solid #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Bộ Lọc Giá</h1>
+    
+    <div class="test-section">
+        <h2>Test API trực tiếp:</h2>
+        <button onclick="testAllProducts()">Tất cả sản phẩm</button>
+        <button onclick="testLaptopOnly()">Chỉ Laptop</button>
+        <button onclick="testLaptopUnder15M()">Laptop dưới 15 triệu</button>
+        <button onclick="testLaptop15to20M()">Laptop 15-20 triệu</button>
+        <button onclick="testLaptopOver20M()">Laptop trên 20 triệu</button>
+    </div>
+
+    <div id="results">
+        <p>Nhấn vào các nút trên để test...</p>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        async function fetchProducts(params) {
+            const queryString = new URLSearchParams(params).toString();
+            const url = `${API_URL}/products?${queryString}`;
+            
+            document.getElementById('results').innerHTML = `
+                <p>🔄 Đang gọi API: <code>${url}</code></p>
+            `;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                let html = `
+                    <h3>✅ Kết quả: ${data.totalProducts} sản phẩm</h3>
+                    <p><strong>URL:</strong> <code>${url}</code></p>
+                    <hr>
+                `;
+
+                if (data.products && data.products.length > 0) {
+                    data.products.forEach(p => {
+                        html += `
+                            <div class="product-item">
+                                <strong>${p.name}</strong><br>
+                                Giá: ${p.price.toLocaleString('vi-VN')} VND<br>
+                                Danh mục: ${p.category} | Brand: ${p.brand}
+                            </div>
+                        `;
+                    });
+                } else {
+                    html += '<p>❌ Không tìm thấy sản phẩm nào</p>';
+                }
+
+                document.getElementById('results').innerHTML = html;
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <p>❌ Lỗi: ${error.message}</p>
+                `;
+            }
+        }
+
+        function testAllProducts() {
+            fetchProducts({});
+        }
+
+        function testLaptopOnly() {
+            fetchProducts({ category: 'Laptop' });
+        }
+
+        function testLaptopUnder15M() {
+            fetchProducts({ 
+                category: 'Laptop',
+                minPrice: 0,
+                maxPrice: 15000000
+            });
+        }
+
+        function testLaptop15to20M() {
+            fetchProducts({ 
+                category: 'Laptop',
+                minPrice: 15000000,
+                maxPrice: 20000000
+            });
+        }
+
+        function testLaptopOver20M() {
+            fetchProducts({ 
+                category: 'Laptop',
+                minPrice: 20000000,
+                maxPrice: 999999999
+            });
+        }
+    </script>
+</body>
+</html>

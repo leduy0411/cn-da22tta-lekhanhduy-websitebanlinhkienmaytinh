@@ -63,6 +63,7 @@
 .categories-table {
   width: 100%;
   border-collapse: collapse;
+  border-spacing: 0;
 }
 
 .categories-table thead {
@@ -75,11 +76,22 @@
   text-align: left;
   font-weight: 600;
   white-space: nowrap;
+  border-bottom: 2px solid #dee2e6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.categories-table tbody tr {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.categories-table tbody tr:last-child {
+  border-bottom: none;
 }
 
 .categories-table td {
   padding: 1rem;
-  border-bottom: 1px solid #f0f0f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  vertical-align: middle;
 }
 
 .categories-table tbody tr:hover {
@@ -89,6 +101,14 @@
 .category-icon {
   font-size: 1.5rem;
   text-align: center;
+}
+
+.category-icon-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 }
 
 .category-name {
@@ -101,11 +121,19 @@
   max-width: 300px;
 }
 
+.category-count {
+  text-align: center;
+}
+
 .category-count .badge {
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 600;
+  display: inline-block;
+  min-width: 80px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: 0.3px;
 }
 
 .badge-info {
@@ -304,6 +332,75 @@
 .checkbox-label input[type="checkbox"] {
   width: auto;
   cursor: pointer;
+}
+
+/* Icon Type Selector */
+.icon-type-selector {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: normal !important;
+}
+
+.radio-label input[type="radio"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.icon-input-group,
+.icon-upload-group {
+  margin-top: 0.5rem;
+}
+
+.icon-upload-group input[type="file"] {
+  padding: 0.5rem;
+  background: #f8f9fa;
+  cursor: pointer;
+}
+
+.icon-upload-group input[type="file"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.uploading-text {
+  color: #667eea;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.icon-preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.icon-preview img {
+  max-width: 100px;
+  max-height: 100px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  margin-bottom: 0.5rem;
+}
+
+.icon-preview p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .modal-footer {

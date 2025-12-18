@@ -1,0 +1,315 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { FiChevronRight } from 'react-icons/fi';
+import './MegaMenu.css';
+
+const MegaMenu = () => {
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [filters, setFilters] = useState({});
+  const [activeCategory, setActiveCategory] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    fetchCategories();
+    fetchBrands();
+  }, []);
+
+  // Đọc category từ URL để set activeCategory
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const categoryFromURL = searchParams.get('category');
+    if (categoryFromURL) {
+      setActiveCategory(categoryFromURL);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
+    if (activeCategory) {
+      fetchFilters(activeCategory);
+    }
+  }, [activeCategory]);
+
+  const fetchCategories = async () => {
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_URL}/categories`);
+      const data = await response.json();
+      console.log('Categories data:', data);
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh mục:', error);
+      setCategories([]);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_URL}/products/brands/list`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch brands');
+      }
+      
+      const data = await response.json();
+      const brandsData = Array.isArray(data) ? data : [];
+      
+      // Đảm bảo mỗi brand là string
+      const processedBrands = brandsData
+        .map(brand => {
+          if (typeof brand === 'string') return brand;
+          if (typeof brand === 'object' && brand !== null) {
+            return brand.name || brand.value || brand.label || String(brand);
+          }
+          return String(brand);
+        })
+        .filter(brand => brand && brand.trim() !== '');
+      
+      // Nếu không có data, dùng brands mẫu
+      if (processedBrands.length === 0) {
+        setBrands(['ASUS', 'ACER', 'MSI', 'LENOVO', 'DELL', 'HP']);
+      } else {
+        setBrands(processedBrands);
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy thương hiệu:', error);
+      setBrands(['ASUS', 'ACER', 'MSI', 'LENOVO', 'DELL', 'HP']);
+    }
+  };
+
+  const fetchFilters = async (categoryName) => {
+    if (!categoryName) return;
+    
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+      const url = `${API_URL}/filters?category=${encodeURIComponent(categoryName)}`;
+      console.log('Fetching filters from:', url);
+      console.log('Category name:', categoryName);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.error('Không thể tải bộ lọc, status:', response.status);
+        setFilters({ [categoryName]: [] });
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('Filters data received:', data);
+      console.log('Number of filters:', data.length);
+      
+      // Log chi tiết từng filter
+      if (Array.isArray(data)) {
+        data.forEach((filter, index) => {
+          console.log(`Filter ${index}:`, filter);
+        });
+      }
+      
+      // QUAN TRỌNG: Merge vào filters state thay vì ghi đè
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        [categoryName]: Array.isArray(data) ? data : []
+      }));
+      console.log('Updated filters state for category:', categoryName);
+    } catch (error) {
+      console.error('Lỗi khi lấy bộ lọc:', error);
+      setFilters({ [categoryName]: [] });
+    }
+  };
+
+  const handleCategoryClick = (categoryName) => {
+    navigate(`/?category=${encodeURIComponent(categoryName)}`);
+  };
+
+  const handleBrandClick = (brand) => {
+    navigate(`/?brand=${encodeURIComponent(brand)}`);
+  };
+
+  const handleFilterClick = (categoryName, filterName, value) => {
+    console.log('🎯 handleFilterClick called:', { categoryName, filterName, value });
+    
+    // Map old filter names to new ones
+    const filterNameMap = {
+      'giatien': 'priceRange',
+      'gia': 'priceRange',
+      'giaban': 'priceRange'
+    };
+    
+    const actualFilterName = filterNameMap[filterName] || filterName;
+    
+    // Đảm bảo value là số, không phải chữ tiếng Việt
+    let actualValue = value;
+    if (actualFilterName === 'priceRange') {
+      // Nếu value là tiếng Việt, convert sang số
+      const priceMap = {
+        'dưới 15 triệu': '0-15000000',
+        'từ 15 - 20 triệu': '15000000-20000000',
+        'trên 20 triệu': '20000000-999999999'
+      };
+      actualValue = priceMap[value.toLowerCase()] || value;
+    }
+    
+    const params = new URLSearchParams();
+    params.set('category', categoryName);
+    params.set(actualFilterName, actualValue);
+    const url = `/?${params.toString()}`;
+    console.log('🚀 Navigating to:', url);
+    navigate(url);
+  };
+
+  const getCategoryIcon = (categoryName) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes('laptop')) return '💻';
+    if (name.includes('pc') || name.includes('máy tính')) return '🖥️';
+    if (name.includes('cpu') || name.includes('bộ xử lý')) return '⚙️';
+    if (name.includes('vga') || name.includes('card')) return '🎮';
+    if (name.includes('ram') || name.includes('bộ nhớ')) return '🔲';
+    if (name.includes('ssd') || name.includes('ổ cứng')) return '💾';
+    if (name.includes('case') || name.includes('nguồn')) return '📦';
+    if (name.includes('màn hình')) return '🖼️';
+    if (name.includes('bàn phím')) return '⌨️';
+    if (name.includes('chuột')) return '🖱️';
+    if (name.includes('tai nghe')) return '🎧';
+    if (name.includes('ghế')) return '🪑';
+    return '📱';
+  };
+
+  // Group filters by category
+  const groupedFilters = activeCategory && filters[activeCategory] ? filters[activeCategory] : [];
+  
+  console.log('Active category:', activeCategory);
+  console.log('All filters state:', filters);
+  console.log('Grouped filters for current category:', groupedFilters);
+
+  return (
+    <div 
+      className="mega-menu"
+      onMouseLeave={() => {
+        // Delay reset để cho phép click vào filter
+        setTimeout(() => {
+          setActiveCategory(null);
+        }, 200);
+      }}
+    >
+      <div className="mega-menu-container">
+        <div className="mega-menu-content"
+          onMouseEnter={() => {
+            // Giữ activeCategory khi hover vào content
+          }}
+        >
+          <div className="categories-list">
+            {Array.isArray(categories) && categories.map((category, index) => {
+              try {
+                const categoryName = typeof category === 'string' ? category : (category?.name || '');
+                const categoryId = typeof category === 'string' ? category : (category?._id || category?.name || `cat-${index}`);
+                
+                // Bỏ qua nếu không có tên category hợp lệ
+                if (!categoryName || typeof categoryName !== 'string') return null;
+                
+                return (
+                  <div
+                    key={categoryId}
+                    className={`category-item ${activeCategory === categoryName ? 'active' : ''}`}
+                    onMouseEnter={() => {
+                      setActiveCategory(categoryName);
+                    }}
+                    onClick={() => {
+                      handleCategoryClick(categoryName);
+                    }}
+                  >
+                    <span className="category-icon">{getCategoryIcon(categoryName)}</span>
+                    <span className="category-name">{String(categoryName)}</span>
+                    <FiChevronRight className="category-arrow" />
+                  </div>
+                );
+              } catch (err) {
+                console.error('Error rendering category:', category, err);
+                return null;
+              }
+            })}
+          </div>
+
+          {/* Filters panel khi có activeCategory */}
+          {activeCategory && (
+            <div 
+              className="filters-panel-grid"
+              onMouseEnter={() => {
+                // Giữ activeCategory khi hover vào filter panel
+              }}
+            >
+              {/* Dynamic Filters - Chỉ hiển thị bộ lọc từ Admin */}
+              {groupedFilters.length > 0 && groupedFilters.map((filter, filterIndex) => {
+                try {
+                  // Đảm bảo filter là object hợp lệ
+                  if (!filter || typeof filter !== 'object') return null;
+                  
+                  const filterId = filter._id || `filter-${filterIndex}`;
+                  const filterDisplayName = filter.displayName || filter.name || '';
+                  const filterName = filter.name || '';
+                  const filterOptions = Array.isArray(filter.options) ? filter.options : [];
+                  
+                  // Chỉ render nếu có displayName và options
+                  if (!filterDisplayName || filterOptions.length === 0) return null;
+                  
+                  return (
+                    <div key={filterId} className="filter-column">
+                      <h5 className="filter-column-title">{String(filterDisplayName)}</h5>
+                      <div className="filter-items">
+                        {filterOptions.slice(0, 12).map((option, index) => {
+                          try {
+                            // Xử lý option - có thể là string hoặc object {value, label}
+                            let displayText = '';
+                            let optionValue = '';
+                            
+                            if (typeof option === 'string') {
+                              displayText = option;
+                              optionValue = option;
+                            } else if (typeof option === 'object' && option !== null) {
+                              // Ưu tiên label để hiển thị, value để lọc
+                              displayText = String(option.label || option.value || '');
+                              optionValue = String(option.value || option.label || '');
+                            } else {
+                              displayText = String(option);
+                              optionValue = String(option);
+                            }
+                            
+                            // Bỏ qua nếu không có text để hiển thị
+                            if (!displayText) return null;
+                            
+                            return (
+                              <button
+                                key={`${filterId}-opt-${index}`}
+                                className="filter-item-link"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log('🔥 Button clicked!', { activeCategory, filterName, optionValue });
+                                  handleFilterClick(activeCategory, filterName, optionValue);
+                                }}
+                              >
+                                {displayText}
+                              </button>
+                            );
+                          } catch (optErr) {
+                            console.error('Error rendering option:', option, optErr);
+                            return null;
+                          }
+                        })}
+                      </div>
+                    </div>
+                  );
+                } catch (filterErr) {
+                  console.error('Error rendering filter:', filter, filterErr);
+                  return null;
+                }
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MegaMenu;

@@ -65,8 +65,18 @@ router.post('/', auth, isAdmin, async (req, res) => {
       return res.status(400).json({ message: 'Tên danh mục đã tồn tại!' });
     }
     
+    // Tạo slug từ name
+    const slug = name
+      .toLowerCase()
+      .replace(/đ/g, 'd')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    
     const category = new Category({
       name,
+      slug,
       description,
       icon: icon || '📦',
       order: order || 0
@@ -100,6 +110,15 @@ router.put('/:id', auth, isAdmin, async (req, res) => {
       if (existingCategory) {
         return res.status(400).json({ message: 'Tên danh mục đã tồn tại!' });
       }
+      
+      // Cập nhật slug khi tên thay đổi
+      category.slug = name
+        .toLowerCase()
+        .replace(/đ/g, 'd')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
     }
     
     // Cập nhật các trường

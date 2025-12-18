@@ -12,6 +12,11 @@ const getSessionId = () => {
   return sessionId;
 };
 
+// Xóa sessionId khi đăng nhập
+export const clearSessionId = () => {
+  localStorage.removeItem('sessionId');
+};
+
 // Axios instance với session ID
 const api = axios.create({
   baseURL: API_URL,
@@ -21,6 +26,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+  // Luôn gửi sessionId (cho cả user đã đăng nhập và chưa đăng nhập)
   config.headers['x-session-id'] = getSessionId();
   
   // Thêm token nếu có
@@ -53,7 +59,11 @@ export const cartAPI = {
 // Order API
 export const orderAPI = {
   createOrder: (orderData) => api.post('/orders', orderData),
-  getOrders: (params) => api.get('/orders', { params }),
+  getOrders: async (params) => {
+    const response = await api.get('/orders', { params });
+    // Trả về mảng orders từ response
+    return { data: response.data.orders || [] };
+  },
   getOrderById: (id) => api.get(`/orders/${id}`),
   trackOrder: (orderNumber) => api.get(`/orders/tracking/${orderNumber}`),
   updateOrderStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),

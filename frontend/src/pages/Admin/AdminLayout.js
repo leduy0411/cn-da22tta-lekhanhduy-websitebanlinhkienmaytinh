@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiFilter } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import './AdminLayout.css';
 
@@ -27,8 +27,10 @@ const AdminLayout = () => {
     { path: '/admin', icon: FiBarChart2, label: 'Dashboard', exact: true },
     { path: '/admin/products', icon: FiPackage, label: 'Sản phẩm' },
     { path: '/admin/categories', icon: FiGrid, label: 'Danh mục' },
+    { path: '/admin/filters', icon: FiFilter, label: 'Bộ lọc' },
     { path: '/admin/orders', icon: FiShoppingBag, label: 'Đơn hàng' },
     { path: '/admin/users', icon: FiUsers, label: 'Người dùng' },
+    { path: '/admin/chat', icon: FiMessageCircle, label: 'Chat' },
   ];
 
   const isActive = (path, exact = false) => {
@@ -74,7 +76,11 @@ const AdminLayout = () => {
 
         <div className="sidebar-footer">
           <div className="admin-info">
-            <img src={user?.avatar} alt={user?.name} className="admin-avatar" />
+            <div className="admin-avatar">
+              <div className="avatar-circle">
+                <span className="avatar-text">LD</span>
+              </div>
+            </div>
             <div className="admin-details">
               <p className="admin-name">{user?.name}</p>
               <p className="admin-role">Administrator</p>
@@ -84,13 +90,6 @@ const AdminLayout = () => {
       </aside>
 
       <main className="admin-main">
-        <button 
-          className="sidebar-toggle"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          ☰
-        </button>
-        
         <div className="admin-content">
           <Outlet />
         </div>

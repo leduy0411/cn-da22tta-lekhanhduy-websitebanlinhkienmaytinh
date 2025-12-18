@@ -6,6 +6,10 @@ const orderSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   items: [{
     product: {
       type: mongoose.Schema.Types.ObjectId,
@@ -13,7 +17,8 @@ const orderSchema = new mongoose.Schema({
     },
     name: String,
     price: Number,
-    quantity: Number
+    quantity: Number,
+    image: String
   }],
   customerInfo: {
     name: {
@@ -45,10 +50,19 @@ const orderSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
-    default: 'Pending'
+    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+    default: 'pending'
   },
-  note: String
+  note: String,
+  deliveredAt: {
+    type: Date
+  },
+  cancelledAt: {
+    type: Date
+  },
+  cancelReason: {
+    type: String
+  }
 }, {
   timestamps: true
 });

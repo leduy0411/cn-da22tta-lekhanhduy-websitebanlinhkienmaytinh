@@ -185,18 +185,58 @@
   color: #333;
 }
 
-.remove-btn {
-  background: none;
-  border: none;
+.remove-item-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #fff5f5;
+  border: 2px solid #ff6b6b;
   color: #ff6b6b;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
   transition: all 0.3s;
+  white-space: nowrap;
+  min-width: 90px;
+}
+
+.remove-item-btn:hover {
+  background: #ff6b6b;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.remove-btn {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff5f5;
+  border: 2px solid #ff6b6b;
+  color: #ff6b6b;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+  white-space: nowrap;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.remove-btn svg {
+  font-size: 1.1rem;
 }
 
 .remove-btn:hover {
-  transform: scale(1.2);
-  color: #ee5a52;
+  background: #ff6b6b;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
 }
 
 .cart-summary {

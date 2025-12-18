@@ -18,6 +18,8 @@ function AdminCategories() {
     isActive: true
   });
   const [error, setError] = useState('');
+  const [iconType, setIconType] = useState('emoji'); // 'emoji', 'upload', 'url'
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -48,6 +50,12 @@ function AdminCategories() {
         order: category.order || 0,
         isActive: category.isActive
       });
+      // Xác định loại icon
+      if (category.icon?.startsWith('http') || category.icon?.startsWith('/uploads')) {
+        setIconType('url');
+      } else {
+        setIconType('emoji');
+      }
     } else {
       setEditingCategory(null);
       setFormData({
@@ -57,6 +65,7 @@ function AdminCategories() {
         order: 0,
         isActive: true
       });
+      setIconType('emoji');
     }
     setShowModal(true);
     setError('');
@@ -74,6 +83,59 @@ function AdminCategories() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Kiểm tra loại file
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file ảnh!');
+      return;
+    }
+
+    // Kiểm tra kích thước (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Kích thước ảnh không được vượt quá 2MB!');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const token = localStorage.getItem('token');
+      const formDataUpload = new FormData();
+      formDataUpload.append('image', file);
+
+      const response = await axios.post(`${API_URL}/upload`, formDataUpload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      // Cập nhật icon với đường dẫn ảnh
+      setFormData(prev => ({
+        ...prev,
+        icon: response.data.imageUrl
+      }));
+
+      alert('Upload ảnh thành công!');
+    } catch (error) {
+      console.error('Lỗi khi upload ảnh:', error);
+      alert(error.response?.data?.message || 'Có lỗi khi upload ảnh!');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleIconTypeChange = (type) => {
+    setIconType(type);
+    if (type === 'emoji') {
+      setFormData(prev => ({ ...prev, icon: '📦' }));
+    } else if (type === 'url') {
+      setFormData(prev => ({ ...prev, icon: '' }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -181,7 +243,18 @@ function AdminCategories() {
             ) : (
               categories.map((category) => (
                 <tr key={category._id}>
-                  <td className="category-icon">{category.icon}</td>
+                  <td className="category-icon">
+                    {category.icon?.startsWith('http') || category.icon?.startsWith('/uploads') ? (
+                      <img 
+                        src={category.icon?.startsWith('http') ? category.icon : `${API_URL}${category.icon}`}
+                        alt={category.name}
+                        className="category-icon-image"
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
+                    ) : (
+                      category.icon
+                    )}
+                  </td>
                   <td className="category-name">{category.name}</td>
                   <td className="category-description">
                     {category.description || '-'}
@@ -273,17 +346,102 @@ function AdminCategories() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="icon">Icon (Emoji)</label>
-                  <input
-                    type="text"
-                    id="icon"
-                    name="icon"
-                    value={formData.icon}
-                    onChange={handleChange}
-                    placeholder="📦"
-                    maxLength="2"
-                  />
-                  <small>Chọn 1 emoji để đại diện</small>
+                  <label>Icon danh mục</label>
+                  
+                  <div className="icon-type-selector">
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="iconType"
+                        value="emoji"
+                        checked={iconType === 'emoji'}
+                        onChange={() => handleIconTypeChange('emoji')}
+                      />
+                      <span>Emoji</span>
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="iconType"
+                        value="upload"
+                        checked={iconType === 'upload'}
+                        onChange={() => handleIconTypeChange('upload')}
+                      />
+                      <span>Upload ảnh</span>
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="iconType"
+                        value="url"
+                        checked={iconType === 'url'}
+                        onChange={() => handleIconTypeChange('url')}
+                      />
+                      <span>URL ảnh</span>
+                    </label>
+                  </div>
+
+                  {iconType === 'emoji' && (
+                    <div className="icon-input-group">
+                      <input
+                        type="text"
+                        id="icon"
+                        name="icon"
+                        value={formData.icon}
+                        onChange={handleChange}
+                        placeholder="📦"
+                        maxLength="2"
+                      />
+                      <small>Chọn 1 emoji để đại diện</small>
+                    </div>
+                  )}
+
+                  {iconType === 'upload' && (
+                    <div className="icon-upload-group">
+                      <input
+                        type="file"
+                        id="iconUpload"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                      />
+                      <small>Chọn ảnh từ máy tính (tối đa 2MB)</small>
+                      {uploadingImage && <p className="uploading-text">Đang upload...</p>}
+                      {formData.icon && formData.icon.startsWith('/uploads') && (
+                        <div className="icon-preview">
+                          <img src={`${API_URL}${formData.icon}`} alt="Preview" />
+                          <p>Ảnh đã upload</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {iconType === 'url' && (
+                    <div className="icon-input-group">
+                      <input
+                        type="url"
+                        id="icon"
+                        name="icon"
+                        value={formData.icon}
+                        onChange={handleChange}
+                        placeholder="https://example.com/icon.png"
+                      />
+                      <small>Nhập URL của ảnh icon</small>
+                      {formData.icon && (formData.icon.startsWith('http') || formData.icon.startsWith('/uploads')) && (
+                        <div className="icon-preview">
+                          <img 
+                            src={formData.icon.startsWith('http') ? formData.icon : `${API_URL}${formData.icon}`} 
+                            alt="Preview"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.textContent = 'URL ảnh không hợp lệ';
+                            }}
+                          />
+                          <p>Preview</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
