@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category');
 const Product = require('../models/Product');
+const SUBCATEGORIES = require('../data/subcategories');
 const { auth, isAdmin } = require('../middleware/auth');
 
 // GET: Lấy tất cả danh mục (public)
@@ -162,6 +163,18 @@ router.delete('/:id', auth, isAdmin, async (req, res) => {
     res.json({ message: 'Xóa danh mục thành công!' });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi xóa danh mục!', error: error.message });
+  }
+});
+
+// GET: Lấy danh mục con theo danh mục chính
+router.get('/subcategories/:category', (req, res) => {
+  try {
+    const category = req.params.category;
+    const subcategories = SUBCATEGORIES[category] || [];
+    
+    res.json(subcategories);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy danh mục con!', error: error.message });
   }
 });
 

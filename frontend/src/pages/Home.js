@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { productAPI } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import MegaMenu from '../components/MegaMenu';
@@ -7,6 +7,7 @@ import './Home.css';
 
 const Home = ({ searchQuery }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
@@ -18,12 +19,17 @@ const Home = ({ searchQuery }) => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [dynamicFilters, setDynamicFilters] = useState([]); // Bộ lọc động từ database
+  const [subcategories, setSubcategories] = useState([]);
+  const [selectedSubcategories, setSelectedSubcategories] = useState([]);
+  const [subcategorySearch, setSubcategorySearch] = useState('');
+  const [showAllSubcategories, setShowAllSubcategories] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalProducts: 0,
   });
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [urlKey, setUrlKey] = useState(Date.now());
 
   const bannerImages = [
     `${process.env.PUBLIC_URL}/img/img-banner-dai/gearvn-laptop-gaming-t8-header-banner.png`,
@@ -42,26 +48,72 @@ const Home = ({ searchQuery }) => {
     return () => clearInterval(interval);
   }, [totalSlides]);
 
-  // Đọc URL parameters và cập nhật filters
+  // Đọc URL parameters và GỌI API NGAY LẬP TỨC
   useEffect(() => {
-    console.log('🔄 URL changed, location.search:', location.search);
-    const params = new URLSearchParams(location.search);
-    const newFilters = {
-      category: params.get('category') || '',
-      brand: params.get('brand') || '',
-      priceRange: params.get('priceRange') || '',
-      page: parseInt(params.get('page')) || 1,
+    const loadProducts = async () => {
+      const params = new URLSearchParams(location.search);
+      const newFilters = {
+        category: params.get('category') || '',
+        brand: params.get('brand') || '',
+        priceRange: params.get('priceRange') || '',
+        page: parseInt(params.get('page')) || 1,
+      };
+      
+      // Load subcategories từ URL
+      const subcategoryParam = params.get('subcategory');
+      if (subcategoryParam) {
+        const subs = subcategoryParam.split(',').filter(s => s.trim());
+        setSelectedSubcategories(subs);
+        newFilters.subcategory = subcategoryParam;
+      } else {
+        setSelectedSubcategories([]);
+      }
+      
+      // Fetch subcategories nếu có category
+      if (newFilters.category) {
+        fetchSubcategories(newFilters.category);
+      }
+      
+      // Thêm các bộ lọc động khác từ URL
+      params.forEach((value, key) => {
+        if (!['category', 'brand', 'page', 'priceRange', 'subcategory'].includes(key)) {
+          newFilters[key] = value;
+        }
+      });
+      
+      console.log('🔍 Home.js - URL changed, loading products with filters:', newFilters);
+      setFilters(newFilters);
+      
+      // GỌI API TRỰC TIẾP NGAY TỨC KHẮC
+      try {
+        setLoading(true);
+        
+        const cleanFilters = Object.keys(newFilters).reduce((acc, key) => {
+          if (newFilters[key] && newFilters[key] !== '') {
+            acc[key] = newFilters[key];
+          }
+          return acc;
+        }, {});
+        
+        console.log('📡 Calling API with cleanFilters:', cleanFilters);
+        const response = await productAPI.getAll(cleanFilters);
+        
+        console.log('✅ API response:', response.data.products.length, 'products found');
+        setProducts(response.data.products);
+        setPagination({
+          currentPage: response.data.currentPage,
+          totalPages: response.data.totalPages,
+          totalProducts: response.data.totalProducts,
+        });
+      } catch (error) {
+        console.error('❌ Error loading products:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
     };
     
-    // Thêm các bộ lọc động khác từ URL
-    params.forEach((value, key) => {
-      if (!['category', 'brand', 'page', 'priceRange'].includes(key)) {
-        newFilters[key] = value;
-      }
-    });
-    
-    console.log('✅ New filters from URL:', newFilters);
-    setFilters(newFilters);
+    loadProducts();
   }, [location.search]);
 
   useEffect(() => {
@@ -80,41 +132,27 @@ const Home = ({ searchQuery }) => {
     }
   }, [filters.category]);
 
+  // CHỈ xử lý search query, KHÔNG xử lý filters (filters đã được xử lý ở useEffect location.search)
   useEffect(() => {
-    console.log('⚡ useEffect triggered - filters changed:', filters);
-    console.log('⚡ searchQuery:', searchQuery);
     if (searchQuery) {
-      console.log('🔍 Calling searchProducts');
       searchProducts(searchQuery);
-    } else {
-      console.log('📦 Calling fetchProducts');
-      fetchProducts();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [filters, searchQuery]);
+  }, [searchQuery]);
 
-  const fetchProducts = async () => {
+  const fetchProductsWithFilters = async (filtersToUse) => {
     try {
       setLoading(true);
       
-      console.log('🔍 Fetching with filters:', filters);
-      console.log('📍 URL search params:', location.search);
-      
       // Lọc bỏ các giá trị rỗng
-      const cleanFilters = Object.keys(filters).reduce((acc, key) => {
-        if (filters[key] && filters[key] !== '') {
-          acc[key] = filters[key];
+      const cleanFilters = Object.keys(filtersToUse).reduce((acc, key) => {
+        if (filtersToUse[key] && filtersToUse[key] !== '') {
+          acc[key] = filtersToUse[key];
         }
         return acc;
       }, {});
       
-      console.log('🧹 Clean filters sent to API:', cleanFilters);
-      console.log('🌐 API URL will be:', `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/products?${new URLSearchParams(cleanFilters).toString()}`);
-      
       const response = await productAPI.getAll(cleanFilters);
-      console.log('📥 Response:', response.data);
-      console.log('📊 Total products:', response.data.totalProducts);
-      console.log('📦 Products returned:', response.data.products.length);
-      console.log('📦 First 3 products:', response.data.products.slice(0, 3).map(p => `${p.name} - ${p.price.toLocaleString()}đ`));
       
       setProducts(response.data.products);
       setPagination({
@@ -128,6 +166,10 @@ const Home = ({ searchQuery }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchProducts = async () => {
+    return fetchProductsWithFilters(filters);
   };
 
   const searchProducts = async (query) => {
@@ -153,6 +195,7 @@ const Home = ({ searchQuery }) => {
       setCategories(response.data);
     } catch (error) {
       console.error('Lỗi khi lấy danh mục:', error);
+      setCategories([]);
     }
   };
 
@@ -197,6 +240,24 @@ const Home = ({ searchQuery }) => {
     }
   };
 
+  const fetchSubcategories = async (category) => {
+    if (!category) {
+      setSubcategories([]);
+      setSelectedSubcategories([]);
+      return;
+    }
+    
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/categories/subcategories/${encodeURIComponent(category)}`);
+      const data = await response.json();
+      setSubcategories(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh mục con:', error);
+      setSubcategories([]);
+    }
+  };
+
   const handleFilterChange = (key, value) => {
     if (key === 'category') {
       // Reset brand khi đổi category
@@ -207,8 +268,128 @@ const Home = ({ searchQuery }) => {
   };
 
   const handlePageChange = (newPage) => {
-    setFilters({ ...filters, page: newPage });
+    const params = new URLSearchParams(location.search);
+    params.set('page', newPage.toString());
+    navigate(`/?${params.toString()}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCategoryClick = (categoryName) => {
+    console.log('🖱️ Sidebar - Category clicked:', categoryName);
+    
+    // Fetch subcategories cho category mới
+    fetchSubcategories(categoryName);
+    setSelectedSubcategories([]);
+    setSubcategorySearch('');
+    setShowAllSubcategories(false);
+    
+    // Tạo URL params mới với category được chọn
+    const params = new URLSearchParams(location.search);
+    params.set('category', categoryName);
+    params.set('page', '1'); // Reset về trang 1
+    
+    // Xóa các filter khác khi chọn category mới
+    const keysToDelete = [];
+    params.forEach((value, key) => {
+      if (!['category', 'page'].includes(key)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => params.delete(key));
+    
+    const newUrl = `/?${params.toString()}`;
+    console.log('🔗 Navigating to:', newUrl);
+    navigate(newUrl);
+    
+    // Scroll đến phần sản phẩm
+    setTimeout(() => {
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) {
+        const offsetTop = mainContent.getBoundingClientRect().top + window.pageYOffset - 100;
+        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
+  const handleSubcategoryToggle = (subcategory) => {
+    const newSelected = selectedSubcategories.includes(subcategory)
+      ? selectedSubcategories.filter(s => s !== subcategory)
+      : [...selectedSubcategories, subcategory];
+    
+    setSelectedSubcategories(newSelected);
+    
+    // Cập nhật URL
+    const params = new URLSearchParams(location.search);
+    if (newSelected.length > 0) {
+      params.set('subcategory', newSelected.join(','));
+    } else {
+      params.delete('subcategory');
+    }
+    params.set('page', '1');
+    navigate(`/?${params.toString()}`);
+  };
+
+  const getCategoryImage = (categoryName) => {
+    const name = categoryName.toLowerCase();
+    
+    // Map category names to local images - tên file không dấu
+    const imageMap = {
+      'laptop': '/img/img-danhmucsanpham/Laptop.png',
+      'pc': '/img/img-danhmucsanpham/PC.png',
+      'pc build sẵn': '/img/img-danhmucsanpham/PC.png',
+      'màn hình': '/img/img-danhmucsanpham/Manhinh.jpg',
+      'monitor': '/img/img-danhmucsanpham/Manhinh.jpg',
+      'mainboard': '/img/img-danhmucsanpham/Mainboard.png',
+      'main': '/img/img-danhmucsanpham/Mainboard.png',
+      'cpu': '/img/img-danhmucsanpham/CPU.png',
+      'bộ xử lý': '/img/img-danhmucsanpham/CPU.png',
+      'vga': '/img/img-danhmucsanpham/VGA.jpg',
+      'card': '/img/img-danhmucsanpham/VGA.jpg',
+      'card màn hình': '/img/img-danhmucsanpham/VGA.jpg',
+      'ram': '/img/img-danhmucsanpham/RAM.png',
+      'bộ nhớ': '/img/img-danhmucsanpham/RAM.png',
+      'ổ cứng': '/img/img-danhmucsanpham/Ocung.png',
+      'ssd': '/img/img-danhmucsanpham/Ocung.png',
+      'hdd': '/img/img-danhmucsanpham/Ocung.png',
+      'case': '/img/img-danhmucsanpham/Case.png',
+      'vỏ case': '/img/img-danhmucsanpham/Case.png',
+      'tản nhiệt': '/img/img-danhmucsanpham/Tannhiet.png',
+      'cooling': '/img/img-danhmucsanpham/Tannhiet.png',
+      'nguồn': '/img/img-danhmucsanpham/Nguon.png',
+      'psu': '/img/img-danhmucsanpham/Nguon.png',
+      'bàn phím': '/img/img-danhmucsanpham/Banphim.jpg',
+      'keyboard': '/img/img-danhmucsanpham/Banphim.jpg',
+      'chuột': '/img/img-danhmucsanpham/Chuot.jpg',
+      'mouse': '/img/img-danhmucsanpham/Chuot.jpg',
+      'ghế': '/img/img-danhmucsanpham/Ghe.jpg',
+      'chair': '/img/img-danhmucsanpham/Ghe.jpg',
+      'tai nghe': '/img/img-danhmucsanpham/Tainghe.jpg',
+      'headphone': '/img/img-danhmucsanpham/Tainghe.jpg',
+      'headset': '/img/img-danhmucsanpham/Tainghe.jpg',
+      'loa': '/img/img-danhmucsanpham/Loa.png',
+      'speaker': '/img/img-danhmucsanpham/Loa.png',
+      'console': '/img/img-danhmucsanpham/Console.png',
+      'ps5': '/img/img-danhmucsanpham/Console.png',
+      'playstation': '/img/img-danhmucsanpham/Console.png',
+      'phụ kiện': '/img/img-danhmucsanpham/Phukien.png',
+      'accessory': '/img/img-danhmucsanpham/Phukien.png',
+      'thiết bị vp': '/img/img-danhmucsanpham/Thietbivp.png',
+      'văn phòng': '/img/img-danhmucsanpham/Thietbivp.png',
+      'printer': '/img/img-danhmucsanpham/Thietbivp.png',
+      'sạc dp': '/img/img-danhmucsanpham/Sacdp.png',
+      'sạc dự phòng': '/img/img-danhmucsanpham/Sacdp.png',
+      'powerbank': '/img/img-danhmucsanpham/Sacdp.png',
+    };
+    
+    // Tìm key phù hợp
+    for (const [key, image] of Object.entries(imageMap)) {
+      if (name.includes(key) || key.includes(name)) {
+        return process.env.PUBLIC_URL + image;
+      }
+    }
+    
+    // Default image
+    return 'https://via.placeholder.com/150?text=' + encodeURIComponent(categoryName);
   };
 
   const getPriceRangeLabel = (range) => {
@@ -397,70 +578,226 @@ const Home = ({ searchQuery }) => {
       )}
 
       <div className="container">
-        <div className="page-header">
-          <h2></h2>
-          <p className="subtitle">
-            {searchQuery 
-              ? `Kết quả tìm kiếm: "${searchQuery}"`
-              : `${pagination.totalProducts} sản phẩm`
-            }
-          </p>
-        </div>
+        {searchQuery && (
+          <>
+            <div className="search-results-header">
+              <h2>Kết quả tìm kiếm</h2>
+              <p className="search-query">"{searchQuery}"</p>
+              <p className="search-count">{pagination.totalProducts} sản phẩm</p>
+            </div>
+          </>
+        )}
+
+        {!searchQuery && (
+          <>
+            {filters.category && (
+              <div className="category-header-section">
+                <div>
+                  <h2 className="category-title">{filters.category}</h2>
+                  <p className="category-product-count">{pagination.totalProducts} sản phẩm</p>
+                </div>
+              </div>
+            )}
+            
+            {!filters.category && (
+              <div className="page-header">
+                <h2></h2>
+                <p className="subtitle">
+                  {pagination.totalProducts} sản phẩm
+                </p>
+              </div>
+            )}
+          </>
+        )}
 
         <div className={searchQuery ? "content-wrapper-full" : "content-wrapper"}>
           {!searchQuery && (
             <aside className="sidebar">
-              <MegaMenu />
-
-              {/* Active Filters Display */}
-              {(filters.category || filters.brand || filters.priceRange || Object.keys(filters).some(key => !['category', 'brand', 'page', 'priceRange'].includes(key) && filters[key])) && (
-                <div className="active-filters">
-                  <h4>Đang lọc:</h4>
-                  {filters.category && (
-                    <div className="filter-tag">
-                      <span>Danh mục: {filters.category}</span>
-                      <button onClick={() => setFilters({...filters, category: ''})}>×</button>
-                    </div>
-                  )}
-                  {filters.brand && (
-                    <div className="filter-tag">
-                      <span>Thương hiệu: {filters.brand}</span>
-                      <button onClick={() => setFilters({...filters, brand: ''})}>×</button>
-                    </div>
-                  )}
-                  {filters.priceRange && (
-                    <div className="filter-tag">
-                      <span>Giá: {getPriceRangeLabel(filters.priceRange)}</span>
-                      <button onClick={() => setFilters({...filters, priceRange: ''})}>×</button>
-                    </div>
-                  )}
-                  {Object.keys(filters).map(key => {
-                    if (!['category', 'brand', 'page', 'priceRange'].includes(key) && filters[key]) {
-                      return (
-                        <div key={key} className="filter-tag">
-                          <span>{key}: {filters[key]}</span>
-                          <button onClick={() => {
-                            const newFilters = {...filters};
-                            delete newFilters[key];
-                            setFilters(newFilters);
-                          }}>×</button>
+              {/* Danh mục sản phẩm - Luôn hiển thị */}
+              <div className="sidebar-categories-section">
+                <h3 className="sidebar-categories-title">Danh mục sản phẩm</h3>
+                <div className="sidebar-categories-grid">
+                  {categories.length > 0 ? (
+                    categories
+                      .filter(cat => cat.isActive !== false)
+                      .sort((a, b) => (a.order || 0) - (b.order || 0))
+                      .map((category) => (
+                        <div 
+                          key={category._id || category.name} 
+                          className={`sidebar-category-item ${filters.category === category.name ? 'active' : ''}`}
+                          onClick={() => handleCategoryClick(category.name)}
+                        >
+                            <div className="sidebar-category-icon">
+                              {category.icon ? (
+                                category.icon.startsWith('http') || category.icon.startsWith('/') ? (
+                                  <img 
+                                    src={category.icon} 
+                                    alt={category.name}
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = getCategoryImage(category.name);
+                                    }}
+                                  />
+                                ) : /^[\p{Emoji}]$/u.test(category.icon) ? (
+                                  <span style={{ fontSize: '48px' }}>{category.icon}</span>
+                                ) : (
+                                  <img 
+                                    src={getCategoryImage(category.name)} 
+                                    alt={category.name}
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = 'https://via.placeholder.com/150?text=' + encodeURIComponent(category.name);
+                                    }}
+                                  />
+                                )
+                              ) : (
+                                <img 
+                                  src={getCategoryImage(category.name)} 
+                                  alt={category.name}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = 'https://via.placeholder.com/150?text=' + encodeURIComponent(category.name);
+                                  }}
+                                />
+                              )}
+                            </div>
+                            <p className="sidebar-category-name">{category.name}</p>
+                          </div>
+                        ))
+                    ) : (
+                      // Fallback: Hiển thị danh mục hardcode nếu chưa load được từ API
+                      [
+                        'Laptop',
+                        'PC',
+                        'Màn hình',
+                        'Mainboard',
+                        'CPU',
+                        'VGA',
+                        'RAM',
+                        'Ổ cứng',
+                        'Case',
+                        'Tản nhiệt',
+                        'Nguồn',
+                        'Bàn phím',
+                        'Chuột',
+                        'Ghế',
+                        'Tai nghe',
+                        'Loa',
+                        'Console',
+                        'Phụ kiện',
+                        'Thiết bị VP',
+                        'Sạc DP'
+                      ].map((categoryName, index) => (
+                        <div 
+                          key={index} 
+                          className={`sidebar-category-item ${filters.category === categoryName ? 'active' : ''}`}
+                          onClick={() => handleCategoryClick(categoryName)}
+                        >
+                          <div className="sidebar-category-icon">
+                            <img 
+                              src={getCategoryImage(categoryName)} 
+                              alt={categoryName}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://via.placeholder.com/150?text=' + encodeURIComponent(categoryName);
+                              }}
+                            />
+                          </div>
+                          <p className="sidebar-category-name">{categoryName}</p>
                         </div>
-                      );
-                    }
-                    return null;
-                  })}
-                  <button
-                    className="clear-filters"
-                    onClick={() => setFilters({ category: '', brand: '', priceRange: '', page: 1 })}
-                  >
-                    Xóa tất cả bộ lọc
-                  </button>
+                      ))
+                    )}
+                  </div>
                 </div>
-              )}
+
             </aside>
           )}
 
-          <main className="main-content">
+          <main className="main-content" id="products-section">
+            {/* Danh mục con filter - Hiển thị ở trên main content */}
+            {filters.category && subcategories.length > 0 && (
+              <div className="subcategories-filter-panel">
+                <div className="subcategories-header">
+                  <h3 className="subcategories-title">
+                    <span className="category-badge">{filters.category}</span>
+                    Lọc theo danh mục con
+                  </h3>
+                  
+                  <div className="subcategories-actions">
+                    <input
+                      type="text"
+                      placeholder="🔍 Tìm kiếm..."
+                      value={subcategorySearch}
+                      onChange={(e) => setSubcategorySearch(e.target.value)}
+                      className="subcategory-search-input-horizontal"
+                    />
+                    
+                    {selectedSubcategories.length > 0 && (
+                      <button 
+                        className="clear-all-btn"
+                        onClick={() => {
+                          setSelectedSubcategories([]);
+                          const params = new URLSearchParams(location.search);
+                          params.delete('subcategory');
+                          params.set('page', '1');
+                          navigate(`/?${params.toString()}`);
+                        }}
+                      >
+                        ✕ Xóa tất cả ({selectedSubcategories.length})
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="subcategories-chips-container">
+                  {(() => {
+                    const filteredSubs = subcategories.filter(sub => 
+                      sub.toLowerCase().includes(subcategorySearch.toLowerCase())
+                    );
+                    const INITIAL_DISPLAY = 12;
+                    const displayedSubs = showAllSubcategories || subcategorySearch 
+                      ? filteredSubs 
+                      : filteredSubs.slice(0, INITIAL_DISPLAY);
+                    const hasMore = filteredSubs.length > INITIAL_DISPLAY;
+                    
+                    return (
+                      <>
+                        {displayedSubs.map((sub, index) => (
+                          <button
+                            key={index}
+                            className={`subcategory-chip ${selectedSubcategories.includes(sub) ? 'active' : ''}`}
+                            onClick={() => handleSubcategoryToggle(sub)}
+                          >
+                            {selectedSubcategories.includes(sub) && <span className="check-icon">✓</span>}
+                            {sub}
+                          </button>
+                        ))}
+                        
+                        {!subcategorySearch && hasMore && (
+                          <button
+                            className="show-more-btn"
+                            onClick={() => setShowAllSubcategories(!showAllSubcategories)}
+                          >
+                            {showAllSubcategories ? (
+                              <>
+                                <span className="icon">▲</span>
+                                Thu gọn
+                              </>
+                            ) : (
+                              <>
+                                <span className="icon">▼</span>
+                                Xem thêm ({filteredSubs.length - INITIAL_DISPLAY})
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
             {loading ? (
               <div className="loading">Đang tải...</div>
             ) : products.length > 0 ? (
@@ -497,11 +834,120 @@ const Home = ({ searchQuery }) => {
               </>
             ) : (
               <div className="no-products">
-                <p>Không tìm thấy sản phẩm nào</p>
+                <div className="no-products-icon">📦</div>
+                <h3>Không tìm thấy sản phẩm nào</h3>
+                {filters.category && (
+                  <p>Không có sản phẩm nào trong danh mục "{filters.category}"</p>
+                )}
+                {(filters.brand || filters.priceRange) && (
+                  <p>Thử xóa một số bộ lọc để xem thêm sản phẩm</p>
+                )}
               </div>
             )}
           </main>
         </div>
+
+        {/* Categories Grid Section - Chỉ hiển thị ở trang chủ khi chưa lọc */}
+        {!searchQuery && !filters.category && (
+          <div className="categories-grid-section">
+            <h2 className="categories-grid-title">Danh mục sản phẩm</h2>
+            <div className="categories-grid">
+              {categories.length > 0 ? (
+                categories
+                  .filter(cat => cat.isActive !== false)
+                  .sort((a, b) => (a.order || 0) - (b.order || 0))
+                  .map((category) => (
+                    <div 
+                      key={category._id || category.name}
+                      className="category-card" 
+                      onClick={() => handleCategoryClick(category.name)}
+                    >
+                      <div className="category-image">
+                        {category.icon ? (
+                          category.icon.startsWith('http') || category.icon.startsWith('/') ? (
+                            <img 
+                              src={category.icon} 
+                              alt={category.name}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = getCategoryImage(category.name);
+                              }}
+                            />
+                          ) : /^[\p{Emoji}]$/u.test(category.icon) ? (
+                            <span style={{ fontSize: '64px' }}>{category.icon}</span>
+                          ) : (
+                            <img 
+                              src={getCategoryImage(category.name)} 
+                              alt={category.name}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://via.placeholder.com/200?text=' + encodeURIComponent(category.name);
+                              }}
+                            />
+                          )
+                        ) : (
+                          <img 
+                            src={getCategoryImage(category.name)} 
+                            alt={category.name}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/200?text=' + encodeURIComponent(category.name);
+                            }}
+                          />
+                        )}
+                      </div>
+                      <h3>{category.name}</h3>
+                      {category.description && (
+                        <p className="category-description">{category.description}</p>
+                      )}
+                    </div>
+                  ))
+              ) : (
+                // Fallback categories
+                [
+                  'Laptop',
+                  'PC',
+                  'Màn hình',
+                  'Mainboard',
+                  'CPU',
+                  'VGA',
+                  'RAM',
+                  'Ổ cứng',
+                  'Case',
+                  'Tản nhiệt',
+                  'Nguồn',
+                  'Bàn phím',
+                  'Chuột',
+                  'Ghế',
+                  'Tai nghe',
+                  'Loa',
+                  'Console',
+                  'Phụ kiện',
+                  'Thiết bị VP',
+                  'Sạc DP'
+                ].map((categoryName, index) => (
+                  <div 
+                    key={index} 
+                    className="category-card" 
+                    onClick={() => handleCategoryClick(categoryName)}
+                  >
+                    <div className="category-image">
+                      <img 
+                        src={getCategoryImage(categoryName)} 
+                        alt={categoryName}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://via.placeholder.com/200?text=' + encodeURIComponent(categoryName);
+                        }}
+                      />
+                    </div>
+                    <h3>{categoryName}</h3>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

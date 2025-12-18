@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const passport = require('../config/passport');
 const User = require('../models/User');
 const Cart = require('../models/Cart');
 const { auth } = require('../middleware/auth');
@@ -276,5 +277,141 @@ router.post('/reset-password/:token', async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi reset mật khẩu!', error: error.message });
   }
 });
+
+// ============= GOOGLE OAUTH =============
+
+// Google login
+router.get('/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email']
+  })
+);
+
+// Google callback
+router.get('/google/callback',
+  passport.authenticate('google', { 
+    session: false,
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_auth_failed`
+  }),
+  async (req, res) => {
+    try {
+      // Tạo JWT token
+      const token = jwt.sign(
+        { userId: req.user._id, role: req.user.role },
+        process.env.JWT_SECRET || 'your_jwt_secret_key_here',
+        { expiresIn: '7d' }
+      );
+
+      // Chuyển giỏ hàng từ session sang user (nếu có)
+      const sessionId = req.query.sessionId;
+      if (sessionId) {
+        try {
+          const sessionCart = await Cart.findOne({ sessionId });
+          if (sessionCart && sessionCart.items.length > 0) {
+            let userCart = await Cart.findOne({ userId: req.user._id });
+            
+            if (userCart) {
+              for (const sessionItem of sessionCart.items) {
+                const existingIndex = userCart.items.findIndex(
+                  item => item.product.toString() === sessionItem.product.toString()
+                );
+                
+                if (existingIndex > -1) {
+                  userCart.items[existingIndex].quantity += sessionItem.quantity;
+                } else {
+                  userCart.items.push(sessionItem);
+                }
+              }
+              await userCart.save();
+            } else {
+              sessionCart.userId = req.user._id;
+              sessionCart.sessionId = undefined;
+              await sessionCart.save();
+            }
+            
+            await Cart.deleteOne({ sessionId });
+          }
+        } catch (cartError) {
+          console.error('Error merging carts:', cartError);
+        }
+      }
+
+      // Redirect về frontend với token
+      const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3000';
+      res.redirect(`${frontendURL}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}`);
+    } catch (error) {
+      console.error('Google callback error:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`);
+    }
+  }
+);
+
+// ============= FACEBOOK OAUTH =============
+
+// Facebook login
+router.get('/facebook',
+  passport.authenticate('facebook', {
+    scope: ['email']
+  })
+);
+
+// Facebook callback
+router.get('/facebook/callback',
+  passport.authenticate('facebook', { 
+    session: false,
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=facebook_auth_failed`
+  }),
+  async (req, res) => {
+    try {
+      // Tạo JWT token
+      const token = jwt.sign(
+        { userId: req.user._id, role: req.user.role },
+        process.env.JWT_SECRET || 'your_jwt_secret_key_here',
+        { expiresIn: '7d' }
+      );
+
+      // Chuyển giỏ hàng từ session sang user (nếu có)
+      const sessionId = req.query.sessionId;
+      if (sessionId) {
+        try {
+          const sessionCart = await Cart.findOne({ sessionId });
+          if (sessionCart && sessionCart.items.length > 0) {
+            let userCart = await Cart.findOne({ userId: req.user._id });
+            
+            if (userCart) {
+              for (const sessionItem of sessionCart.items) {
+                const existingIndex = userCart.items.findIndex(
+                  item => item.product.toString() === sessionItem.product.toString()
+                );
+                
+                if (existingIndex > -1) {
+                  userCart.items[existingIndex].quantity += sessionItem.quantity;
+                } else {
+                  userCart.items.push(sessionItem);
+                }
+              }
+              await userCart.save();
+            } else {
+              sessionCart.userId = req.user._id;
+              sessionCart.sessionId = undefined;
+              await sessionCart.save();
+            }
+            
+            await Cart.deleteOne({ sessionId });
+          }
+        } catch (cartError) {
+          console.error('Error merging carts:', cartError);
+        }
+      }
+
+      // Redirect về frontend với token
+      const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3000';
+      res.redirect(`${frontendURL}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}`);
+    } catch (error) {
+      console.error('Facebook callback error:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`);
+    }
+  }
+);
 
 module.exports = router;

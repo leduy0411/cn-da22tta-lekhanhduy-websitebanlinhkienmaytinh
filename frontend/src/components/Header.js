@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiShoppingCart, FiSearch, FiUser, FiLogOut, FiSettings, FiCpu, FiPackage, FiPhone, FiMenu } from 'react-icons/fi';
+import { FiShoppingCart, FiSearch, FiUser, FiLogOut, FiSettings, FiCpu, FiPackage, FiPhone, FiMenu, FiLogIn } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
@@ -20,13 +20,6 @@ const Header = ({ onSearch }) => {
   };
 
   const handleLogoClick = () => {
-    setSearchTerm('');
-    if (onSearch) {
-      onSearch('');
-    }
-  };
-
-  const handleHomeClick = () => {
     setSearchTerm('');
     if (onSearch) {
       onSearch('');
@@ -90,6 +83,7 @@ const Header = ({ onSearch }) => {
           </button>
 
           <form className="search-form" onSubmit={handleSearch}>
+            <FiSearch className="search-icon" />
             <input
               type="text"
               placeholder="Tìm kiếm sản phẩm..."
@@ -97,14 +91,9 @@ const Header = ({ onSearch }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
-            <button type="submit" className="search-button">
-              <FiSearch />
-            </button>
           </form>
 
           <nav className="nav">
-            <Link to="/" className="nav-link" onClick={handleHomeClick}>Trang chủ</Link>
-            
             <a href="tel:0348137209" className="hotline-link">
               <FiPhone size={18} />
               <span>Hotline: 0348137209</span>
@@ -149,8 +138,10 @@ const Header = ({ onSearch }) => {
                 )}
               </div>
             ) : (
-              <Link to="/login" className="nav-link">
-                <FiUser size={20} /> Đăng nhập
+              <Link to="/login" className="login-button">
+                <FiLogIn size={20} />
+                <span>Đăng nhập</span>
+                <span className="login-glow"></span>
               </Link>
             )}
 

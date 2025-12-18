@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiFilter } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import './AdminLayout.css';
 
@@ -27,7 +27,6 @@ const AdminLayout = () => {
     { path: '/admin', icon: FiBarChart2, label: 'Dashboard', exact: true },
     { path: '/admin/products', icon: FiPackage, label: 'Sản phẩm' },
     { path: '/admin/categories', icon: FiGrid, label: 'Danh mục' },
-    { path: '/admin/filters', icon: FiFilter, label: 'Bộ lọc' },
     { path: '/admin/orders', icon: FiShoppingBag, label: 'Đơn hàng' },
     { path: '/admin/users', icon: FiUsers, label: 'Người dùng' },
     { path: '/admin/chat', icon: FiMessageCircle, label: 'Chat' },

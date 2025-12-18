@@ -51,7 +51,7 @@ function AdminCategories() {
         isActive: category.isActive
       });
       // Xác định loại icon
-      if (category.icon?.startsWith('http') || category.icon?.startsWith('/uploads')) {
+      if (category.icon?.startsWith('http') || category.icon?.startsWith('/')) {
         setIconType('url');
       } else {
         setIconType('emoji');
@@ -244,15 +244,15 @@ function AdminCategories() {
               categories.map((category) => (
                 <tr key={category._id}>
                   <td className="category-icon">
-                    {category.icon?.startsWith('http') || category.icon?.startsWith('/uploads') ? (
+                    {category.icon?.startsWith('http') || category.icon?.startsWith('/') ? (
                       <img 
-                        src={category.icon?.startsWith('http') ? category.icon : `${API_URL}${category.icon}`}
+                        src={category.icon?.startsWith('http') ? category.icon : category.icon}
                         alt={category.name}
                         className="category-icon-image"
                         onError={(e) => e.target.style.display = 'none'}
                       />
                     ) : (
-                      category.icon
+                      <span style={{ fontSize: '32px' }}>{category.icon}</span>
                     )}
                   </td>
                   <td className="category-name">{category.name}</td>

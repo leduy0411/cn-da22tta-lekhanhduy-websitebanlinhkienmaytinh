@@ -6,6 +6,7 @@ import './ImageUpload.css';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 function ImageUpload({ value, onChange, multiple = false, maxFiles = 10 }) {
+    const [imageUrl, setImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
@@ -166,7 +167,6 @@ function ImageUpload({ value, onChange, multiple = false, maxFiles = 10 }) {
             </button>
           </div>
         ))}
-        
         {(!value || value.length < maxFiles) && (
           <div
             className={`upload-area-small ${dragActive ? 'drag-active' : ''}`}
@@ -191,8 +191,34 @@ function ImageUpload({ value, onChange, multiple = false, maxFiles = 10 }) {
           </div>
         )}
       </div>
+      {/* Thêm input nhập link ảnh phụ */}
+      {(!value || value.length < maxFiles) && (
+        <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+          <input
+            type="text"
+            placeholder="Hoặc nhập URL ảnh phụ..."
+            value={imageUrl}
+            onChange={e => setImageUrl(e.target.value)}
+            style={{ flex: 1, padding: 6, borderRadius: 6, border: '1px solid #ccc' }}
+          />
+          <button
+            type="button"
+            style={{ padding: '6px 12px', borderRadius: 6, background: '#dc2626', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+            onClick={() => {
+              if (imageUrl && /^https?:\/\//.test(imageUrl)) {
+                if (!value || value.length < maxFiles) {
+                  onChange([...(value || []), imageUrl]);
+                  setImageUrl("");
+                }
+              } else {
+                alert('Vui lòng nhập đúng định dạng URL ảnh!');
+              }
+            }}
+          >Thêm</button>
+        </div>
+      )}
       <p className="upload-hint">
-        Click hoặc kéo thả để thêm ảnh (max. {maxFiles} ảnh, 5MB mỗi ảnh)
+        Click, kéo thả hoặc dán link để thêm ảnh (tối đa {maxFiles} ảnh, 5MB mỗi ảnh)
         {value && value.length > 0 && ` - Đã có ${value.length}/${maxFiles} ảnh`}
       </p>
     </div>

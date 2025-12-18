@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="#dc2626"/>
+  
+  <!-- CPU Icon -->
+  <g transform="translate(16, 16)">
+    <!-- Main chip body -->
+    <rect x="8" y="8" width="16" height="16" rx="2" fill="#ffffff"/>
+    
+    <!-- Chip pins - Top -->
+    <rect x="10" y="4" width="2" height="4" fill="#fef2f2"/>
+    <rect x="14" y="4" width="2" height="4" fill="#fef2f2"/>
+    <rect x="18" y="4" width="2" height="4" fill="#fef2f2"/>
+    
+    <!-- Chip pins - Bottom -->
+    <rect x="10" y="24" width="2" height="4" fill="#fef2f2"/>
+    <rect x="14" y="24" width="2" height="4" fill="#fef2f2"/>
+    <rect x="18" y="24" width="2" height="4" fill="#fef2f2"/>
+    
+    <!-- Chip pins - Left -->
+    <rect x="4" y="10" width="4" height="2" fill="#fef2f2"/>
+    <rect x="4" y="14" width="4" height="2" fill="#fef2f2"/>
+    <rect x="4" y="18" width="4" height="2" fill="#fef2f2"/>
+    
+    <!-- Chip pins - Right -->
+    <rect x="24" y="10" width="4" height="2" fill="#fef2f2"/>
+    <rect x="24" y="14" width="4" height="2" fill="#fef2f2"/>
+    <rect x="24" y="18" width="4" height="2" fill="#fef2f2"/>
+    
+    <!-- Inner detail -->
+    <rect x="12" y="12" width="8" height="8" rx="1" fill="#dc2626"/>
+    <circle cx="16" cy="16" r="2" fill="#ffffff"/>
+  </g>
+</svg>

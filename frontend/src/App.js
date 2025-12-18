@@ -14,11 +14,11 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import AuthCallback from './pages/AuthCallback';
 import AdminLayout from './pages/Admin/AdminLayout';
 import Dashboard from './pages/Admin/Dashboard';
 import AdminProducts from './pages/Admin/AdminProducts';
 import AdminCategories from './pages/Admin/AdminCategories';
-import AdminFilters from './pages/Admin/AdminFilters';
 import AdminOrders from './pages/Admin/AdminOrders';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminChat from './pages/Admin/AdminChat';
@@ -75,6 +75,7 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={
@@ -85,7 +86,6 @@ function AppContent() {
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="categories" element={<AdminCategories />} />
-          <Route path="filters" element={<AdminFilters />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="chat" element={<AdminChat />} />

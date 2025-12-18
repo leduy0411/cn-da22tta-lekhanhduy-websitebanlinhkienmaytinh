@@ -85,8 +85,6 @@ const MegaMenu = () => {
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
       const url = `${API_URL}/filters?category=${encodeURIComponent(categoryName)}`;
-      console.log('Fetching filters from:', url);
-      console.log('Category name:', categoryName);
       
       const response = await fetch(url);
       
@@ -97,22 +95,12 @@ const MegaMenu = () => {
       }
       
       const data = await response.json();
-      console.log('Filters data received:', data);
-      console.log('Number of filters:', data.length);
-      
-      // Log chi tiết từng filter
-      if (Array.isArray(data)) {
-        data.forEach((filter, index) => {
-          console.log(`Filter ${index}:`, filter);
-        });
-      }
       
       // QUAN TRỌNG: Merge vào filters state thay vì ghi đè
       setFilters(prevFilters => ({
         ...prevFilters,
         [categoryName]: Array.isArray(data) ? data : []
       }));
-      console.log('Updated filters state for category:', categoryName);
     } catch (error) {
       console.error('Lỗi khi lấy bộ lọc:', error);
       setFilters({ [categoryName]: [] });
@@ -120,16 +108,27 @@ const MegaMenu = () => {
   };
 
   const handleCategoryClick = (categoryName) => {
-    navigate(`/?category=${encodeURIComponent(categoryName)}`);
+    console.log('🖱️ MegaMenu - Category clicked:', categoryName);
+    // GIỮ các filter hiện tại, chỉ thay đổi category
+    const params = new URLSearchParams(location.search);
+    params.set('category', categoryName);
+    params.set('page', '1'); // Reset về trang 1
+    const newUrl = `/?${params.toString()}`;
+    console.log('🔗 Navigating to:', newUrl);
+    navigate(newUrl);
+    // window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBrandClick = (brand) => {
-    navigate(`/?brand=${encodeURIComponent(brand)}`);
+    // GIỮ các filter hiện tại, chỉ thay đổi brand
+    const params = new URLSearchParams(location.search);
+    params.set('brand', brand);
+    params.set('page', '1'); // Reset về trang 1
+    navigate(`/?${params.toString()}`);
+    // window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFilterClick = (categoryName, filterName, value) => {
-    console.log('🎯 handleFilterClick called:', { categoryName, filterName, value });
-    
     // Map old filter names to new ones
     const filterNameMap = {
       'giatien': 'priceRange',
@@ -151,15 +150,38 @@ const MegaMenu = () => {
       actualValue = priceMap[value.toLowerCase()] || value;
     }
     
-    const params = new URLSearchParams();
+    // GIỮ TẤT CẢ params hiện tại, chỉ thêm/sửa category và filter mới
+    const params = new URLSearchParams(location.search);
     params.set('category', categoryName);
     params.set(actualFilterName, actualValue);
+    params.set('page', '1');
+    
     const url = `/?${params.toString()}`;
-    console.log('🚀 Navigating to:', url);
     navigate(url);
+    // window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getCategoryIcon = (categoryName) => {
+    // Tìm category trong state để lấy icon từ database
+    const category = categories.find(cat => cat.name === categoryName);
+    
+    if (category && category.icon) {
+      // Nếu là đường dẫn ảnh
+      if (category.icon.startsWith('http') || category.icon.startsWith('/')) {
+        return (
+          <img 
+            src={category.icon} 
+            alt={categoryName}
+            style={{ width: '20px', height: '20px', objectFit: 'contain' }}
+            onError={(e) => e.target.style.display = 'none'}
+          />
+        );
+      }
+      // Nếu là emoji
+      return category.icon;
+    }
+    
+    // Fallback emoji nếu không có icon
     const name = categoryName.toLowerCase();
     if (name.includes('laptop')) return '💻';
     if (name.includes('pc') || name.includes('máy tính')) return '🖥️';

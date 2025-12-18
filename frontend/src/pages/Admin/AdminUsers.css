@@ -145,11 +145,11 @@
 }
 
 .users-table th {
-  padding: 1rem;
+  padding: 0.6rem 0.8rem;
   text-align: left;
   font-weight: 600;
   white-space: nowrap;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   letter-spacing: 0.3px;
   border-bottom: 2px solid #dee2e6;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -164,8 +164,8 @@
 }
 
 .users-table td {
-  padding: 0.9rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.8rem;
   letter-spacing: 0.3px;
   vertical-align: middle;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -177,32 +177,32 @@
 
 .user-name {
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
 }
 
 .name-with-icon {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .admin-icon {
   color: #667eea;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   flex-shrink: 0;
 }
 
 .user-icon {
   color: #999;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   flex-shrink: 0;
 }
 
 .role-badge {
   display: inline-block;
-  padding: 0.35rem 0.75rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 20px;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -219,9 +219,9 @@
 
 .status-badge {
   display: inline-block;
-  padding: 0.35rem 0.75rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 20px;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -238,25 +238,25 @@
 
 .user-date {
   color: #666;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
 }
 
 .user-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   align-items: center;
 }
 
 .role-select {
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.6rem;
   border: 2px solid #e0e0e0;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.3s;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   letter-spacing: 0.3px;
-  min-width: 140px;
+  min-width: 120px;
 }
 
 .role-select:focus {
@@ -265,7 +265,7 @@
 }
 
 .btn-toggle {
-  padding: 0.5rem;
+  padding: 0.35rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -273,6 +273,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.85rem;
 }
 
 .btn-toggle.lock {
@@ -296,7 +297,7 @@
 }
 
 .btn-delete {
-  padding: 0.45rem;
+  padding: 0.35rem;
   background: #f8d7da;
   color: #721c24;
   border: none;
@@ -306,8 +307,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
+  font-size: 0.85rem;
 }
 
 .btn-delete:hover {

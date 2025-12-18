@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
 import { productAPI, adminAPI } from '../../services/api';
 import ImageUpload from '../../components/ImageUpload';
+import CategoryDropdown from '../../components/CategoryDropdown';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './AdminProducts.css';
@@ -13,11 +14,14 @@ const AdminProducts = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [subcategorySearch, setSubcategorySearch] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     category: '',
+    subcategory: [],
     brand: '',
     image: '',
     images: [],
@@ -79,16 +83,32 @@ const AdminProducts = () => {
       
       // Đặt category mặc định nếu có danh mục
       if (data.length > 0 && !formData.category) {
-        setFormData(prev => ({ ...prev, category: data[0].name }));
+        const firstCategory = data[0].name;
+        setFormData(prev => ({ ...prev, category: firstCategory }));
+        fetchSubcategories(firstCategory);
       }
     } catch (error) {
       console.error('Lỗi khi lấy danh mục:', error);
-      // Fallback về danh mục mặc định nếu không load được
-      setCategories([
-        { _id: '1', name: 'Điện thoại', isActive: true },
-        { _id: '2', name: 'Laptop', isActive: true },
-        { _id: '3', name: 'Phụ kiện', isActive: true }
-      ]);
+      setCategories([]);
+    }
+  };
+
+  const fetchSubcategories = async (category) => {
+    if (!category) {
+      setSubcategories([]);
+      setSubcategorySearch('');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/categories/subcategories/${encodeURIComponent(category)}`);
+      const data = await response.json();
+      setSubcategories(Array.isArray(data) ? data : []);
+      setSubcategorySearch('');
+    } catch (error) {
+      console.error('Lỗi khi lấy danh mục con:', error);
+      setSubcategories([]);
+      setSubcategorySearch('');
     }
   };
 
@@ -132,11 +152,13 @@ const AdminProducts = () => {
       description: product.description,
       price: product.price,
       category: product.category,
-      brand: product.brand,
+      subcategory: Array.isArray(product.subcategory) ? product.subcategory : (product.subcategory ? [product.subcategory] : []),
+      brand: product.brand || '',
       image: product.image,
       images: product.images || [],
       stock: product.stock,
     });
+    fetchSubcategories(product.category);
     setShowModal(true);
   };
 
@@ -154,16 +176,21 @@ const AdminProducts = () => {
 
   const resetForm = () => {
     setEditingProduct(null);
+    const firstCategory = categories.length > 0 ? categories[0].name : '';
     setFormData({
       name: '',
       description: '',
       price: '',
-      category: categories.length > 0 ? categories[0].name : '',
+      category: firstCategory,
+      subcategory: [],
       brand: '',
       image: '',
       images: [],
       stock: '',
     });
+    if (firstCategory) {
+      fetchSubcategories(firstCategory);
+    }
   };
 
   const formatPrice = (price) => {
@@ -261,25 +288,15 @@ const AdminProducts = () => {
               <div className="form-row">
                 <div className="form-group">
                   <label>Danh mục *</label>
-                  <select
+                  <CategoryDropdown
+                    categories={categories}
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    required
-                  >
-                    <option value="">-- Chọn danh mục --</option>
-                    {categories
-                      .filter(cat => cat.isActive)
-                      .map(cat => (
-                        <option key={cat._id} value={cat.name}>
-                          {cat.icon && (cat.icon.startsWith('http') || cat.icon.startsWith('/uploads')) 
-                            ? '' 
-                            : cat.icon + ' '
-                          }
-                          {cat.name}
-                        </option>
-                      ))
-                    }
-                  </select>
+                    onChange={(categoryName) => {
+                      setFormData({ ...formData, category: categoryName, subcategory: [] });
+                      fetchSubcategories(categoryName);
+                    }}
+                    required={true}
+                  />
                   {categories.filter(cat => cat.isActive).length === 0 && (
                     <small style={{ color: '#dc3545', display: 'block', marginTop: '0.25rem' }}>
                       Chưa có danh mục nào. Vui lòng thêm danh mục trước!
@@ -288,13 +305,76 @@ const AdminProducts = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Thương hiệu</label>
-                  <input
-                    type="text"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    placeholder="Nhập tên thương hiệu (không bắt buộc)"
-                  />
+                  <label>Danh mục con (có thể chọn nhiều)</label>
+                  
+                  {subcategories.length > 0 ? (
+                    <>
+                      <div className="subcategory-controls">
+                        <input
+                          type="text"
+                          placeholder="🔍 Tìm kiếm danh mục con..."
+                          value={subcategorySearch}
+                          onChange={(e) => setSubcategorySearch(e.target.value)}
+                          className="subcategory-search"
+                        />
+                        <div className="subcategory-buttons">
+                          <button
+                            type="button"
+                            className="btn-select-all"
+                            onClick={() => setFormData({ ...formData, subcategory: subcategories })}
+                          >
+                            Chọn tất cả
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-clear-all"
+                            onClick={() => setFormData({ ...formData, subcategory: [] })}
+                          >
+                            Bỏ chọn
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="subcategory-list">
+                        {subcategories
+                          .filter(sub => sub.toLowerCase().includes(subcategorySearch.toLowerCase()))
+                          .map((sub, index) => (
+                            <div key={index} className="subcategory-item">
+                              <label className="subcategory-checkbox">
+                                <input
+                                  type="checkbox"
+                                  checked={formData.subcategory.includes(sub)}
+                                  onChange={(e) => {
+                                    const newSubcategories = e.target.checked
+                                      ? [...formData.subcategory, sub]
+                                      : formData.subcategory.filter(s => s !== sub);
+                                    setFormData({ ...formData, subcategory: newSubcategories });
+                                  }}
+                                />
+                                <span className="checkmark"></span>
+                                <span className="subcategory-text">{sub}</span>
+                              </label>
+                            </div>
+                          ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="subcategory-list">
+                      <p className="subcategory-empty">Chọn danh mục chính trước</p>
+                    </div>
+                  )}
+                  
+                  {formData.subcategory.length > 0 && (
+                    <div className="selected-count">
+                      Đã chọn: <strong>{formData.subcategory.length}</strong> danh mục
+                    </div>
+                  )}
+                  
+                  {subcategories.length === 0 && formData.category && (
+                    <small style={{ color: '#999', display: 'block', marginTop: '0.25rem', fontSize: '0.85rem' }}>
+                      Danh mục này chưa có danh mục con
+                    </small>
+                  )}
                 </div>
               </div>
 

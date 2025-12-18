@@ -4,7 +4,6 @@ const filterSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
     trim: true
   },
   displayName: {
@@ -18,13 +17,13 @@ const filterSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    required: false,
-    default: ''
+    required: true
   },
   options: [{
     value: String,
     label: String,
-    icon: String
+    icon: String,
+    count: { type: Number, default: 0 }
   }],
   order: {
     type: Number,
@@ -37,5 +36,8 @@ const filterSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Compound unique index: name + category
+filterSchema.index({ name: 1, category: 1 }, { unique: true });
 
 module.exports = mongoose.model('Filter', filterSchema);

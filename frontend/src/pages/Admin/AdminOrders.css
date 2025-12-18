@@ -116,6 +116,7 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  border: 1px solid #dee2e6;
 }
 
 .orders-table {
@@ -127,6 +128,9 @@
 .orders-table thead {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .orders-table th {
@@ -134,22 +138,28 @@
   text-align: left;
   font-weight: 600;
   white-space: nowrap;
-  border-bottom: 2px solid #dee2e6;
+  border: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .orders-table tbody tr {
   border-bottom: 1px solid #dee2e6;
+  background: white;
 }
 
 .orders-table tbody tr:last-child {
   border-bottom: none;
 }
 
+.orders-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
 .orders-table td {
   padding: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   vertical-align: middle;
+  border: none;
 }
 
 .orders-table tbody tr:hover {

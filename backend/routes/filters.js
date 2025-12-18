@@ -17,9 +17,6 @@ router.get('/', async (req, res) => {
     
     const filters = await Filter.find(query).sort({ order: 1 });
     
-    console.log('Filter query:', { category, query });
-    console.log('Filters found:', filters.length);
-    
     res.json(filters);
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi lấy danh sách bộ lọc', error: error.message });
@@ -39,8 +36,6 @@ router.get('/all', auth, isAdmin, async (req, res) => {
 // POST: Tạo filter mới (admin only)
 router.post('/', auth, isAdmin, async (req, res) => {
   try {
-    console.log('Creating filter with data:', req.body);
-    
     // Kiểm tra xem filter name đã tồn tại chưa
     const existingFilter = await Filter.findOne({ name: req.body.name });
     if (existingFilter) {

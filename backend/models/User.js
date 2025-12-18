@@ -16,8 +16,24 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function() {
+      // Password không bắt buộc nếu đăng nhập qua OAuth
+      return !this.googleId && !this.facebookId;
+    },
     minlength: 6
+  },
+  googleId: {
+    type: String,
+    sparse: true
+  },
+  facebookId: {
+    type: String,
+    sparse: true
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google', 'facebook'],
+    default: 'local'
   },
   phone: {
     type: String,
@@ -52,7 +68,8 @@ const userSchema = new mongoose.Schema({
 
 // Hash password trước khi lưu
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  // Bỏ qua nếu password không thay đổi hoặc không có password (OAuth)
+  if (!this.isModified('password') || !this.password) return next();
   
   try {
     const salt = await bcrypt.genSalt(10);
