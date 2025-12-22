@@ -54,6 +54,8 @@ const categoryRoutes = require('./routes/categories');
 const uploadRoutes = require('./routes/upload');
 const chatRoutes = require('./routes/chat');
 const filterRoutes = require('./routes/filters');
+const zalopayRoutes = require('./routes/zalopay');
+const reviewRoutes = require('./routes/reviews');
 
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -64,6 +66,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/filters', filterRoutes);
+app.use('/api/zalopay', zalopayRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Home route
 app.get('/', (req, res) => {

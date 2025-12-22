@@ -24,73 +24,133 @@ router.get('/', async (req, res) => {
       console.log('🏷️  Category filter:', categoryFilter);
     }
     
-    // 2. SUBCATEGORY - Có thể nhiều subcategories (product phải có ít nhất 1 trong các subcategories đã chọn)
+    // 2. SUBCATEGORY - Phân loại tags theo nhóm, OR trong cùng nhóm, AND giữa các nhóm
     if (req.query.subcategory) {
       const subcats = req.query.subcategory.split(',').map(s => s.trim()).filter(s => s);
       if (subcats.length > 0) {
-        const subcategoryOrConditions = [];
-        const priceRangeConditions = [];
+        // Định nghĩa các nhóm tags
+        const brandTags = ['ASUS', 'ASUS ROG', 'ASUS TUF', 'ACER', 'ACER Predator', 'ACER Aspire', 'MSI', 'MSI Gaming', 'MSI MAG', 'MSI MPG', 'DELL', 'DELL Alienware', 'DELL XPS', 'HP', 'HP Omen', 'HP Pavilion', 'LENOVO', 'Lenovo Legion', 'Lenovo ThinkPad', 'Apple Macbook', 'Macbook Air', 'Macbook Pro', 'GIGABYTE', 'GIGABYTE AORUS', 'LG', 'LG UltraGear', 'Samsung', 'Samsung Odyssey', 'ViewSonic', 'BenQ', 'AOC', 'ASROCK', 'BIOSTAR', 'CORSAIR', 'G.SKILL', 'Kingston', 'TeamGroup', 'ADATA', 'Crucial', 'Western Digital', 'Seagate', 'NZXT', 'Cooler Master', 'Lian Li', 'Thermaltake', 'Phanteks', 'be quiet!', 'Noctua', 'DeepCool', 'ID-COOLING', 'Razer', 'Logitech', 'SteelSeries', 'HyperX'];
+        const cpuTags = ['Intel Core i3', 'Intel Core i5', 'Intel Core i7', 'Intel Core i9', 'Intel Ultra 5', 'Intel Ultra 7', 'Intel Ultra 9', 'AMD Ryzen 3', 'AMD Ryzen 5', 'AMD Ryzen 7', 'AMD Ryzen 9', 'AMD Ryzen AI', 'Apple M1', 'Apple M2', 'Apple M3', 'Intel', 'Intel Gen 14', 'Intel Gen 13', 'Intel Pentium', 'Intel Celeron', 'AMD'];
+        const purposeTags = ['Gaming', 'Gaming cao cấp', 'Gaming RTX', 'Gaming GTX', 'Văn phòng', 'Học tập - Sinh viên', 'Đồ họa - Render', 'Đồ họa', 'Thiết kế', 'Streaming', 'Workstation', 'Mỏng nhẹ', 'Ultrabook'];
+        const screenTags = ['Full HD', '2K QHD', '4K UHD', '60Hz', '75Hz', '144Hz', '155Hz', '160Hz', '165Hz', '180Hz', '200Hz', '210Hz', '220Hz', '230Hz', '240Hz', '360Hz', 'IPS', 'VA', 'TN', 'OLED', 'Cong', 'Phẳng', 'G-Sync', 'FreeSync', '23.8 inch', '24 inch', '27 inch', '32 inch', '34 inch Ultrawide', '49 inch Super Ultrawide'];
+        
+        // Regex patterns để nhận diện price tags động (bất kỳ giá nào)
+        const pricePatterns = [
+          /^Dưới\s+\d+\s*triệu$/i,
+          /^Từ\s+\d+-\d+\s*triệu$/i,
+          /^Trên\s+\d+\s*triệu$/i
+        ];
+        
+        // Phân loại tags đã chọn vào các nhóm
+        const groups = {
+          brands: [],
+          cpus: [],
+          purposes: [],
+          screens: [],
+          prices: [],
+          others: []
+        };
         
         subcats.forEach(subcat => {
-          // Kiểm tra xem subcategory có phải là khoảng giá không
-          const pricePatterns = [
-            { regex: /^Dưới\s+(\d+)\s*triệu$/i, type: 'max' },
-            { regex: /^Từ\s+(\d+)-(\d+)\s*triệu$/i, type: 'range' },
-            { regex: /^Trên\s+(\d+)\s*triệu$/i, type: 'min' }
-          ];
+          // Kiểm tra price tags trước bằng regex động
+          const isPriceTag = pricePatterns.some(pattern => pattern.test(subcat));
           
-          let isPriceFilter = false;
-          
-          for (const pattern of pricePatterns) {
-            const match = subcat.match(pattern.regex);
-            if (match) {
-              isPriceFilter = true;
-              
-              if (pattern.type === 'max') {
-                const max = parseInt(match[1]) * 1000000;
-                priceRangeConditions.push({ price: { $lt: max } });
-              } else if (pattern.type === 'range') {
-                const min = parseInt(match[1]) * 1000000;
-                const max = parseInt(match[2]) * 1000000;
-                priceRangeConditions.push({
-                  $and: [
-                    { price: { $gte: min } },
-                    { price: { $lte: max } }
-                  ]
-                });
-              } else if (pattern.type === 'min') {
-                const min = parseInt(match[1]) * 1000000;
-                priceRangeConditions.push({ price: { $gt: min } });
-              }
-              
-              break;
-            }
-          }
-          
-          // Nếu không phải price filter, add như subcategory tag bình thường
-          if (!isPriceFilter) {
-            subcategoryOrConditions.push({ subcategory: subcat });
+          if (isPriceTag) {
+            groups.prices.push(subcat);
+          } else if (brandTags.includes(subcat)) {
+            groups.brands.push(subcat);
+          } else if (cpuTags.includes(subcat)) {
+            groups.cpus.push(subcat);
+          } else if (purposeTags.includes(subcat)) {
+            groups.purposes.push(subcat);
+          } else if (screenTags.includes(subcat)) {
+            groups.screens.push(subcat);
+          } else {
+            groups.others.push(subcat);
           }
         });
         
-        // Combine price ranges với OR (nếu chọn nhiều khoảng giá)
-        if (priceRangeConditions.length > 0) {
-          if (priceRangeConditions.length === 1) {
-            andConditions.push(priceRangeConditions[0]);
-          } else {
-            andConditions.push({ $or: priceRangeConditions });
-          }
-          console.log('💰 Price range from subcategory:', priceRangeConditions);
+        console.log('🏷️  Grouped subcategory tags:', groups);
+        
+        // Xử lý từng nhóm - OR trong nhóm, AND giữa các nhóm
+        
+        // Brands: OR
+        if (groups.brands.length > 0) {
+          andConditions.push({
+            subcategory: { $in: groups.brands }
+          });
+          console.log('🏢 Brand filter (OR):', groups.brands);
         }
         
-        // Add subcategory tags với OR
-        if (subcategoryOrConditions.length > 0) {
-          if (subcategoryOrConditions.length === 1) {
-            andConditions.push(subcategoryOrConditions[0]);
-          } else {
-            andConditions.push({ $or: subcategoryOrConditions });
+        // CPUs: OR
+        if (groups.cpus.length > 0) {
+          andConditions.push({
+            subcategory: { $in: groups.cpus }
+          });
+          console.log('💻 CPU filter (OR):', groups.cpus);
+        }
+        
+        // Purposes: OR
+        if (groups.purposes.length > 0) {
+          andConditions.push({
+            subcategory: { $in: groups.purposes }
+          });
+          console.log('🎯 Purpose filter (OR):', groups.purposes);
+        }
+        
+        // Screens: OR
+        if (groups.screens.length > 0) {
+          andConditions.push({
+            subcategory: { $in: groups.screens }
+          });
+          console.log('🖥️  Screen filter (OR):', groups.screens);
+        }
+        
+        // Prices: Xử lý đặc biệt cho khoảng giá
+        if (groups.prices.length > 0) {
+          const priceConditions = [];
+          groups.prices.forEach(priceTag => {
+            const pricePatterns = [
+              { regex: /^Dưới\s+(\d+)\s*triệu$/i, type: 'max' },
+              { regex: /^Từ\s+(\d+)-(\d+)\s*triệu$/i, type: 'range' },
+              { regex: /^Trên\s+(\d+)\s*triệu$/i, type: 'min' }
+            ];
+            
+            for (const pattern of pricePatterns) {
+              const match = priceTag.match(pattern.regex);
+              if (match) {
+                if (pattern.type === 'max') {
+                  const max = parseInt(match[1]) * 1000000;
+                  priceConditions.push({ price: { $lt: max } });
+                } else if (pattern.type === 'range') {
+                  const min = parseInt(match[1]) * 1000000;
+                  const max = parseInt(match[2]) * 1000000;
+                  priceConditions.push({ price: { $gte: min, $lte: max } });
+                } else if (pattern.type === 'min') {
+                  const min = parseInt(match[1]) * 1000000;
+                  priceConditions.push({ price: { $gt: min } });
+                }
+                break;
+              }
+            }
+          });
+          
+          if (priceConditions.length > 0) {
+            if (priceConditions.length === 1) {
+              andConditions.push(priceConditions[0]);
+            } else {
+              andConditions.push({ $or: priceConditions });
+            }
+            console.log('💰 Price filter (OR):', priceConditions);
           }
-          console.log('🏷️  Subcategory filter:', subcategoryOrConditions);
+        }
+        
+        // Others: OR
+        if (groups.others.length > 0) {
+          andConditions.push({
+            subcategory: { $in: groups.others }
+          });
+          console.log('📦 Other filter (OR):', groups.others);
         }
       }
     }
@@ -200,13 +260,30 @@ router.get('/search', async (req, res) => {
       return res.status(400).json({ message: 'Vui lòng nhập từ khóa tìm kiếm' });
     }
 
-    const products = await Product.find({
+    // Escape special regex characters
+    const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const searchRegex = new RegExp(escapedTerm, 'i');
+    
+    // Ưu tiên tìm theo tên, category, brand trước (không tìm trong description để tránh kết quả không liên quan)
+    let products = await Product.find({
       $or: [
-        { name: { $regex: searchTerm, $options: 'i' } },
-        { description: { $regex: searchTerm, $options: 'i' } },
-        { brand: { $regex: searchTerm, $options: 'i' } }
+        { name: searchRegex },
+        { category: searchRegex },
+        { brand: searchRegex },
+        { subcategory: searchRegex }
       ]
-    }).limit(20);
+    })
+    .sort({ name: 1 })
+    .limit(50);
+
+    // Nếu không tìm thấy, mở rộng tìm trong description
+    if (products.length === 0) {
+      products = await Product.find({
+        description: searchRegex
+      })
+      .sort({ name: 1 })
+      .limit(20);
+    }
 
     res.json({ products, count: products.length });
   } catch (error) {

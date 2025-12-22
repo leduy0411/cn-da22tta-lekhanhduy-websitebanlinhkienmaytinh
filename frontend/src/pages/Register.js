@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import './Login.css';
+import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiEye, FiEyeOff, FiUserPlus } from 'react-icons/fi';
+import './Register.css';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -56,101 +59,184 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-container">
-        <div className="auth-card">
-          <h1>Đăng ký</h1>
-          <p className="auth-subtitle">Tạo tài khoản mới để bắt đầu mua sắm!</p>
+    <div 
+      className="register-page"
+      style={{
+        backgroundImage: `url(${process.env.PUBLIC_URL}/img/img-nen-dangnhap/pexels-lulizler-3165335.jpg)`
+      }}
+    >
+      <div className="register-container">
+        {/* Left Side - Branding */}
+        <div className="register-branding">
+          <div className="branding-content">
+            <div className="brand-icon">
+              <FiUserPlus size={40} />
+            </div>
+            <h1>Tạo Tài Khoản Mới</h1>
+            <p>Đăng ký để trải nghiệm mua sắm công nghệ tuyệt vời</p>
+            
+            <div className="benefits-list">
+              <div className="benefit-item">
+                <span className="benefit-icon">🎁</span>
+                <span>Ưu đãi độc quyền cho thành viên</span>
+              </div>
+              <div className="benefit-item">
+                <span className="benefit-icon">🚚</span>
+                <span>Giao hàng nhanh miễn phí</span>
+              </div>
+              <div className="benefit-item">
+                <span className="benefit-icon">💰</span>
+                <span>Tích điểm đổi quà hấp dẫn</span>
+              </div>
+              <div className="benefit-item">
+                <span className="benefit-icon">🛡️</span>
+                <span>Bảo hành chính hãng toàn quốc</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          {error && <div className="error-message">{error}</div>}
+        {/* Right Side - Form */}
+        <div className="register-form-section">
+          <div className="form-header">
+            <h2>Đăng Ký</h2>
+            <p>Điền thông tin của bạn để tạo tài khoản</p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="form-group">
-              <label htmlFor="name">Họ và tên *</label>
+          {error && (
+            <div className="error-message">
+              <span>⚠️</span> {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="register-form" autoComplete="off">
+            {/* Họ tên */}
+            <div className="input-group">
+              <div className="input-icon">
+                <FiUser />
+              </div>
               <input
                 type="text"
-                id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 required
-                placeholder="Nguyễn Văn A"
+                placeholder="Họ và tên"
+                autoComplete="off"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="email">Email *</label>
+            {/* Email */}
+            <div className="input-group">
+              <div className="input-icon">
+                <FiMail />
+              </div>
               <input
                 type="email"
-                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                placeholder="example@email.com"
+                placeholder="Email"
+                autoComplete="new-email"
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="password">Mật khẩu *</label>
+            {/* Password Row */}
+            <div className="password-row">
+              <div className="input-group">
+                <div className="input-icon">
+                  <FiLock />
+                </div>
                 <input
-                  type="password"
-                  id="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  placeholder="Ít nhất 6 ký tự"
+                  placeholder="Mật khẩu"
                   minLength="6"
+                  autoComplete="new-password"
                 />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="confirmPassword">Xác nhận MK *</label>
+              <div className="input-group">
+                <div className="input-icon">
+                  <FiLock />
+                </div>
                 <input
-                  type="password"
-                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  placeholder="Nhập lại mật khẩu"
+                  placeholder="Xác nhận mật khẩu"
                   minLength="6"
+                  autoComplete="new-password"
                 />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="phone">Số điện thoại</label>
+            {/* Số điện thoại */}
+            <div className="input-group">
+              <div className="input-icon">
+                <FiPhone />
+              </div>
               <input
                 type="tel"
-                id="phone"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="0123456789"
+                placeholder="Số điện thoại"
+                autoComplete="off"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="address">Địa chỉ</label>
+            {/* Địa chỉ */}
+            <div className="input-group textarea-group">
+              <div className="input-icon">
+                <FiMapPin />
+              </div>
               <textarea
-                id="address"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
                 rows="2"
-                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                placeholder="Địa chỉ (số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố)"
+                autoComplete="off"
               />
             </div>
 
-            <button type="submit" className="auth-submit-btn" disabled={loading}>
-              {loading ? 'Đang đăng ký...' : 'Đăng ký'}
+            <button type="submit" className="submit-btn" disabled={loading}>
+              {loading ? (
+                <>
+                  <span className="spinner"></span>
+                  Đang xử lý...
+                </>
+              ) : (
+                <>
+                  <FiUserPlus />
+                  Đăng Ký Ngay
+                </>
+              )}
             </button>
           </form>
 
-          <div className="auth-footer">
+          <div className="register-footer">
             <p>
               Đã có tài khoản? <Link to="/login">Đăng nhập ngay</Link>
             </p>

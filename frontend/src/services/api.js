@@ -100,4 +100,22 @@ export const adminAPI = {
   deleteProduct: (id) => api.delete(`/products/${id}`),
 };
 
+// ZaloPay API
+export const zalopayAPI = {
+  createOrder: (orderId, amount, description) => 
+    api.post('/zalopay/create', { orderId, amount, description }),
+  checkStatus: (app_trans_id) => 
+    api.post('/zalopay/check-status', { app_trans_id }),
+};
+
+// Reviews API
+export const reviewAPI = {
+  getProductReviews: (productId, params) => api.get(`/reviews/product/${productId}`, { params }),
+  createReview: (reviewData) => api.post('/reviews', reviewData),
+  updateReview: (id, reviewData) => api.put(`/reviews/${id}`, reviewData),
+  deleteReview: (id) => api.delete(`/reviews/${id}`),
+  markHelpful: (id) => api.post(`/reviews/${id}/helpful`),
+  checkUserReview: (productId) => api.get(`/reviews/check/${productId}`),
+};
+
 export default api;

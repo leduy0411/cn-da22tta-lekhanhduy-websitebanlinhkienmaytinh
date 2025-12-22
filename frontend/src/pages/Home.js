@@ -30,6 +30,7 @@ const Home = ({ searchQuery }) => {
   });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [urlKey, setUrlKey] = useState(Date.now());
+  const [expandedCategories, setExpandedCategories] = useState([]); // Track expanded category descriptions
 
   const bannerImages = [
     `${process.env.PUBLIC_URL}/img/img-banner-dai/gearvn-laptop-gaming-t8-header-banner.png`,
@@ -271,11 +272,32 @@ const Home = ({ searchQuery }) => {
     const params = new URLSearchParams(location.search);
     params.set('page', newPage.toString());
     navigate(`/?${params.toString()}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Scroll to top of products section
+    const productsSection = document.querySelector('.products-grid');
+    if (productsSection) {
+      const yOffset = -100; // Offset for header
+      const y = productsSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleCategoryClick = (categoryName) => {
     console.log('🖱️ Sidebar - Category clicked:', categoryName);
+    
+    // Nếu click vào category đang chọn -> bỏ chọn
+    if (filters.category === categoryName) {
+      setSubcategories([]);
+      setSelectedSubcategories([]);
+      setSubcategorySearch('');
+      setShowAllSubcategories(false);
+      
+      // Xóa tất cả params, quay về trang chủ
+      navigate('/');
+      return;
+    }
     
     // Fetch subcategories cho category mới
     fetchSubcategories(categoryName);
@@ -719,19 +741,16 @@ const Home = ({ searchQuery }) => {
               <div className="subcategories-filter-panel">
                 <div className="subcategories-header">
                   <h3 className="subcategories-title">
-                    <span className="category-badge">{filters.category}</span>
-                    Lọc theo danh mục con
+                    <span 
+                      className="category-badge clickable"
+                      onClick={() => handleCategoryClick(filters.category)}
+                      title="Click để bỏ chọn danh mục"
+                    >
+                      {filters.category} ✕
+                    </span>
                   </h3>
                   
                   <div className="subcategories-actions">
-                    <input
-                      type="text"
-                      placeholder="🔍 Tìm kiếm..."
-                      value={subcategorySearch}
-                      onChange={(e) => setSubcategorySearch(e.target.value)}
-                      className="subcategory-search-input-horizontal"
-                    />
-                    
                     {selectedSubcategories.length > 0 && (
                       <button 
                         className="clear-all-btn"
@@ -749,48 +768,96 @@ const Home = ({ searchQuery }) => {
                   </div>
                 </div>
                 
-                <div className="subcategories-chips-container">
+                <div className="subcategories-columns">
                   {(() => {
-                    const filteredSubs = subcategories.filter(sub => 
-                      sub.toLowerCase().includes(subcategorySearch.toLowerCase())
-                    );
-                    const INITIAL_DISPLAY = 12;
-                    const displayedSubs = showAllSubcategories || subcategorySearch 
-                      ? filteredSubs 
-                      : filteredSubs.slice(0, INITIAL_DISPLAY);
-                    const hasMore = filteredSubs.length > INITIAL_DISPLAY;
+                    // Định nghĩa các nhóm
+                    const groupDefinitions = {
+                      brands: {
+                        title: 'Thương hiệu',
+                        color: '#2563eb',
+                        tags: ['ASUS', 'ASUS ROG', 'ASUS TUF', 'ACER', 'ACER Predator', 'ACER Aspire', 'MSI', 'MSI Gaming', 'MSI MAG', 'MSI MPG', 'DELL', 'DELL Alienware', 'DELL XPS', 'HP', 'HP Omen', 'HP Pavilion', 'LENOVO', 'Lenovo Legion', 'Lenovo ThinkPad', 'Apple Macbook', 'Macbook Air', 'Macbook Pro', 'GIGABYTE', 'GIGABYTE AORUS', 'LG', 'LG UltraGear', 'LG Gram', 'Samsung', 'Samsung Odyssey', 'ViewSonic', 'BenQ', 'AOC', 'ASROCK', 'BIOSTAR', 'CORSAIR', 'G.SKILL', 'Kingston', 'TeamGroup', 'ADATA', 'Crucial', 'Western Digital', 'Seagate', 'NZXT', 'Cooler Master', 'Lian Li', 'Thermaltake', 'Phanteks', 'be quiet!', 'Noctua', 'DeepCool', 'ID-COOLING', 'Razer', 'Logitech', 'SteelSeries', 'HyperX']
+                      },
+                      purposes: {
+                        title: 'Nhu cầu',
+                        color: '#16a34a',
+                        tags: ['Gaming', 'Gaming cao cấp', 'Gaming RTX', 'Gaming GTX', 'Văn phòng', 'Học tập - Sinh viên', 'Đồ họa - Render', 'Đồ họa', 'Thiết kế', 'Streaming', 'Workstation', 'Mỏng nhẹ', 'Ultrabook', 'Laptop Gaming', 'Laptop AI', 'Laptop đồ họa', 'Laptop Sinh viên', 'Laptop Văn Phòng', 'Laptop cảm ứng 2 in 1', 'Laptop mỏng nhẹ']
+                      },
+                      specs: {
+                        title: 'Cấu hình',
+                        color: '#9333ea',
+                        tags: ['Intel Core i3', 'Intel Core i5', 'Intel Core i7', 'Intel Core i9', 'Intel Ultra 5', 'Intel Ultra 7', 'Intel Ultra 9', 'AMD Ryzen 3', 'AMD Ryzen 5', 'AMD Ryzen 7', 'AMD Ryzen 9', 'AMD Ryzen AI', 'Apple M1', 'Apple M2', 'Apple M3', 'Laptop i5', 'Laptop i7', 'Laptop i9', 'Laptop Ryzen 5', 'Laptop Ryzen 7', 'Laptop Ultra 5', 'Laptop Ultra 7']
+                      },
+                      screens: {
+                        title: 'Màn hình',
+                        color: '#ea580c',
+                        tags: ['Full HD', '2K QHD', '4K UHD', '60Hz', '75Hz', '144Hz', '155Hz', '160Hz', '165Hz', '180Hz', '200Hz', '210Hz', '220Hz', '230Hz', '240Hz', '360Hz', 'IPS', 'VA', 'TN', 'OLED', 'Cong', 'Phẳng', 'G-Sync', 'FreeSync', '23.8 inch', '24 inch', '27 inch', '32 inch', '34 inch Ultrawide', '49 inch Super Ultrawide']
+                      },
+                      prices: {
+                        title: 'Mức giá',
+                        color: '#dc2626',
+                        pattern: /^(Dưới|Từ|Trên)\s+\d+/i
+                      }
+                    };
+                    
+                    // Phân loại subcategories vào các nhóm
+                    const groups = {
+                      brands: [],
+                      purposes: [],
+                      specs: [],
+                      screens: [],
+                      prices: [],
+                      others: []
+                    };
+                    
+                    subcategories.forEach(sub => {
+                      if (groupDefinitions.prices.pattern.test(sub)) {
+                        groups.prices.push(sub);
+                      } else if (groupDefinitions.brands.tags.includes(sub)) {
+                        groups.brands.push(sub);
+                      } else if (groupDefinitions.purposes.tags.includes(sub)) {
+                        groups.purposes.push(sub);
+                      } else if (groupDefinitions.specs.tags.includes(sub)) {
+                        groups.specs.push(sub);
+                      } else if (groupDefinitions.screens.tags.includes(sub)) {
+                        groups.screens.push(sub);
+                      } else {
+                        groups.others.push(sub);
+                      }
+                    });
+                    
+                    // Render từng cột
+                    const renderColumn = (groupKey, groupData) => {
+                      if (groupData.length === 0) return null;
+                      const def = groupDefinitions[groupKey] || { title: 'Khác', color: '#6b7280' };
+                      
+                      return (
+                        <div key={groupKey} className="filter-column">
+                          <h4 className="filter-column-title" style={{ color: def.color }}>
+                            {def.title}
+                          </h4>
+                          <ul className="filter-column-list">
+                            {groupData.map((sub, index) => (
+                              <li 
+                                key={index}
+                                className={`filter-column-item ${selectedSubcategories.includes(sub) ? 'active' : ''}`}
+                                onClick={() => handleSubcategoryToggle(sub)}
+                              >
+                                {sub}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    };
                     
                     return (
                       <>
-                        {displayedSubs.map((sub, index) => (
-                          <button
-                            key={index}
-                            className={`subcategory-chip ${selectedSubcategories.includes(sub) ? 'active' : ''}`}
-                            onClick={() => handleSubcategoryToggle(sub)}
-                          >
-                            {selectedSubcategories.includes(sub) && <span className="check-icon">✓</span>}
-                            {sub}
-                          </button>
-                        ))}
-                        
-                        {!subcategorySearch && hasMore && (
-                          <button
-                            className="show-more-btn"
-                            onClick={() => setShowAllSubcategories(!showAllSubcategories)}
-                          >
-                            {showAllSubcategories ? (
-                              <>
-                                <span className="icon">▲</span>
-                                Thu gọn
-                              </>
-                            ) : (
-                              <>
-                                <span className="icon">▼</span>
-                                Xem thêm ({filteredSubs.length - INITIAL_DISPLAY})
-                              </>
-                            )}
-                          </button>
-                        )}
+                        {renderColumn('brands', groups.brands)}
+                        {renderColumn('purposes', groups.purposes)}
+                        {renderColumn('specs', groups.specs)}
+                        {renderColumn('screens', groups.screens)}
+                        {renderColumn('prices', groups.prices)}
+                        {renderColumn('others', groups.others)}
                       </>
                     );
                   })()}
@@ -818,9 +885,62 @@ const Home = ({ searchQuery }) => {
                       ← Trước
                     </button>
                     
-                    <span className="page-info">
-                      Trang {pagination.currentPage} / {pagination.totalPages}
-                    </span>
+                    <div className="pagination-numbers">
+                      {(() => {
+                        const pages = [];
+                        const maxVisible = 5;
+                        let startPage = Math.max(1, pagination.currentPage - Math.floor(maxVisible / 2));
+                        let endPage = Math.min(pagination.totalPages, startPage + maxVisible - 1);
+                        
+                        if (endPage - startPage < maxVisible - 1) {
+                          startPage = Math.max(1, endPage - maxVisible + 1);
+                        }
+                        
+                        if (startPage > 1) {
+                          pages.push(
+                            <button
+                              key={1}
+                              onClick={() => handlePageChange(1)}
+                              className="pagination-number"
+                            >
+                              1
+                            </button>
+                          );
+                          if (startPage > 2) {
+                            pages.push(<span key="dots1" className="pagination-dots">...</span>);
+                          }
+                        }
+                        
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(
+                            <button
+                              key={i}
+                              onClick={() => handlePageChange(i)}
+                              className={`pagination-number ${i === pagination.currentPage ? 'active' : ''}`}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+                        
+                        if (endPage < pagination.totalPages) {
+                          if (endPage < pagination.totalPages - 1) {
+                            pages.push(<span key="dots2" className="pagination-dots">...</span>);
+                          }
+                          pages.push(
+                            <button
+                              key={pagination.totalPages}
+                              onClick={() => handlePageChange(pagination.totalPages)}
+                              className="pagination-number"
+                            >
+                              {pagination.totalPages}
+                            </button>
+                          );
+                        }
+                        
+                        return pages;
+                      })()}
+                    </div>
                     
                     <button
                       disabled={pagination.currentPage === pagination.totalPages}
@@ -898,7 +1018,26 @@ const Home = ({ searchQuery }) => {
                       </div>
                       <h3>{category.name}</h3>
                       {category.description && (
-                        <p className="category-description">{category.description}</p>
+                        <div className="category-description-wrapper">
+                          <p className={`category-description ${expandedCategories.includes(category._id || category.name) ? 'expanded' : ''}`}>
+                            {category.description}
+                          </p>
+                          {category.description.length > 30 && (
+                            <button 
+                              className="see-more-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedCategories(prev => 
+                                  prev.includes(category._id || category.name)
+                                    ? prev.filter(id => id !== (category._id || category.name))
+                                    : [...prev, category._id || category.name]
+                                );
+                              }}
+                            >
+                              {expandedCategories.includes(category._id || category.name) ? 'Thu gọn' : 'Xem thêm'}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))

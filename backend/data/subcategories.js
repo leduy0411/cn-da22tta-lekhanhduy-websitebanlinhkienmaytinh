@@ -33,14 +33,22 @@ const SUBCATEGORIES = {
     'Workstation',
     'Mỏng nhẹ',
     'Ultrabook',
-    // CPU
+    // CPU Intel Core
     'Intel Core i3',
     'Intel Core i5',
     'Intel Core i7',
     'Intel Core i9',
+    // CPU Intel Ultra
+    'Intel Ultra 5',
+    'Intel Ultra 7',
+    'Intel Ultra 9',
+    // CPU AMD Ryzen
+    'AMD Ryzen 3',
     'AMD Ryzen 5',
     'AMD Ryzen 7',
     'AMD Ryzen 9',
+    'AMD Ryzen AI',
+    // CPU Apple
     'Apple M1',
     'Apple M2',
     'Apple M3',
@@ -73,6 +81,10 @@ const SUBCATEGORIES = {
     'Intel Core i5',
     'Intel Core i7',
     'Intel Core i9',
+    'Intel Ultra 7',
+    'Intel Ultra 9',
+    'Intel Pentium',
+    'Intel Celeron',
     'AMD',
     'AMD Ryzen 5',
     'AMD Ryzen 7',
@@ -119,6 +131,7 @@ const SUBCATEGORIES = {
     'Đồ họa',
     'Thiết kế',
     // Kích thước
+    '23.8 inch',
     '24 inch',
     '27 inch',
     '32 inch',
@@ -132,8 +145,14 @@ const SUBCATEGORIES = {
     '60Hz',
     '75Hz',
     '144Hz',
+    '155Hz',
+    '160Hz',
     '165Hz',
     '180Hz',
+    '200Hz',
+    '210Hz',
+    '220Hz',
+    '230Hz',
     '240Hz',
     '360Hz',
     // Panel
@@ -209,6 +228,7 @@ const SUBCATEGORIES = {
     'Intel Core i5',
     'Intel Core i7',
     'Intel Core i9',
+    'Intel Ultra 9',
     'Intel Pentium',
     'Intel Celeron',
     // AMD
@@ -253,7 +273,7 @@ const SUBCATEGORIES = {
     'MSI Ventus',
     'GIGABYTE',
     'GIGABYTE AORUS',
-    'GIGABYTE Gaming OC',
+    'GIGABYTE Gaming',
     'INNO3D',
     'Colorful',
     'Zotac',
@@ -263,6 +283,9 @@ const SUBCATEGORIES = {
     // NVIDIA RTX 40 Series
     'NVIDIA',
     'NVIDIA GeForce',
+    'RTX 5090',
+    'RTX 5080',
+    'RTX 5070',
     'RTX 4090',
     'RTX 4080',
     'RTX 4070 Ti',
@@ -482,6 +505,7 @@ const SUBCATEGORIES = {
     'Logitech G',
     'Razer',
     'Razer BlackWidow',
+    'Newmen',
     'Corsair',
     'SteelSeries',
     'ASUS',
@@ -630,7 +654,7 @@ const SUBCATEGORIES = {
     'Từ 200k-500k',
     'Trên 500k'
   ],
-  'Thiết bị văn phòng': [
+  'Thiết bị VP': [
     'Canon',
     'HP',
     'Brother',

@@ -33,7 +33,7 @@ const ProductCard = ({ product }) => {
           productId: product._id,
           name: product.name,
           price: product.price,
-          image: product.image,
+          image: product.images?.[0] || product.image,
           quantity: 1
         }
       }
@@ -70,7 +70,7 @@ const ProductCard = ({ product }) => {
       )}
       
       <div className="product-image">
-        <img src={product.image} alt={product.name} />
+        <img src={product.images?.[0] || product.image} alt={product.name} />
         {product.stock === 0 && <div className="out-of-stock">Hết hàng</div>}
       </div>
       
@@ -123,9 +123,13 @@ const ProductCard = ({ product }) => {
           <div className="product-rating">
             <span className="stars">{'★'.repeat(Math.floor(product.rating))}{'☆'.repeat(5 - Math.floor(product.rating))}</span>
             <span className="rating-value">{product.rating.toFixed(1)}</span>
-            {product.reviews && product.reviews.length > 0 && (
-              <span className="review-count">({product.reviews.length} đánh giá)</span>
-            )}
+            <span className="review-count">({product.reviewCount || 0} đánh giá)</span>
+          </div>
+        )}
+        {product.rating === 0 && (
+          <div className="product-rating no-rating">
+            <span className="stars">☆☆☆☆☆</span>
+            <span className="review-count">Chưa có đánh giá</span>
           </div>
         )}
       </div>

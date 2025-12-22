@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
 import { productAPI } from '../services/api';
 import { useCart } from '../context/CartContext';
+import ProductCard from '../components/ProductCard';
+import ProductReviews from '../components/ProductReviews';
 import './ProductDetail.css';
 
 const ProductDetail = () => {
@@ -14,9 +16,11 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   useEffect(() => {
     fetchProduct();
+    fetchRelatedProducts();
   }, [id]);
 
   const fetchProduct = async () => {
@@ -31,6 +35,18 @@ const ProductDetail = () => {
       navigate('/');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRelatedProducts = async () => {
+    try {
+      const response = await productAPI.getAll({ limit: 8 });
+      // Lọc bỏ sản phẩm hiện tại và lấy ngẫu nhiên 4 sản phẩm
+      const filtered = response.data.products.filter(p => p._id !== id);
+      const shuffled = filtered.sort(() => 0.5 - Math.random());
+      setRelatedProducts(shuffled.slice(0, 4));
+    } catch (error) {
+      console.error('Lỗi khi lấy sản phẩm gợi ý:', error);
     }
   };
 
@@ -205,6 +221,21 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Sản phẩm gợi ý */}
+        {relatedProducts.length > 0 && (
+          <div className="related-products-section">
+            <h2 className="related-products-title">Sản phẩm gợi ý</h2>
+            <div className="related-products-grid">
+              {relatedProducts.map(relatedProduct => (
+                <ProductCard key={relatedProduct._id} product={relatedProduct} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Reviews Section */}
+        <ProductReviews productId={id} />
       </div>
     </div>
   );

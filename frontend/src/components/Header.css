@@ -1,9 +1,9 @@
-/* Header Styles - Purple/Pink Modern Theme v2.0 */
+/* Header Styles - Dark Red Theme v2.0 */
 .header {
-  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%) !important;
+  background: linear-gradient(135deg, #8B0000 0%, #B22222 50%, #DC143C 100%) !important;
   color: white;
   padding: 1rem 0;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 4px 20px rgba(139, 0, 0, 0.5);
   position: sticky;
   top: 0;
   z-index: 1000;

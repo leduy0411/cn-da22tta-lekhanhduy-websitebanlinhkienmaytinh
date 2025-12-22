@@ -201,19 +201,25 @@
 
 .order-total {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #B22222 0%, #DC143C 100%);
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 15px rgba(178, 34, 34, 0.25);
 }
 
 .total-label {
-  color: #666;
-  font-size: 0.9rem;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .total-amount {
-  color: #dc2626;
-  font-size: 1.5rem;
-  font-weight: 700;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 800;
 }
 
 .btn-view-detail {
@@ -233,6 +239,32 @@
 .btn-view-detail:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.btn-cancel-order {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #ef4444;
+  border: 2px solid #ef4444;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-cancel-order:hover:not(:disabled) {
+  background: #ef4444;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-cancel-order:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* No Orders */
@@ -482,16 +514,19 @@
 }
 
 .summary-row.total {
-  border-top: 2px solid #dee2e6;
-  margin-top: 0.5rem;
-  padding-top: 1rem;
-  font-size: 1.25rem;
+  margin-top: 1rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #B22222 0%, #DC143C 100%);
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 15px rgba(178, 34, 34, 0.25);
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #333;
 }
 
-.summary-row.total span:last-child {
-  color: #dc2626;
+.summary-row.total .modal-total-price {
+  font-size: 1.3rem;
+  font-weight: 800;
 }
 
 .loading {

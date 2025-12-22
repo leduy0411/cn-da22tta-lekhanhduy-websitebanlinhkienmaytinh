@@ -62,8 +62,13 @@ const Header = ({ onSearch }) => {
     }
   };
 
+  const headerStyle = {
+    background: 'linear-gradient(135deg, #8B0000 0%, #B22222 50%, #DC143C 100%)',
+    boxShadow: '0 4px 20px rgba(139, 0, 0, 0.5)'
+  };
+
   return (
-    <header className="header">
+    <header className="header" style={headerStyle}>
       <div className="container">
         <div className="header-content">
           <Link to="/" className="logo" onClick={handleLogoClick}>

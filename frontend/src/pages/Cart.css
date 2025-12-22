@@ -262,14 +262,24 @@
 }
 
 .summary-row.total {
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: #333;
-  margin-top: 1rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #B22222 0%, #DC143C 100%);
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 15px rgba(178, 34, 34, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
 }
 
-.total-price {
-  color: #ff6b6b;
+.summary-row.total .total-price {
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 800;
 }
 
 .summary-divider {

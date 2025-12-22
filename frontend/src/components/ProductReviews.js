@@ -1,0 +1,342 @@
+import React, { useState, useEffect } from 'react';
+import { FiStar, FiThumbsUp, FiCheckCircle, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { reviewAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import './ProductReviews.css';
+
+const ProductReviews = ({ productId }) => {
+  const { isAuthenticated, user } = useAuth();
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [reviewStats, setReviewStats] = useState(null);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState('recent');
+  const [editingReview, setEditingReview] = useState(null);
+  
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    comment: ''
+  });
+  
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [productId, currentPage, sortBy]);
+
+  const fetchReviews = async () => {
+    try {
+      setLoading(true);
+      const response = await reviewAPI.getProductReviews(productId, {
+        page: currentPage,
+        limit: 5,
+        sort: sortBy
+      });
+      
+      setReviews(response.data.reviews);
+      setReviewStats({
+        totalReviews: response.data.totalReviews,
+        averageRating: response.data.averageRating,
+        ratingCounts: response.data.ratingCounts,
+        totalPages: response.data.totalPages
+      });
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để đánh giá');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      
+      if (editingReview) {
+        // Cập nhật review đang sửa
+        await reviewAPI.updateReview(editingReview._id, {
+          rating: reviewForm.rating,
+          comment: reviewForm.comment
+        });
+        alert('✅ Đã cập nhật đánh giá thành công!');
+        setEditingReview(null);
+      } else {
+        // Tạo review mới
+        await reviewAPI.createReview({
+          productId,
+          rating: reviewForm.rating,
+          comment: reviewForm.comment
+        });
+        alert('✅ Đã gửi đánh giá thành công!');
+      }
+      
+      setReviewForm({ rating: 5, comment: '' });
+      setShowReviewForm(false);
+      fetchReviews();
+    } catch (error) {
+      alert('❌ ' + (error.response?.data?.message || 'Lỗi khi gửi đánh giá'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditReview = (review) => {
+    setEditingReview(review);
+    setReviewForm({
+      rating: review.rating,
+      comment: review.comment
+    });
+    setShowReviewForm(true);
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Bạn có chắc muốn xóa đánh giá này?')) {
+      return;
+    }
+
+    try {
+      await reviewAPI.deleteReview(reviewId);
+      alert('✅ Đã xóa đánh giá thành công!');
+      fetchReviews();
+    } catch (error) {
+      alert('❌ ' + (error.response?.data?.message || 'Lỗi khi xóa đánh giá'));
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReview(null);
+    setReviewForm({ rating: 5, comment: '' });
+    setShowReviewForm(false);
+  };
+
+  const handleMarkHelpful = async (reviewId) => {
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập');
+      return;
+    }
+
+    try {
+      await reviewAPI.markHelpful(reviewId);
+      fetchReviews();
+    } catch (error) {
+      console.error('Error marking helpful:', error);
+    }
+  };
+
+  const renderStars = (rating, interactive = false, onRatingChange = null) => {
+    return (
+      <div className={`stars ${interactive ? 'interactive' : ''}`}>
+        {[1, 2, 3, 4, 5].map(star => (
+          <FiStar
+            key={star}
+            className={star <= rating ? 'filled' : ''}
+            onClick={() => interactive && onRatingChange && onRatingChange(star)}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getRatingPercentage = (rating) => {
+    if (!reviewStats || reviewStats.totalReviews === 0) return 0;
+    return ((reviewStats.ratingCounts[rating] || 0) / reviewStats.totalReviews) * 100;
+  };
+
+  if (loading && currentPage === 1) {
+    return <div className="reviews-loading">Đang tải đánh giá...</div>;
+  }
+
+  return (
+    <div className="product-reviews">
+      <div className="reviews-header">
+        <h2>Đánh giá sản phẩm</h2>
+      </div>
+
+      {reviewStats && reviewStats.totalReviews > 0 && (
+        <div className="reviews-summary">
+          <div className="summary-rating">
+            <div className="average-rating">{reviewStats.averageRating.toFixed(1)}</div>
+            {renderStars(Math.round(reviewStats.averageRating))}
+            <div className="total-reviews">{reviewStats.totalReviews} đánh giá</div>
+          </div>
+
+          <div className="rating-breakdown">
+            {[5, 4, 3, 2, 1].map(rating => (
+              <div key={rating} className="rating-row">
+                <span className="rating-label">{rating} sao</span>
+                <div className="rating-bar">
+                  <div 
+                    className="rating-fill" 
+                    style={{ width: `${getRatingPercentage(rating)}%` }}
+                  />
+                </div>
+                <span className="rating-count">{reviewStats.ratingCounts[rating] || 0}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="reviews-actions">
+        {isAuthenticated && (
+          <button 
+            className="write-review-btn"
+            onClick={() => {
+              setEditingReview(null);
+              setReviewForm({ rating: 5, comment: '' });
+              setShowReviewForm(!showReviewForm);
+            }}
+          >
+            Viết đánh giá
+          </button>
+        )}
+
+        <select 
+          className="sort-select"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+        >
+          <option value="recent">Mới nhất</option>
+          <option value="oldest">Cũ nhất</option>
+          <option value="highest">Điểm cao nhất</option>
+          <option value="lowest">Điểm thấp nhất</option>
+          <option value="helpful">Hữu ích nhất</option>
+        </select>
+      </div>
+
+      {showReviewForm && (
+        <form className="review-form" onSubmit={handleSubmitReview}>
+          <h3>{editingReview ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá của bạn'}</h3>
+          
+          <div className="form-group">
+            <label>Đánh giá của bạn:</label>
+            {renderStars(reviewForm.rating, true, (rating) => 
+              setReviewForm({ ...reviewForm, rating })
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Nhận xét:</label>
+            <textarea
+              value={reviewForm.comment}
+              onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+              placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm..."
+              required
+              rows="5"
+            />
+          </div>
+
+          <div className="form-actions">
+            <button type="button" onClick={handleCancelEdit}>
+              Hủy
+            </button>
+            <button type="submit" disabled={submitting}>
+              {submitting ? 'Đang gửi...' : (editingReview ? 'Cập nhật' : 'Gửi đánh giá')}
+            </button>
+          </div>
+        </form>
+      )}
+
+      <div className="reviews-list">
+        {reviews.length === 0 ? (
+          <div className="no-reviews">
+            <p>Chưa có đánh giá nào cho sản phẩm này</p>
+            {isAuthenticated && (
+              <button onClick={() => setShowReviewForm(true)}>
+                Hãy là người đầu tiên đánh giá
+              </button>
+            )}
+          </div>
+        ) : (
+          reviews.map(review => (
+            <div key={review._id} className="review-item">
+              <div className="review-header">
+                <div className="reviewer-info">
+                  <div className="reviewer-name">
+                    {review.user?.name || 'Ẩn danh'}
+                    {review.verified && (
+                      <span className="verified-badge" title="Đã mua sản phẩm">
+                        <FiCheckCircle /> Đã mua hàng
+                      </span>
+                    )}
+                  </div>
+                  <div className="review-date">{formatDate(review.createdAt)}</div>
+                </div>
+                {renderStars(review.rating)}
+              </div>
+
+              <div className="review-content">
+                <p>{review.comment}</p>
+              </div>
+
+              <div className="review-actions">
+                <button 
+                  className={`helpful-btn ${review.helpfulBy?.includes(user?._id) ? 'active' : ''}`}
+                  onClick={() => handleMarkHelpful(review._id)}
+                  disabled={!isAuthenticated}
+                >
+                  <FiThumbsUp /> Hữu ích ({review.helpful || 0})
+                </button>
+                
+                {/* Nút sửa và xóa cho chủ đánh giá */}
+                {isAuthenticated && user && review.user?._id === user._id && (
+                  <div className="owner-actions">
+                    <button 
+                      className="edit-btn"
+                      onClick={() => handleEditReview(review)}
+                      title="Sửa đánh giá"
+                    >
+                      <FiEdit2 /> Sửa
+                    </button>
+                    <button 
+                      className="delete-btn"
+                      onClick={() => handleDeleteReview(review._id)}
+                      title="Xóa đánh giá"
+                    >
+                      <FiTrash2 /> Xóa
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {reviewStats && reviewStats.totalPages > 1 && (
+        <div className="reviews-pagination">
+          <button 
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            Trước
+          </button>
+          <span>Trang {currentPage} / {reviewStats.totalPages}</span>
+          <button 
+            onClick={() => setCurrentPage(p => Math.min(reviewStats.totalPages, p + 1))}
+            disabled={currentPage === reviewStats.totalPages}
+          >
+            Sau
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProductReviews;

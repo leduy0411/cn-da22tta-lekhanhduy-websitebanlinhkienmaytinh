@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaGoogle, FaFacebookF } from 'react-icons/fa';
+import { FiEye, FiEyeOff, FiMail, FiLock } from 'react-icons/fi';
 import './Login.css';
 
 const Login = () => {
@@ -29,7 +30,9 @@ const Login = () => {
     setLoading(true);
     setError('');
 
+    console.log('Đang đăng nhập với:', formData.email);
     const result = await login(formData.email, formData.password);
+    console.log('Kết quả đăng nhập:', result);
 
     if (result.success) {
       // Chuyển hướng dựa vào role
@@ -40,6 +43,7 @@ const Login = () => {
       }
     } else {
       setError(result.message);
+      console.error('Lỗi đăng nhập:', result.message);
     }
 
     setLoading(false);
@@ -66,7 +70,12 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-page">
+    <div 
+      className="auth-page"
+      style={{
+        backgroundImage: `url(${process.env.PUBLIC_URL}/img/img-nen-dangnhap/pexels-lulizler-3165335.jpg)`
+      }}
+    >
       <div className="auth-split-container">
         {/* Left Side - Branding */}
         <div className="auth-branding">
@@ -108,11 +117,11 @@ const Login = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="login-form">
+            <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
               <div className="form-group">
                 <label htmlFor="email">
-                  <span className="label-icon">📧</span>
-                  Email
+                  <FiMail className="label-icon" />
+                  <span>Email</span>
                 </label>
                 <div className="input-wrapper">
                   <input
@@ -124,14 +133,15 @@ const Login = () => {
                     required
                     placeholder="example@email.com"
                     className="form-input"
+                    autoComplete="new-email"
                   />
                 </div>
               </div>
 
               <div className="form-group">
                 <label htmlFor="password">
-                  <span className="label-icon">🔒</span>
-                  Mật khẩu
+                  <FiLock className="label-icon" />
+                  <span>Mật khẩu</span>
                 </label>
                 <div className="input-wrapper password-wrapper">
                   <input
@@ -144,6 +154,7 @@ const Login = () => {
                     placeholder="Nhập mật khẩu"
                     minLength="6"
                     className="form-input"
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -151,7 +162,7 @@ const Login = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex="-1"
                   >
-                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                    {showPassword ? <FiEyeOff /> : <FiEye />}
                   </button>
                 </div>
               </div>

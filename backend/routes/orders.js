@@ -8,6 +8,7 @@ const { auth, optionalAuth } = require('../middleware/auth');
 // POST: Tạo đơn hàng mới
 router.post('/', optionalAuth, async (req, res) => {
   try {
+    console.log('📦 Creating order with data:', JSON.stringify(req.body, null, 2));
     const { customerInfo, paymentMethod, note, buyNowItem } = req.body;
     const sessionId = req.headers['x-session-id'];
     
@@ -115,10 +116,13 @@ router.post('/', optionalAuth, async (req, res) => {
       totalAmount,
       paymentMethod,
       note,
-      status: 'pending'
+      status: paymentMethod === 'ZaloPay' ? 'pending' : 'pending',
+      paymentStatus: paymentMethod === 'ZaloPay' ? 'Pending' : 'Pending'
     });
 
     await order.save();
+
+    console.log('✅ Order created successfully:', order._id);
 
     res.status(201).json({ 
       message: 'Đặt hàng thành công!', 
@@ -126,6 +130,7 @@ router.post('/', optionalAuth, async (req, res) => {
     });
 
   } catch (error) {
+    console.error('❌ Error creating order:', error);
     res.status(500).json({ message: 'Lỗi khi tạo đơn hàng', error: error.message });
   }
 });
@@ -201,15 +206,25 @@ router.put('/:id/status', async (req, res) => {
       return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
     }
 
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
+    const order = await Order.findById(req.params.id).populate('items.product');
 
     if (!order) {
       return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
     }
+
+    // Nếu đơn hàng bị hủy, hoàn trả số lượng sản phẩm vào kho
+    if (status === 'cancelled' && order.status !== 'cancelled') {
+      for (const item of order.items) {
+        const product = await Product.findById(item.product._id);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+        }
+      }
+    }
+
+    order.status = status;
+    await order.save();
 
     res.json({ message: 'Cập nhật trạng thái thành công', order });
   } catch (error) {

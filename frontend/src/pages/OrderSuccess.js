@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiCheckCircle, FiPackage } from 'react-icons/fi';
+import { FiCheckCircle, FiPackage, FiX, FiClock, FiTruck, FiAlertCircle } from 'react-icons/fi';
 import { orderAPI } from '../services/api';
 import './OrderSuccess.css';
 
@@ -9,6 +9,7 @@ const OrderSuccess = () => {
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -38,6 +39,57 @@ const OrderSuccess = () => {
     return new Date(date).toLocaleString('vi-VN');
   };
 
+  const handleCancelOrder = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+      return;
+    }
+
+    try {
+      setCancelling(true);
+      await orderAPI.updateOrderStatus(orderId, 'cancelled');
+      await fetchOrder(); // Reload order data
+    } catch (error) {
+      console.error('Lỗi khi hủy đơn hàng:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Không thể hủy đơn hàng. Vui lòng thử lại.'));
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      pending: { label: 'Chờ xử lý', icon: FiClock, color: '#f59e0b' },
+      processing: { label: 'Đang xử lý', icon: FiPackage, color: '#3b82f6' },
+      shipped: { label: 'Đang giao hàng', icon: FiTruck, color: '#8b5cf6' },
+      delivered: { label: 'Đã giao hàng', icon: FiCheckCircle, color: '#10b981' },
+      cancelled: { label: 'Đã hủy', icon: FiX, color: '#ef4444' }
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+    const Icon = config.icon;
+
+    return (
+      <span className="status-badge" style={{ backgroundColor: config.color }}>
+        <Icon size={16} />
+        {config.label}
+      </span>
+    );
+  };
+
+  const getPaymentMethodLabel = (method) => {
+    const methods = {
+      'COD': 'Thanh toán khi nhận hàng',
+      'Banking': 'Chuyển khoản ngân hàng',
+      'Card': 'Thẻ tín dụng/Ghi nợ',
+      'ZaloPay': 'Ví điện tử ZaloPay'
+    };
+    return methods[method] || method;
+  };
+
+  const canCancelOrder = () => {
+    return order && (order.status === 'pending' || order.status === 'processing');
+  };
+
   if (loading) {
     return <div className="loading">Đang tải...</div>;
   }
@@ -50,88 +102,118 @@ const OrderSuccess = () => {
     <div className="order-success-page">
       <div className="container">
         <div className="success-card">
-          <FiCheckCircle className="success-icon" />
-          <h1>Đặt hàng thành công!</h1>
-          <p className="success-message">
-            Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ liên hệ với bạn sớm nhất.
-          </p>
+          {order.status === 'cancelled' ? (
+            <>
+              <div className="status-icon cancelled">
+                <FiX size={64} />
+              </div>
+              <h1 className="cancelled-title">Đơn hàng đã bị hủy</h1>
+              <p className="cancelled-message">
+                Đơn hàng này đã bị hủy. Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="status-icon success">
+                <FiCheckCircle size={64} />
+              </div>
+              <h1 className="success-title">Đặt hàng thành công!</h1>
+              <p className="success-message">
+                Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ liên hệ với bạn sớm nhất.
+              </p>
+            </>
+          )}
 
-          <div className="order-number">
-            <FiPackage />
-            <div>
-              <span className="label">Mã đơn hàng:</span>
-              <span className="value">{order.orderNumber}</span>
+          <div className="order-number-card">
+            <FiPackage size={24} />
+            <div className="order-number-info">
+              <span className="order-label">Mã đơn hàng</span>
+              <span className="order-value">{order.orderNumber}</span>
             </div>
+            {getStatusBadge(order.status)}
           </div>
 
           <div className="order-details-card">
-            <h2>Thông tin đơn hàng</h2>
-
-            <div className="info-section">
-              <h3>Thông tin khách hàng</h3>
-              <div className="info-row">
-                <span>Họ tên:</span>
-                <span>{order.customerInfo.name}</span>
-              </div>
-              <div className="info-row">
-                <span>Email:</span>
-                <span>{order.customerInfo.email}</span>
-              </div>
-              <div className="info-row">
-                <span>Số điện thoại:</span>
-                <span>{order.customerInfo.phone}</span>
-              </div>
-              <div className="info-row">
-                <span>Địa chỉ:</span>
-                <span>{order.customerInfo.address}</span>
-              </div>
+            <div className="details-header">
+              <h2>Thông tin đơn hàng</h2>
             </div>
 
             <div className="info-section">
-              <h3>Sản phẩm đã đặt</h3>
-              {order.items.map((item, index) => (
-                <div key={index} className="order-item-row">
-                  <span>{item.name} x {item.quantity}</span>
-                  <span>{formatPrice(item.price * item.quantity)}</span>
+              <h3><FiPackage size={18} /> Thông tin khách hàng</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-label">Họ tên:</span>
+                  <span className="info-value">{order.customerInfo.name}</span>
                 </div>
-              ))}
+                <div className="info-item">
+                  <span className="info-label">Email:</span>
+                  <span className="info-value">{order.customerInfo.email}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Số điện thoại:</span>
+                  <span className="info-value">{order.customerInfo.phone}</span>
+                </div>
+                <div className="info-item full-width">
+                  <span className="info-label">Địa chỉ giao hàng:</span>
+                  <span className="info-value">{order.customerInfo.address}</span>
+                </div>
+              </div>
             </div>
 
             <div className="info-section">
-              <h3>Thanh toán</h3>
-              <div className="info-row">
-                <span>Phương thức:</span>
-                <span>{order.paymentMethod}</span>
+              <h3><FiPackage size={18} /> Sản phẩm đã đặt</h3>
+              <div className="order-items-list">
+                {order.items.map((item, index) => (
+                  <div key={index} className="order-item-card">
+                    <div className="item-info">
+                      <span className="item-name">{item.name}</span>
+                      <span className="item-quantity">Số lượng: {item.quantity}</span>
+                    </div>
+                    <div className="item-price">
+                      {formatPrice(item.price * item.quantity)}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="info-row">
-                <span>Trạng thái:</span>
-                <span className="status-badge">{order.status}</span>
-              </div>
-              <div className="info-row total">
-                <span>Tổng cộng:</span>
-                <span className="total-amount">{formatPrice(order.totalAmount)}</span>
+            </div>
+
+            <div className="info-section">
+              <h3><FiAlertCircle size={18} /> Thanh toán & Giao hàng</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-label">Phương thức thanh toán:</span>
+                  <span className="info-value">{getPaymentMethodLabel(order.paymentMethod)}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Ngày đặt hàng:</span>
+                  <span className="info-value">{formatDate(order.createdAt)}</span>
+                </div>
               </div>
             </div>
 
             {order.note && (
               <div className="info-section">
-                <h3>Ghi chú</h3>
-                <p>{order.note}</p>
+                <h3><FiAlertCircle size={18} /> Ghi chú</h3>
+                <p className="order-note">{order.note}</p>
               </div>
             )}
-
-            <div className="info-section">
-              <div className="info-row">
-                <span>Ngày đặt hàng:</span>
-                <span>{formatDate(order.createdAt)}</span>
-              </div>
-            </div>
           </div>
 
           <div className="action-buttons">
-            <button onClick={() => navigate('/')} className="continue-btn">
-              Tiếp tục mua sắm
+            <button onClick={() => navigate('/my-orders')} className="btn-view-orders">
+              <FiPackage size={18} />
+              Xem đơn hàng của tôi
             </button>
+            {canCancelOrder() && (
+              <button 
+                onClick={handleCancelOrder} 
+                className="btn-cancel-order"
+                disabled={cancelling}
+              >
+                <FiX size={18} />
+                {cancelling ? 'Đang hủy...' : 'Hủy đơn hàng'}
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const Review = require('../models/Review');
 const { auth, isAdmin } = require('../middleware/auth');
 
 // Tất cả routes đều yêu cầu auth và isAdmin
@@ -189,6 +190,162 @@ router.delete('/orders/:id', async (req, res) => {
     res.json({ message: 'Đã xóa đơn hàng!' });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi xóa đơn hàng!', error: error.message });
+  }
+});
+
+// ==================== REVIEW MANAGEMENT ====================
+
+// GET: Lấy tất cả đánh giá với filter
+router.get('/reviews', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    const { rating, status } = req.query;
+
+    let filter = {};
+    if (rating) filter.rating = parseInt(rating);
+    if (status) filter.status = status;
+
+    const reviews = await Review.find(filter)
+      .populate('user', 'name email')
+      .populate('product', 'name images')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Review.countDocuments(filter);
+
+    // Thống kê
+    const stats = {
+      total: await Review.countDocuments(),
+      approved: await Review.countDocuments({ status: 'approved' }),
+      pending: await Review.countDocuments({ status: 'pending' }),
+      rejected: await Review.countDocuments({ status: 'rejected' }),
+      avgRating: await Review.aggregate([
+        { $group: { _id: null, avg: { $avg: '$rating' } } }
+      ]).then(r => r[0]?.avg?.toFixed(1) || 0)
+    };
+
+    res.json({
+      reviews,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalReviews: total,
+      stats
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy đánh giá!', error: error.message });
+  }
+});
+
+// PUT: Cập nhật trạng thái đánh giá
+router.put('/reviews/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ message: 'Không tìm thấy đánh giá!' });
+    }
+
+    review.status = status || (review.status === 'approved' ? 'rejected' : 'approved');
+    await review.save();
+
+    const messages = {
+      approved: 'Đã duyệt đánh giá!',
+      rejected: 'Đã từ chối đánh giá!',
+      pending: 'Đã chuyển về chờ duyệt!'
+    };
+
+    res.json({ 
+      message: messages[review.status] || 'Đã cập nhật!', 
+      review 
+    });
+  } catch (error) {
+    res.status(400).json({ message: 'Lỗi khi cập nhật!', error: error.message });
+  }
+});
+
+// DELETE: Xóa đánh giá
+router.delete('/reviews/:id', async (req, res) => {
+  try {
+    const review = await Review.findByIdAndDelete(req.params.id);
+    if (!review) {
+      return res.status(404).json({ message: 'Không tìm thấy đánh giá!' });
+    }
+    
+    // Cập nhật rating trung bình cho sản phẩm sau khi xóa review
+    const mongoose = require('mongoose');
+    const stats = await Review.aggregate([
+      { 
+        $match: { 
+          product: review.product,
+          status: 'approved'
+        } 
+      },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const rating = stats.length > 0 ? Math.round(stats[0].averageRating * 10) / 10 : 0;
+    const reviewCount = stats.length > 0 ? stats[0].totalReviews : 0;
+
+    await Product.findByIdAndUpdate(review.product, { 
+      rating: rating,
+      reviewCount: reviewCount
+    });
+    
+    res.json({ message: 'Đã xóa đánh giá!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi xóa đánh giá!', error: error.message });
+  }
+});
+
+// POST: Cập nhật rating cho tất cả sản phẩm (sync từ reviews)
+router.post('/sync-ratings', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const products = await Product.find({});
+    let updated = 0;
+
+    for (const product of products) {
+      const stats = await Review.aggregate([
+        { 
+          $match: { 
+            product: product._id,
+            status: 'approved'
+          } 
+        },
+        {
+          $group: {
+            _id: null,
+            averageRating: { $avg: '$rating' },
+            totalReviews: { $sum: 1 }
+          }
+        }
+      ]);
+
+      const rating = stats.length > 0 ? Math.round(stats[0].averageRating * 10) / 10 : 0;
+      const reviewCount = stats.length > 0 ? stats[0].totalReviews : 0;
+
+      await Product.findByIdAndUpdate(product._id, { 
+        rating: rating,
+        reviewCount: reviewCount
+      });
+      updated++;
+    }
+
+    res.json({ 
+      message: `Đã cập nhật rating cho ${updated} sản phẩm!`,
+      updated 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi đồng bộ rating!', error: error.message });
   }
 });
 

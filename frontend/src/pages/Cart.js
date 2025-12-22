@@ -72,7 +72,7 @@ const Cart = () => {
             {cart.items.map((item) => (
               <div key={item._id} className="cart-item">
                 <img 
-                  src={item.product.image} 
+                  src={item.product.images?.[0] || item.product.image} 
                   alt={item.product.name}
                   className="cart-item-image"
                   onClick={() => navigate(`/product/${item.product._id}`)}
@@ -138,7 +138,7 @@ const Cart = () => {
             <div className="summary-divider"></div>
 
             <div className="summary-row total">
-              <span>Tổng cộng:</span>
+              <span>💰 Tổng cộng:</span>
               <span className="total-price">{formatPrice(cart.totalAmount)}</span>
             </div>
 

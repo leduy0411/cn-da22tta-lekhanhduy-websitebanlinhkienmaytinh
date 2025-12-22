@@ -256,8 +256,8 @@ function AdminOrders() {
                   <td className="items-count">
                     {order.items.length} sản phẩm
                   </td>
-                  <td className="order-total">
-                    <strong>{formatPrice(order.totalAmount)}</strong>
+                  <td className="order-total-cell">
+                    <span className="order-total-badge">{formatPrice(order.totalAmount)}</span>
                   </td>
                   <td>
                     <span 
@@ -413,8 +413,8 @@ function AdminOrders() {
                     <strong>{selectedOrder.paymentMethod}</strong>
                   </div>
                   <div className="summary-row total">
-                    <span>Tổng thanh toán:</span>
-                    <strong className="total-amount">{formatPrice(selectedOrder.totalAmount)}</strong>
+                    <span>💰 Tổng thanh toán:</span>
+                    <strong className="admin-total-amount">{formatPrice(selectedOrder.totalAmount)}</strong>
                   </div>
                 </div>
               </div>

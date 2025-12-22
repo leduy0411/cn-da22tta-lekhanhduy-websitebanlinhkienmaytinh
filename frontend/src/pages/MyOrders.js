@@ -14,6 +14,7 @@ const MyOrders = () => {
   const [filter, setFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [cancellingOrderId, setCancellingOrderId] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -89,6 +90,27 @@ const MyOrders = () => {
   const handleViewDetail = (order) => {
     setSelectedOrder(order);
     setShowDetailModal(true);
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+      return;
+    }
+
+    try {
+      setCancellingOrderId(orderId);
+      await orderAPI.updateOrderStatus(orderId, 'cancelled');
+      await fetchOrders();
+    } catch (error) {
+      console.error('Lỗi khi hủy đơn hàng:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Không thể hủy đơn hàng. Vui lòng thử lại.'));
+    } finally {
+      setCancellingOrderId(null);
+    }
+  };
+
+  const canCancelOrder = (status) => {
+    return status === 'pending' || status === 'processing';
   };
 
   const getImageUrl = (imagePath) => {
@@ -214,7 +236,7 @@ const MyOrders = () => {
 
               <div className="order-footer">
                 <div className="order-total">
-                  <span className="total-label">Tổng cộng:</span>
+                  <span className="total-label">💰 Tổng cộng:</span>
                   <span className="total-amount">{formatPrice(order.totalAmount)}</span>
                 </div>
                 <div className="order-actions">
@@ -224,6 +246,15 @@ const MyOrders = () => {
                   >
                     <FiEye /> Xem chi tiết
                   </button>
+                  {canCancelOrder(order.status) && (
+                    <button 
+                      className="btn-cancel-order"
+                      onClick={() => handleCancelOrder(order._id)}
+                      disabled={cancellingOrderId === order._id}
+                    >
+                      <FiXCircle /> {cancellingOrderId === order._id ? 'Đang hủy...' : 'Hủy đơn'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -324,8 +355,8 @@ const MyOrders = () => {
                     <span>Miễn phí</span>
                   </div>
                   <div className="summary-row total">
-                    <span>Tổng cộng:</span>
-                    <span>{formatPrice(selectedOrder.totalAmount)}</span>
+                    <span>💰 Tổng cộng:</span>
+                    <span className="modal-total-price">{formatPrice(selectedOrder.totalAmount)}</span>
                   </div>
                 </div>
               </div>

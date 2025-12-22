@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FiChevronRight } from 'react-icons/fi';
+import { FiChevronRight, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import './MegaMenu.css';
+
+const INITIAL_ITEMS_SHOW = 5; // Số item hiển thị ban đầu (chuẩn UX)
 
 const MegaMenu = () => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [filters, setFilters] = useState({});
   const [activeCategory, setActiveCategory] = useState(null);
+  const [expandedFilters, setExpandedFilters] = useState({}); // Track which filters are expanded
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -205,6 +208,19 @@ const MegaMenu = () => {
   console.log('All filters state:', filters);
   console.log('Grouped filters for current category:', groupedFilters);
 
+  // Toggle expand/collapse for a filter column
+  const toggleFilterExpand = (filterId) => {
+    setExpandedFilters(prev => ({
+      ...prev,
+      [filterId]: !prev[filterId]
+    }));
+  };
+
+  // Reset expanded state when category changes
+  useEffect(() => {
+    setExpandedFilters({});
+  }, [activeCategory]);
+
   return (
     <div 
       className="mega-menu"
@@ -275,38 +291,35 @@ const MegaMenu = () => {
                   // Chỉ render nếu có displayName và options
                   if (!filterDisplayName || filterOptions.length === 0) return null;
                   
+                  const isExpanded = expandedFilters[filterId];
+                  const hasMoreItems = filterOptions.length > INITIAL_ITEMS_SHOW;
+                  const displayedOptions = isExpanded ? filterOptions : filterOptions.slice(0, INITIAL_ITEMS_SHOW);
+
                   return (
                     <div key={filterId} className="filter-column">
                       <h5 className="filter-column-title">{String(filterDisplayName)}</h5>
                       <div className="filter-items">
-                        {filterOptions.slice(0, 12).map((option, index) => {
+                        {displayedOptions.map((option, index) => {
                           try {
-                            // Xử lý option - có thể là string hoặc object {value, label}
                             let displayText = '';
                             let optionValue = '';
-                            
                             if (typeof option === 'string') {
                               displayText = option;
                               optionValue = option;
                             } else if (typeof option === 'object' && option !== null) {
-                              // Ưu tiên label để hiển thị, value để lọc
                               displayText = String(option.label || option.value || '');
                               optionValue = String(option.value || option.label || '');
                             } else {
                               displayText = String(option);
                               optionValue = String(option);
                             }
-                            
-                            // Bỏ qua nếu không có text để hiển thị
                             if (!displayText) return null;
-                            
                             return (
                               <button
                                 key={`${filterId}-opt-${index}`}
                                 className="filter-item-link"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  console.log('🔥 Button clicked!', { activeCategory, filterName, optionValue });
                                   handleFilterClick(activeCategory, filterName, optionValue);
                                 }}
                               >
@@ -318,6 +331,26 @@ const MegaMenu = () => {
                             return null;
                           }
                         })}
+                        {/* Nút Xem thêm / Thu gọn */}
+                        {hasMoreItems && (
+                          <button
+                            className="filter-show-more"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFilterExpand(filterId);
+                            }}
+                          >
+                            {isExpanded ? (
+                              <>
+                                <FiChevronUp /> Thu gọn
+                              </>
+                            ) : (
+                              <>
+                                <FiChevronDown /> Xem thêm ({filterOptions.length - INITIAL_ITEMS_SHOW})
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

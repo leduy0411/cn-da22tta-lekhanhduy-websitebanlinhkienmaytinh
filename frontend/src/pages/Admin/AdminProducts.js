@@ -201,8 +201,8 @@ const AdminProducts = () => {
   };
 
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.brand.toLowerCase().includes(searchTerm.toLowerCase())
+    (product.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.brand || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -244,7 +244,7 @@ const AdminProducts = () => {
               {filteredProducts.map((product) => (
                 <tr key={product._id}>
                   <td>
-                    <img src={product.image} alt={product.name} className="product-thumb" />
+                    <img src={product.images?.[0] || product.image} alt={product.name} className="product-thumb" />
                   </td>
                   <td className="product-name">{product.name}</td>
                   <td>{product.category}</td>

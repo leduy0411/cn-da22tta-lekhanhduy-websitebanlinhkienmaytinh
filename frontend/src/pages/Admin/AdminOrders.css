@@ -134,11 +134,12 @@
 }
 
 .orders-table th {
-  padding: 1rem;
+  padding: 0.6rem 0.5rem;
   text-align: left;
   font-weight: 600;
   white-space: nowrap;
   border: none;
+  font-size: 0.85rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
@@ -156,10 +157,11 @@
 }
 
 .orders-table td {
-  padding: 1rem;
+  padding: 0.6rem 0.5rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   vertical-align: middle;
   border: none;
+  font-size: 0.85rem;
 }
 
 .orders-table tbody tr:hover {
@@ -170,25 +172,38 @@
   font-family: 'Courier New', monospace;
   color: #667eea;
   font-weight: 600;
+  font-size: 0.75rem;
+  word-break: break-all;
+  max-width: 100px;
 }
 
 .items-count {
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
-.order-total {
-  color: #ff6b6b;
-  font-weight: 600;
+.order-total-cell {
+  padding: 0.5rem;
+}
+
+.order-total-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #B22222 0%, #DC143C 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -200,7 +215,8 @@
 
 .order-date {
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 .order-actions {
@@ -210,7 +226,7 @@
 }
 
 .btn-view {
-  padding: 0.5rem;
+  padding: 0.4rem;
   background: #e3f2fd;
   color: #1976d2;
   border: none;
@@ -220,6 +236,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.9rem;
 }
 
 .btn-view:hover {
@@ -462,14 +479,18 @@
 }
 
 .summary-row.total {
-  border-top: 2px solid #e0e0e0;
-  padding-top: 1rem;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #B22222 0%, #DC143C 100%);
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 15px rgba(178, 34, 34, 0.25);
 }
 
-.total-amount {
-  color: #ff6b6b;
-  font-size: 1.5rem;
+.summary-row.total .admin-total-amount {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 800;
 }
 
 .status-info {

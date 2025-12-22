@@ -45,7 +45,16 @@ const orderSchema = new mongoose.Schema({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ['COD', 'Banking', 'Card']
+    enum: ['COD', 'Banking', 'Card', 'ZaloPay']
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['Pending', 'Paid', 'Failed'],
+    default: 'Pending'
+  },
+  paymentInfo: {
+    zalopayTransId: String,
+    zalopayTime: Date
   },
   status: {
     type: String,

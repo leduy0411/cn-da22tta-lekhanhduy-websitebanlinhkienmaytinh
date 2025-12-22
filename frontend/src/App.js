@@ -15,6 +15,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import AuthCallback from './pages/AuthCallback';
+import ZaloPayCallback from './pages/ZaloPayCallback';
 import AdminLayout from './pages/Admin/AdminLayout';
 import Dashboard from './pages/Admin/Dashboard';
 import AdminProducts from './pages/Admin/AdminProducts';
@@ -22,6 +23,7 @@ import AdminCategories from './pages/Admin/AdminCategories';
 import AdminOrders from './pages/Admin/AdminOrders';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminChat from './pages/Admin/AdminChat';
+import AdminReviews from './pages/Admin/AdminReviews';
 import './App.css';
 
 // Protected Route cho Admin
@@ -88,6 +90,7 @@ function AppContent() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="reviews" element={<AdminReviews />} />
           <Route path="chat" element={<AdminChat />} />
         </Route>
 
@@ -117,6 +120,7 @@ function AppContent() {
             <OrderSuccess />
           </CustomerLayout>
         } />
+        <Route path="/zalopay/callback" element={<ZaloPayCallback />} />
         <Route path="/my-orders" element={
           <CustomerLayout onSearch={handleSearch}>
             <MyOrders />
