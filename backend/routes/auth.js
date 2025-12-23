@@ -199,6 +199,20 @@ router.post('/logout', auth, (req, res) => {
   res.json({ message: 'Đăng xuất thành công!' });
 });
 
+// GET: Lấy tất cả reviews của user hiện tại
+router.get('/reviews', auth, async (req, res) => {
+  try {
+    const Review = require('../models/Review');
+    const reviews = await Review.find({ user: req.user._id })
+      .populate('product', 'name images price')
+      .sort({ createdAt: -1 });
+    
+    res.json({ reviews });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy đánh giá!', error: error.message });
+  }
+});
+
 // POST: Quên mật khẩu - Gửi email reset
 router.post('/forgot-password', async (req, res) => {
   try {

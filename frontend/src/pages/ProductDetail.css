@@ -1,5 +1,5 @@
 .product-detail {
-  padding: 2rem 0;
+  padding: 1rem 0;
   min-height: calc(100vh - 80px);
   background: #f8f9fa;
 }
@@ -7,16 +7,17 @@
 .back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
   background: white;
   border: 2px solid #667eea;
   color: #667eea;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
   transition: all 0.3s;
+  font-size: 0.9rem;
 }
 
 .back-btn:hover {
@@ -27,9 +28,9 @@
 .product-detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  gap: 1.5rem;
   background: white;
-  padding: 2rem;
+  padding: 1.25rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -42,7 +43,7 @@
 
 .main-image {
   width: 100%;
-  max-width: 500px;
+  max-width: 420px;
   margin: 0 auto;
   border-radius: 12px;
   overflow: hidden;
@@ -51,16 +52,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  min-height: 320px;
 }
 
 .main-image img {
   width: 100% !important;
   height: auto !important;
   max-width: 100% !important;
-  max-height: 500px !important;
+  max-height: 400px !important;
   object-fit: contain !important;
-  padding: 2rem;
+  padding: 1.5rem;
   display: block !important;
 }
 
@@ -73,8 +74,8 @@
 
 .thumbnail {
   flex-shrink: 0;
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid #e0e0e0;
@@ -106,29 +107,29 @@
 .product-info-section {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .brand-tag {
   display: inline-block;
   background: #667eea;
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.85rem;
   border-radius: 20px;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   width: fit-content;
 }
 
 .product-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: #333;
   margin: 0;
   line-height: 1.3;
 }
 
 .rating {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #ffa500;
   font-weight: 600;
 }
@@ -136,14 +137,14 @@
 .price-section {
   border-top: 2px solid #e0e0e0;
   border-bottom: 2px solid #e0e0e0;
-  padding: 1.5rem 0;
+  padding: 1rem 0;
 }
 
 .price {
-  font-size: 2rem !important;
+  font-size: 1.6rem !important;
   font-weight: bold;
   color: #ff6b6b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .stock-info .in-stock {
@@ -158,14 +159,15 @@
 
 .description h3,
 .specifications h3 {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   color: #333;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.75rem 0;
 }
 
 .description p {
   color: #666;
-  line-height: 1.6;
+  line-height: 1.5;
+  font-size: 0.9rem;
 }
 
 .specifications table {
@@ -178,7 +180,8 @@
 }
 
 .specifications td {
-  padding: 0.75rem 0;
+  padding: 0.6rem 0;
+  font-size: 0.9rem;
 }
 
 .spec-label {
@@ -197,30 +200,31 @@
 }
 
 .quantity-selector {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .quantity-selector label {
   display: block;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   color: #333;
+  font-size: 0.9rem;
 }
 
 .quantity-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   width: fit-content;
 }
 
 .quantity-controls button {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: 2px solid #667eea;
   background: white;
   color: #667eea;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
   border-radius: 8px;
   cursor: pointer;
@@ -238,35 +242,35 @@
 }
 
 .quantity-controls input {
-  width: 80px;
-  height: 40px;
+  width: 70px;
+  height: 36px;
   text-align: center;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
 .action-buttons-large {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   width: 100%;
 }
 
 .add-to-cart-btn-large,
 .buy-now-btn-large {
   flex: 1;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.5rem;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
   transition: all 0.3s;
 }
 

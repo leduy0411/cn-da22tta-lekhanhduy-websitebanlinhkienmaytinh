@@ -131,9 +131,14 @@ const Header = ({ onSearch }) => {
                     )}
                     
                     {!isAdmin() && (
-                      <Link to="/my-orders" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
-                        <FiPackage /> Đơn hàng của tôi
-                      </Link>
+                      <>
+                        <Link to="/profile" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
+                          <FiUser /> Thông tin cá nhân
+                        </Link>
+                        <Link to="/my-orders" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
+                          <FiPackage /> Đơn hàng của tôi
+                        </Link>
+                      </>
                     )}
                     
                     <button onClick={handleLogout} className="dropdown-item logout">

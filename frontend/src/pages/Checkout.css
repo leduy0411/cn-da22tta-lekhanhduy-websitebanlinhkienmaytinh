@@ -1,11 +1,11 @@
 .checkout-page {
-  padding: 2rem 0;
+  padding: 0.5rem 0;
   min-height: calc(100vh - 80px);
   background: #f8f9fa;
 }
 
 .checkout-empty {
-  padding: 2rem 0;
+  padding: 0.5rem 0;
   min-height: calc(100vh - 80px);
   display: flex;
   align-items: center;
@@ -14,51 +14,52 @@
 }
 
 .checkout-title {
-  font-size: 2rem;
+  font-size: 1.2rem;
   color: #333;
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
   text-align: center;
 }
 
 .checkout-grid {
   display: grid;
-  grid-template-columns: 1fr 450px;
-  gap: 2rem;
+  grid-template-columns: 1fr 340px;
+  gap: 1rem;
   align-items: start;
 }
 
 .checkout-form {
   background: white;
-  padding: 2rem;
-  border-radius: 12px;
+  padding: 1rem;
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .checkout-form h2 {
-  font-size: 1.5rem;
+  font-size: 1rem;
   color: #333;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 0.75rem 0;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .form-group label {
   display: block;
   font-weight: 600;
   color: #333;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
   font-family: inherit;
   outline: none;
   transition: border-color 0.3s;
@@ -73,20 +74,20 @@
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .submit-order-btn {
   width: 100%;
-  padding: 1rem;
+  padding: 0.75rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   transition: all 0.3s;
 }
 
@@ -102,44 +103,45 @@
 
 .order-summary-section {
   position: sticky;
-  top: 100px;
+  top: 80px;
 }
 
 .order-summary {
   background: white;
-  padding: 2rem;
-  border-radius: 12px;
+  padding: 1.25rem;
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .order-summary h2 {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   color: #333;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1rem 0;
 }
 
 .buy-now-badge {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
   text-align: center;
   font-weight: 600;
-  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .order-items {
-  max-height: 400px;
+  max-height: 280px;
   overflow-y: auto;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .order-item {
   display: grid;
-  grid-template-columns: 60px 1fr auto;
-  gap: 1rem;
-  padding: 1rem 0;
+  grid-template-columns: 50px 1fr auto;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
   border-bottom: 1px solid #e0e0e0;
 }
 
@@ -148,21 +150,21 @@
 }
 
 .order-item img {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   object-fit: cover;
   border-radius: 6px;
 }
 
 .order-item-info h4 {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: #333;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.2rem 0;
   line-height: 1.3;
 }
 
 .order-item-info p {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #666;
   margin: 0;
 }
@@ -171,26 +173,28 @@
   font-weight: bold;
   color: #ff6b6b;
   text-align: right;
+  font-size: 0.9rem;
 }
 
 .order-totals {
-  padding-top: 1rem;
+  padding-top: 0.75rem;
 }
 
 .total-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   color: #666;
+  font-size: 0.9rem;
 }
 
 .total-row.grand-total {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 700;
-  margin-top: 1.5rem;
-  padding: 1.25rem 1.5rem;
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
   background: linear-gradient(135deg, #B22222 0%, #DC143C 100%);
-  border-radius: 10px;
+  border-radius: 8px;
   color: white;
   box-shadow: 0 4px 15px rgba(178, 34, 34, 0.25);
   display: flex;
@@ -200,7 +204,7 @@
 
 .grand-total-price {
   color: white;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 800;
 }
 
@@ -242,36 +246,56 @@
 
 /* === PAYMENT METHOD OPTIONS === */
 .payment-method-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .payment-options {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .payment-option {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
+  gap: 0.85rem;
+  padding: 0.85rem 1.1rem;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   background: white;
+  position: relative;
+  overflow: hidden;
 }
 
 .payment-option:hover {
-  border-color: #667eea;
-  background: #f8faff;
+  border-color: #9ca3af;
+  background: #f9fafb;
 }
 
 .payment-option.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  border-color: #374151;
+  background: #f9fafb;
+}
+
+.payment-option.active::after {
+  content: '✓';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  background: #374151;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  z-index: 2;
 }
 
 .payment-option input[type="radio"] {
@@ -279,45 +303,117 @@
 }
 
 .payment-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #374151;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.payment-option:hover .payment-icon {
+  background: #e5e7eb;
+  color: #1f2937;
 }
 
 .payment-option.active .payment-icon {
-  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  background: #374151;
+  color: white;
+  border-color: #374151;
+}
+
+.payment-icon.banking-icon {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.payment-option.active .payment-icon.banking-icon {
+  background: #374151;
+  color: white;
 }
 
 .payment-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
 }
 
 .payment-title {
   font-weight: 600;
   color: #1f2937;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .payment-desc {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #6b7280;
+}
+
+/* === Payment Sub-Options (Banking/ZaloPay) === */
+.payment-sub-options {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-left: 1.5rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+}
+
+.payment-sub-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  flex: 1;
+}
+
+.payment-sub-option:hover {
+  border-color: #667eea;
+}
+
+.payment-sub-option.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+}
+
+.payment-sub-option input[type="radio"] {
+  display: none;
+}
+
+.sub-option-icon {
+  font-size: 1.2rem;
+}
+
+.sub-option-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.sub-option-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
 }
 
 /* === QR CODE SECTION === */
 .qr-code-section {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   border: 2px solid #0ea5e9;
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-top: 1rem;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 0.75rem;
   animation: fadeIn 0.3s ease;
 }
 
@@ -334,34 +430,34 @@
 
 .qr-code-header {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .qr-code-header h3 {
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: #0369a1;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.35rem 0;
 }
 
 .qr-code-header p {
   color: #64748b;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   margin: 0;
 }
 
 .qr-code-content {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   align-items: flex-start;
 }
 
 .qr-code-image {
   flex-shrink: 0;
-  width: 180px;
-  height: 180px;
+  width: 140px;
+  height: 140px;
   background: white;
-  border-radius: 12px;
-  padding: 0.75rem;
+  border-radius: 10px;
+  padding: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -375,27 +471,27 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .bank-info-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.625rem 0.875rem;
+  padding: 0.5rem 0.7rem;
   background: white;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .bank-info-item .label {
   color: #64748b;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .bank-info-item .value {
   font-weight: 600;
   color: #1e293b;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .bank-info-item.highlight {
@@ -405,65 +501,65 @@
 
 .bank-info-item.highlight .value.amount {
   color: #d97706;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 .qr-code-note {
-  margin-top: 1rem;
-  padding: 0.875rem;
+  margin-top: 0.75rem;
+  padding: 0.65rem;
   background: rgba(234, 179, 8, 0.15);
-  border-radius: 8px;
-  border-left: 4px solid #eab308;
+  border-radius: 6px;
+  border-left: 3px solid #eab308;
 }
 
 .qr-code-note p {
   margin: 0;
   color: #92400e;
-  font-size: 0.85rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 /* Payment Status Banners */
 .payment-success-banner {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
+  gap: 0.75rem;
+  padding: 0.875rem;
   background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
   border: 2px solid #28a745;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
   animation: slideDown 0.5s ease;
 }
 
 .success-icon {
-  font-size: 2.5rem;
+  font-size: 2rem;
   animation: scaleIn 0.5s ease;
 }
 
 .success-text h4 {
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.15rem 0;
   color: #155724;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 .success-text p {
   margin: 0;
   color: #155724;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .payment-checking-banner {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
+  gap: 0.75rem;
+  padding: 0.875rem;
   background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
   border: 2px solid #ffc107;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
   animation: slideDown 0.5s ease;
 }
 
@@ -474,10 +570,10 @@
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #ffc107;
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #ffc107;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -488,16 +584,16 @@
 }
 
 .checking-text h4 {
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.15rem 0;
   color: #856404;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 .checking-text p {
   margin: 0;
   color: #856404;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -523,18 +619,18 @@
 
 /* QR Code Actions */
 .qr-code-actions {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   display: flex;
   justify-content: center;
 }
 
 .check-payment-btn {
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -554,18 +650,18 @@
 .payment-confirmed {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 2rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
   border: 2px solid #28a745;
-  border-radius: 12px;
+  border-radius: 10px;
   color: #155724;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .confirmed-icon {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 /* === QR CODE RESPONSIVE === */
@@ -576,8 +672,8 @@
   }
 
   .qr-code-image {
-    width: 200px;
-    height: 200px;
+    width: 160px;
+    height: 160px;
   }
 
   .bank-info {
@@ -585,25 +681,31 @@
   }
 
   .payment-option {
-    padding: 0.875rem 1rem;
+    padding: 0.65rem 0.75rem;
   }
 
   .payment-icon {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 
   .payment-title {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .payment-desc {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+  }
+  
+  .payment-sub-options {
+    flex-direction: column;
+    margin-left: 0.75rem;
+    gap: 0.5rem;
   }
   
   .check-payment-btn {
     width: 100%;
-    padding: 0.875rem 1.5rem;
+    padding: 0.7rem 1rem;
   }
   
   .payment-success-banner,

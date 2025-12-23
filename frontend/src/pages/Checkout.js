@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { orderAPI, zalopayAPI } from '../services/api';
@@ -17,8 +17,19 @@ const Checkout = () => {
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
+  const formRef = useRef(null);
+  
   // Kiểm tra nếu là mua ngay
   const buyNowItem = location.state?.buyNowItem;
+  
+  // Scroll đến form khi click "Mua ngay" từ trang chi tiết sản phẩm
+  useEffect(() => {
+    if (buyNowItem && formRef.current) {
+      setTimeout(() => {
+        formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [buyNowItem]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -236,7 +247,7 @@ const Checkout = () => {
         <h1 className="checkout-title">Thanh toán</h1>
 
         <div className="checkout-grid">
-          <div className="checkout-form-section">
+          <div className="checkout-form-section" ref={formRef}>
             <form onSubmit={handleSubmit} className="checkout-form">
               <h2>Thông tin giao hàng</h2>
 
@@ -302,7 +313,7 @@ const Checkout = () => {
                       onChange={handleChange}
                     />
                     <div className="payment-icon">
-                      <FiTruck size={24} />
+                      <FiTruck size={20} />
                     </div>
                     <div className="payment-info">
                       <span className="payment-title">Thanh toán khi nhận hàng</span>
@@ -310,39 +321,50 @@ const Checkout = () => {
                     </div>
                   </label>
                   
-                  <label className={`payment-option ${formData.paymentMethod === 'Banking' ? 'active' : ''}`}>
+                  <label className={`payment-option ${formData.paymentMethod === 'Banking' || formData.paymentMethod === 'ZaloPay' ? 'active' : ''}`}>
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="Banking"
-                      checked={formData.paymentMethod === 'Banking'}
+                      checked={formData.paymentMethod === 'Banking' || formData.paymentMethod === 'ZaloPay'}
                       onChange={handleChange}
                     />
-                    <div className="payment-icon">
-                      <FiDollarSign size={24} />
+                    <div className="payment-icon banking-icon">
+                      <FiDollarSign size={20} />
                     </div>
                     <div className="payment-info">
-                      <span className="payment-title">Chuyển khoản ngân hàng</span>
-                      <span className="payment-desc">Quét QR để thanh toán nhanh</span>
+                      <span className="payment-title">Chuyển khoản / Ví điện tử</span>
+                      <span className="payment-desc">QR Banking hoặc ZaloPay</span>
                     </div>
                   </label>
                   
-                  <label className={`payment-option ${formData.paymentMethod === 'ZaloPay' ? 'active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="ZaloPay"
-                      checked={formData.paymentMethod === 'ZaloPay'}
-                      onChange={handleChange}
-                    />
-                    <div className="payment-icon zalopay-icon">
-                      <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Icon-ZaloPay-Square.png" alt="ZaloPay" style={{width: '32px', height: '32px'}} />
+                  {/* Sub-options for Banking/ZaloPay */}
+                  {(formData.paymentMethod === 'Banking' || formData.paymentMethod === 'ZaloPay') && (
+                    <div className="payment-sub-options">
+                      <label className={`payment-sub-option ${formData.paymentMethod === 'Banking' ? 'active' : ''}`}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="Banking"
+                          checked={formData.paymentMethod === 'Banking'}
+                          onChange={handleChange}
+                        />
+                        <span className="sub-option-icon">🏦</span>
+                        <span className="sub-option-text">Chuyển khoản ngân hàng</span>
+                      </label>
+                      <label className={`payment-sub-option ${formData.paymentMethod === 'ZaloPay' ? 'active' : ''}`}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="ZaloPay"
+                          checked={formData.paymentMethod === 'ZaloPay'}
+                          onChange={handleChange}
+                        />
+                        <img src="/img/img-zalopay/zalopay-logo.png" alt="ZaloPay" className="sub-option-logo" />
+                        <span className="sub-option-text">Ví ZaloPay</span>
+                      </label>
                     </div>
-                    <div className="payment-info">
-                      <span className="payment-title">Ví điện tử ZaloPay</span>
-                      <span className="payment-desc">Thanh toán qua ứng dụng ZaloPay</span>
-                    </div>
-                  </label>
+                  )}
                   
                   <label className={`payment-option ${formData.paymentMethod === 'Card' ? 'active' : ''}`}>
                     <input
@@ -353,7 +375,7 @@ const Checkout = () => {
                       onChange={handleChange}
                     />
                     <div className="payment-icon">
-                      <FiCreditCard size={24} />
+                      <FiCreditCard size={20} />
                     </div>
                     <div className="payment-info">
                       <span className="payment-title">Thẻ tín dụng/Ghi nợ</span>

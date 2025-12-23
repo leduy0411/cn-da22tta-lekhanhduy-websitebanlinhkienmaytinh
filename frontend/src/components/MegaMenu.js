@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FiChevronRight, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import './MegaMenu.css';
 
-const INITIAL_ITEMS_SHOW = 5; // Số item hiển thị ban đầu (chuẩn UX)
+// Number of items to show per column before showing "Xem thêm"
+const INITIAL_ITEMS_SHOW = 5;
 
 const MegaMenu = () => {
   const [categories, setCategories] = useState([]);
@@ -359,6 +360,7 @@ const MegaMenu = () => {
                   return null;
                 }
               })}
+                {/* Dev badge removed in production */}
             </div>
           )}
         </div>

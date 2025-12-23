@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiSettings } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import './AdminLayout.css';
 
@@ -48,7 +48,8 @@ const AdminLayout = () => {
     <div className="admin-layout">
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
-          <h2>🛒 Admin Panel</h2>
+          <FiSettings className="header-icon" />
+          <h2>Admin</h2>
         </div>
 
         <nav className="sidebar-nav">
@@ -78,7 +79,7 @@ const AdminLayout = () => {
           <div className="admin-info">
             <div className="admin-avatar">
               <div className="avatar-circle">
-                <span className="avatar-text">LD</span>
+                <img src="/img/img-admin-logo/admin-logo.png" alt="Admin" className="avatar-image" />
               </div>
             </div>
             <div className="admin-details">

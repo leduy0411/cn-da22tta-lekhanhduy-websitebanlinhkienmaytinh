@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    default: 'https://via.placeholder.com/150'
+    default: '/img/default-avatar.svg'
   },
   resetPasswordToken: {
     type: String

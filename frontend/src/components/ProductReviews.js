@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiStar, FiThumbsUp, FiCheckCircle, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiStar, FiThumbsUp, FiCheckCircle, FiEdit2, FiTrash2, FiCamera, FiX } from 'react-icons/fi';
 import { reviewAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import './ProductReviews.css';
@@ -13,6 +13,8 @@ const ProductReviews = ({ productId }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('recent');
   const [editingReview, setEditingReview] = useState(null);
+  const [reviewImages, setReviewImages] = useState([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
@@ -63,7 +65,8 @@ const ProductReviews = ({ productId }) => {
         // Cập nhật review đang sửa
         await reviewAPI.updateReview(editingReview._id, {
           rating: reviewForm.rating,
-          comment: reviewForm.comment
+          comment: reviewForm.comment,
+          images: reviewImages
         });
         alert('✅ Đã cập nhật đánh giá thành công!');
         setEditingReview(null);
@@ -72,12 +75,14 @@ const ProductReviews = ({ productId }) => {
         await reviewAPI.createReview({
           productId,
           rating: reviewForm.rating,
-          comment: reviewForm.comment
+          comment: reviewForm.comment,
+          images: reviewImages
         });
         alert('✅ Đã gửi đánh giá thành công!');
       }
       
       setReviewForm({ rating: 5, comment: '' });
+      setReviewImages([]);
       setShowReviewForm(false);
       fetchReviews();
     } catch (error) {
@@ -93,6 +98,7 @@ const ProductReviews = ({ productId }) => {
       rating: review.rating,
       comment: review.comment
     });
+    setReviewImages(review.images || []);
     setShowReviewForm(true);
   };
 
@@ -113,7 +119,38 @@ const ProductReviews = ({ productId }) => {
   const handleCancelEdit = () => {
     setEditingReview(null);
     setReviewForm({ rating: 5, comment: '' });
+    setReviewImages([]);
     setShowReviewForm(false);
+  };
+
+  // Xử lý upload hình ảnh
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + reviewImages.length > 5) {
+      alert('Tối đa 5 hình ảnh!');
+      return;
+    }
+
+    setUploadingImages(true);
+    
+    files.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Kích thước mỗi ảnh không được vượt quá 5MB');
+        setUploadingImages(false);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReviewImages(prev => [...prev, reader.result]);
+        setUploadingImages(false);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setReviewImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleMarkHelpful = async (reviewId) => {
@@ -199,6 +236,7 @@ const ProductReviews = ({ productId }) => {
             onClick={() => {
               setEditingReview(null);
               setReviewForm({ rating: 5, comment: '' });
+              setReviewImages([]);
               setShowReviewForm(!showReviewForm);
             }}
           >
@@ -241,11 +279,43 @@ const ProductReviews = ({ productId }) => {
             />
           </div>
 
+          <div className="form-group">
+            <label>Thêm hình ảnh (tối đa 5 ảnh):</label>
+            <div className="review-images-upload">
+              {reviewImages.map((img, index) => (
+                <div key={index} className="review-image-preview">
+                  <img src={img} alt={`Preview ${index + 1}`} />
+                  <button 
+                    type="button" 
+                    className="remove-image-btn"
+                    onClick={() => removeImage(index)}
+                  >
+                    <FiX />
+                  </button>
+                </div>
+              ))}
+              {reviewImages.length < 5 && (
+                <label className="add-image-btn">
+                  <FiCamera />
+                  <span>Thêm ảnh</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    hidden
+                  />
+                </label>
+              )}
+            </div>
+            {uploadingImages && <span className="uploading-text">Đang tải ảnh...</span>}
+          </div>
+
           <div className="form-actions">
             <button type="button" onClick={handleCancelEdit}>
               Hủy
             </button>
-            <button type="submit" disabled={submitting}>
+            <button type="submit" disabled={submitting || uploadingImages}>
               {submitting ? 'Đang gửi...' : (editingReview ? 'Cập nhật' : 'Gửi đánh giá')}
             </button>
           </div>
@@ -267,21 +337,45 @@ const ProductReviews = ({ productId }) => {
             <div key={review._id} className="review-item">
               <div className="review-header">
                 <div className="reviewer-info">
-                  <div className="reviewer-name">
-                    {review.user?.name || 'Ẩn danh'}
-                    {review.verified && (
-                      <span className="verified-badge" title="Đã mua sản phẩm">
-                        <FiCheckCircle /> Đã mua hàng
+                  <div className="reviewer-avatar">
+                    {review.user?.avatar ? (
+                      <img src={review.user.avatar} alt={review.user.name || 'Avatar'} />
+                    ) : (
+                      <span className="avatar-placeholder">
+                        {(review.user?.name || 'A').charAt(0).toUpperCase()}
                       </span>
                     )}
                   </div>
-                  <div className="review-date">{formatDate(review.createdAt)}</div>
+                  <div className="reviewer-details">
+                    <div className="reviewer-name">
+                      {review.user?.name || 'Ẩn danh'}
+                      {review.verified && (
+                        <span className="verified-badge" title="Đã mua sản phẩm">
+                          <FiCheckCircle /> Đã mua hàng
+                        </span>
+                      )}
+                    </div>
+                    <div className="review-date">{formatDate(review.createdAt)}</div>
+                  </div>
                 </div>
                 {renderStars(review.rating)}
               </div>
 
               <div className="review-content">
                 <p>{review.comment}</p>
+                
+                {review.images && review.images.length > 0 && (
+                  <div className="review-images-display">
+                    {review.images.map((img, idx) => (
+                      <img 
+                        key={idx} 
+                        src={img} 
+                        alt={`Review ${idx + 1}`}
+                        onClick={() => window.open(img, '_blank')}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="review-actions">

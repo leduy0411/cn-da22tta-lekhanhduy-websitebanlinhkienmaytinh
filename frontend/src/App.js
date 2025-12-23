@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import ChatBox from './components/ChatBox';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
@@ -16,6 +18,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import AuthCallback from './pages/AuthCallback';
 import ZaloPayCallback from './pages/ZaloPayCallback';
+import Profile from './pages/Profile';
+import PolicyPage from './pages/PolicyPage';
 import AdminLayout from './pages/Admin/AdminLayout';
 import Dashboard from './pages/Admin/Dashboard';
 import AdminProducts from './pages/Admin/AdminProducts';
@@ -53,11 +57,7 @@ const CustomerLayout = ({ children, onSearch }) => {
       <Header onSearch={handleSearchWithRedirect} />
       {children}
       <ChatBox />
-      <footer className="footer">
-        <div className="container">
-          <p>&copy; Shop linh kiện - máy tính</p>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 };
@@ -126,6 +126,18 @@ function AppContent() {
             <MyOrders />
           </CustomerLayout>
         } />
+        <Route path="/profile" element={
+          <CustomerLayout onSearch={handleSearch}>
+            <Profile />
+          </CustomerLayout>
+        } />
+        
+        {/* Policy Pages */}
+        <Route path="/:slug" element={
+          <CustomerLayout onSearch={handleSearch}>
+            <PolicyPage />
+          </CustomerLayout>
+        } />
       </Routes>
     </div>
   );
@@ -136,6 +148,7 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <Router>
+          <ScrollToTop />
           <AppContent />
         </Router>
       </CartProvider>

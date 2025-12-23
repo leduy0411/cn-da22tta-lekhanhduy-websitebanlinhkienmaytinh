@@ -31,6 +31,7 @@ const Home = ({ searchQuery }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [urlKey, setUrlKey] = useState(Date.now());
   const [expandedCategories, setExpandedCategories] = useState([]); // Track expanded category descriptions
+  const [expandedColumns, setExpandedColumns] = useState([]); // Track expanded filter columns
 
   const bannerImages = [
     `${process.env.PUBLIC_URL}/img/img-banner-dai/gearvn-laptop-gaming-t8-header-banner.png`,
@@ -825,10 +826,23 @@ const Home = ({ searchQuery }) => {
                       }
                     });
                     
-                    // Render từng cột
+                    // Render từng cột với giới hạn hiển thị
+                    const VISIBLE_ITEMS = 5; // Số item hiển thị mặc định
+                    
+                    const toggleColumnExpand = (groupKey) => {
+                      setExpandedColumns(prev => 
+                        prev.includes(groupKey) 
+                          ? prev.filter(k => k !== groupKey)
+                          : [...prev, groupKey]
+                      );
+                    };
+                    
                     const renderColumn = (groupKey, groupData) => {
                       if (groupData.length === 0) return null;
                       const def = groupDefinitions[groupKey] || { title: 'Khác', color: '#6b7280' };
+                      const isExpanded = expandedColumns.includes(groupKey);
+                      const visibleData = isExpanded ? groupData : groupData.slice(0, VISIBLE_ITEMS);
+                      const hasMore = groupData.length > VISIBLE_ITEMS;
                       
                       return (
                         <div key={groupKey} className="filter-column">
@@ -836,7 +850,7 @@ const Home = ({ searchQuery }) => {
                             {def.title}
                           </h4>
                           <ul className="filter-column-list">
-                            {groupData.map((sub, index) => (
+                            {visibleData.map((sub, index) => (
                               <li 
                                 key={index}
                                 className={`filter-column-item ${selectedSubcategories.includes(sub) ? 'active' : ''}`}
@@ -846,6 +860,19 @@ const Home = ({ searchQuery }) => {
                               </li>
                             ))}
                           </ul>
+                          {hasMore && (
+                            <button 
+                              className="filter-column-toggle"
+                              onClick={() => toggleColumnExpand(groupKey)}
+                              style={{ borderColor: def.color, color: def.color }}
+                            >
+                              {isExpanded ? (
+                                <>Thu gọn <span className="toggle-icon">▲</span></>
+                              ) : (
+                                <>Xem thêm ({groupData.length - VISIBLE_ITEMS}) <span className="toggle-icon">▼</span></>
+                              )}
+                            </button>
+                          )}
                         </div>
                       );
                     };
