@@ -23,7 +23,7 @@ const policyData = {
       },
       {
         heading: '3. Quy trình đổi trả',
-        text: `Bước 1: Liên hệ hotline 0123 456 789 hoặc email contact@techstore.vn
+        text: `Bước 1: Liên hệ hotline 0348 137 209 hoặc email Leduytctv2019@gmail.com
 Bước 2: Cung cấp thông tin đơn hàng và lý do đổi trả
 Bước 3: Gửi sản phẩm về địa chỉ cửa hàng
 Bước 4: TechStore kiểm tra và xử lý trong vòng 3-5 ngày làm việc`
@@ -228,7 +228,7 @@ Bước 4: Thông báo và trả sản phẩm cho khách hàng`
         text: `- Yêu cầu xem, sửa đổi thông tin cá nhân
 - Yêu cầu xóa thông tin khỏi hệ thống
 - Từ chối nhận email quảng cáo
-- Liên hệ contact@techstore.vn để thực hiện các yêu cầu trên`
+- Liên hệ Leduytctv2019@gmail.com để thực hiện các yêu cầu trên`
       }
     ]
   }
@@ -293,11 +293,11 @@ const PolicyPage = () => {
           <h3>Cần hỗ trợ thêm?</h3>
           <p>Liên hệ với chúng tôi qua:</p>
           <div className="contact-methods">
-            <a href="tel:0123456789" className="contact-method">
-              📞 Hotline: 0123 456 789
+            <a href="tel:0348137209" className="contact-method">
+              📞 Hotline: 0348 137 209
             </a>
-            <a href="mailto:contact@techstore.vn" className="contact-method">
-              ✉️ Email: contact@techstore.vn
+            <a href="mailto:Leduytctv2019@gmail.com" className="contact-method">
+              ✉️ Email: Leduytctv2019@gmail.com
             </a>
           </div>
         </div>

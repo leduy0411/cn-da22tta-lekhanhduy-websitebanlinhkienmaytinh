@@ -209,7 +209,7 @@ router.get('/reviews', async (req, res) => {
 
     const reviews = await Review.find(filter)
       .populate('user', 'name email')
-      .populate('product', 'name images')
+      .populate('product', 'name images price originalPrice')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });

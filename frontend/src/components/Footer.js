@@ -105,7 +105,7 @@ const Footer = () => {
                 </div>
                 <div className="contact-info">
                   <span className="contact-label">Hotline</span>
-                  <a href="tel:0123456789" className="contact-value highlight">0123 456 789</a>
+                  <a href="tel:0348137209" className="contact-value highlight">0348 137 209</a>
                 </div>
               </li>
               <li className="contact-item">
@@ -114,7 +114,7 @@ const Footer = () => {
                 </div>
                 <div className="contact-info">
                   <span className="contact-label">Email</span>
-                  <a href="mailto:contact@techstore.vn" className="contact-value">contact@techstore.vn</a>
+                  <a href="mailto:Leduytctv2019@gmail.com" className="contact-value">Leduytctv2019@gmail.com</a>
                 </div>
               </li>
               <li className="contact-item">
@@ -163,7 +163,7 @@ const Footer = () => {
       {/* Footer Bottom */}
       <div className="footer-bottom">
         <div className="footer-bottom-content">
-          <p className="copyright">&copy; 2024 TechStore. Tất cả quyền được bảo lưu.</p>
+          <p className="copyright">&copy; 2025 TechStore. Tất cả quyền được bảo lưu.</p>
           <div className="footer-bottom-links">
             <Link to="/dieu-khoan-su-dung">Điều khoản sử dụng</Link>
             <span className="divider">|</span>
