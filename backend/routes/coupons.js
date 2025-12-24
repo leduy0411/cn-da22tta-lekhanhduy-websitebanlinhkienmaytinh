@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Coupon = require('../models/Coupon');
-const { auth, isAdmin } = require('../middleware/auth');
+const { auth, isAdmin, isStaffOrAdmin } = require('../middleware/auth');
 
 // ========== ADMIN ROUTES ==========
 
-// Lấy tất cả mã giảm giá (Admin)
-router.get('/', auth, isAdmin, async (req, res) => {
+// Lấy tất cả mã giảm giá (Admin/Staff)
+router.get('/', auth, isStaffOrAdmin, async (req, res) => {
     try {
         const coupons = await Coupon.find().sort({ createdAt: -1 });
         res.json(coupons);
@@ -16,8 +16,8 @@ router.get('/', auth, isAdmin, async (req, res) => {
     }
 });
 
-// Tạo mã giảm giá mới (Admin)
-router.post('/', auth, isAdmin, async (req, res) => {
+// Tạo mã giảm giá mới (Admin/Staff)
+router.post('/', auth, isStaffOrAdmin, async (req, res) => {
     try {
         const { code, description, discountPercent, maxUses, minOrderAmount, expiryDate, isActive } = req.body;
 
@@ -45,8 +45,8 @@ router.post('/', auth, isAdmin, async (req, res) => {
     }
 });
 
-// Cập nhật mã giảm giá (Admin)
-router.put('/:id', auth, isAdmin, async (req, res) => {
+// Cập nhật mã giảm giá (Admin/Staff)
+router.put('/:id', auth, isStaffOrAdmin, async (req, res) => {
     try {
         const { code, description, discountPercent, maxUses, minOrderAmount, expiryDate, isActive } = req.body;
 
@@ -86,8 +86,8 @@ router.put('/:id', auth, isAdmin, async (req, res) => {
     }
 });
 
-// Xóa mã giảm giá (Admin)
-router.delete('/:id', auth, isAdmin, async (req, res) => {
+// Xóa mã giảm giá (Admin/Staff)
+router.delete('/:id', auth, isStaffOrAdmin, async (req, res) => {
     try {
         const coupon = await Coupon.findByIdAndDelete(req.params.id);
         if (!coupon) {

@@ -3,7 +3,7 @@ const router = express.Router();
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
-const { auth, optionalAuth } = require('../middleware/auth');
+const { auth, optionalAuth, isStaffOrAdmin } = require('../middleware/auth');
 
 // POST: Tạo đơn hàng mới
 router.post('/', optionalAuth, async (req, res) => {
@@ -11,7 +11,7 @@ router.post('/', optionalAuth, async (req, res) => {
     console.log('📦 Creating order with data:', JSON.stringify(req.body, null, 2));
     const { customerInfo, paymentMethod, note, buyNowItem } = req.body;
     const sessionId = req.headers['x-session-id'];
-    
+
     // Lấy userId từ middleware nếu user đã đăng nhập
     const userId = req.userId || null;
 
@@ -21,15 +21,15 @@ router.post('/', optionalAuth, async (req, res) => {
     // Trường hợp 1: Mua ngay (không qua giỏ hàng)
     if (buyNowItem) {
       const { productId, quantity } = buyNowItem;
-      
+
       const product = await Product.findById(productId);
       if (!product) {
         return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
       }
 
       if (product.stock < quantity) {
-        return res.status(400).json({ 
-          message: `Sản phẩm ${product.name} không đủ hàng. Còn ${product.stock} sản phẩm` 
+        return res.status(400).json({
+          message: `Sản phẩm ${product.name} không đủ hàng. Còn ${product.stock} sản phẩm`
         });
       }
 
@@ -64,7 +64,7 @@ router.post('/', optionalAuth, async (req, res) => {
       } else {
         cart = await Cart.findOne({ sessionId }).populate('items.product');
       }
-      
+
       if (!cart || cart.items.length === 0) {
         return res.status(400).json({ message: 'Giỏ hàng trống' });
       }
@@ -72,14 +72,14 @@ router.post('/', optionalAuth, async (req, res) => {
       // Kiểm tra tồn kho và tạo items cho đơn hàng
       for (const item of cart.items) {
         const product = await Product.findById(item.product._id);
-        
+
         if (!product) {
           return res.status(404).json({ message: `Sản phẩm ${item.product.name} không tồn tại` });
         }
 
         if (product.stock < item.quantity) {
-          return res.status(400).json({ 
-            message: `Sản phẩm ${product.name} không đủ hàng. Còn ${product.stock} sản phẩm` 
+          return res.status(400).json({
+            message: `Sản phẩm ${product.name} không đủ hàng. Còn ${product.stock} sản phẩm`
           });
         }
 
@@ -124,9 +124,9 @@ router.post('/', optionalAuth, async (req, res) => {
 
     console.log('✅ Order created successfully:', order._id);
 
-    res.status(201).json({ 
-      message: 'Đặt hàng thành công!', 
-      order 
+    res.status(201).json({
+      message: 'Đặt hàng thành công!',
+      order
     });
 
   } catch (error) {
@@ -165,11 +165,11 @@ router.get('/', auth, async (req, res) => {
 // GET: Lấy chi tiết đơn hàng theo ID (chỉ của user hiện tại)
 router.get('/:id', auth, async (req, res) => {
   try {
-    const order = await Order.findOne({ 
+    const order = await Order.findOne({
       _id: req.params.id,
       user: req.userId // Chỉ cho phép xem đơn hàng của chính mình
     }).populate('items.product');
-    
+
     if (!order) {
       return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
     }
@@ -185,7 +185,7 @@ router.get('/tracking/:orderNumber', async (req, res) => {
   try {
     const order = await Order.findOne({ orderNumber: req.params.orderNumber })
       .populate('items.product');
-    
+
     if (!order) {
       return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
     }
@@ -196,11 +196,11 @@ router.get('/tracking/:orderNumber', async (req, res) => {
   }
 });
 
-// PUT: Cập nhật trạng thái đơn hàng
-router.put('/:id/status', async (req, res) => {
+// PUT: Cập nhật trạng thái đơn hàng (Admin/Staff)
+router.put('/:id/status', auth, isStaffOrAdmin, async (req, res) => {
   try {
     const { status } = req.body;
-    
+
     const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
@@ -232,8 +232,8 @@ router.put('/:id/status', async (req, res) => {
   }
 });
 
-// PUT: Xác nhận giao hàng thành công
-router.put('/:id/deliver', async (req, res) => {
+// PUT: Xác nhận giao hàng thành công (Admin/Staff)
+router.put('/:id/deliver', auth, isStaffOrAdmin, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
@@ -255,17 +255,17 @@ router.put('/:id/deliver', async (req, res) => {
     order.deliveredAt = new Date();
     await order.save();
 
-    res.json({ 
-      message: 'Đã xác nhận giao hàng thành công', 
-      order 
+    res.json({
+      message: 'Đã xác nhận giao hàng thành công',
+      order
     });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi xác nhận giao hàng', error: error.message });
   }
 });
 
-// PUT: Hủy đơn hàng (hoàn trả sản phẩm vào kho)
-router.put('/:id/cancel', async (req, res) => {
+// PUT: Hủy đơn hàng (User/Admin/Staff)
+router.put('/:id/cancel', auth, async (req, res) => {
   try {
     const { reason } = req.body;
     const order = await Order.findById(req.params.id);
@@ -298,9 +298,9 @@ router.put('/:id/cancel', async (req, res) => {
     order.cancelReason = reason || 'Không có lý do';
     await order.save();
 
-    res.json({ 
-      message: 'Đã hủy đơn hàng và hoàn trả sản phẩm vào kho', 
-      order 
+    res.json({
+      message: 'Đã hủy đơn hàng và hoàn trả sản phẩm vào kho',
+      order
     });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi hủy đơn hàng', error: error.message });

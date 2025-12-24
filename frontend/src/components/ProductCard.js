@@ -2,18 +2,26 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import './ProductCard.css';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [adding, setAdding] = React.useState(false);
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
+      navigate('/login');
+      return;
+    }
+
     setAdding(true);
     const result = await addToCart(product._id, 1);
-    
+
     if (result.success) {
       alert('✅ Đã thêm vào giỏ hàng!');
     } else {
@@ -24,8 +32,14 @@ const ProductCard = ({ product }) => {
 
   const handleBuyNow = async (e) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để mua hàng');
+      navigate('/login');
+      return;
+    }
+
     if (product.stock === 0) return;
-    
+
     // Chuyển thẳng đến trang thanh toán với thông tin sản phẩm
     navigate('/checkout', {
       state: {
@@ -68,15 +82,15 @@ const ProductCard = ({ product }) => {
       {discount > 0 && (
         <div className="discount-badge">-{discount}%</div>
       )}
-      
+
       <div className="product-image">
         <img src={product.images?.[0] || product.image} alt={product.name} />
         {product.stock === 0 && <div className="out-of-stock">Hết hàng</div>}
       </div>
-      
+
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
-        
+
         {specs.length > 0 && (
           <div className="product-specs">
             {specs.map(([key, value]) => (
@@ -87,7 +101,7 @@ const ProductCard = ({ product }) => {
             ))}
           </div>
         )}
-        
+
         <div className="product-footer">
           <div className="price-section">
             {product.originalPrice && product.originalPrice > product.price && (
@@ -95,7 +109,7 @@ const ProductCard = ({ product }) => {
             )}
             <div className="product-price">{formatPrice(product.price)}</div>
           </div>
-          
+
           <div className="action-buttons">
             <button
               className="add-to-cart-btn"
@@ -106,7 +120,7 @@ const ProductCard = ({ product }) => {
               <FiShoppingCart />
               {adding ? 'Đang thêm...' : 'Thêm'}
             </button>
-            
+
             <button
               className="buy-now-btn"
               onClick={handleBuyNow}

@@ -36,7 +36,7 @@ const Login = () => {
 
     if (result.success) {
       // Chuyển hướng dựa vào role
-      if (result.user.role === 'admin') {
+      if (result.user.role === 'admin' || result.user.role === 'staff') {
         navigate('/admin');
       } else {
         navigate('/');
@@ -53,14 +53,14 @@ const Login = () => {
     // Redirect to Google OAuth with sessionId for cart merging
     const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
     const sessionId = localStorage.getItem('sessionId');
-    const url = sessionId 
+    const url = sessionId
       ? `${baseURL}/auth/google?sessionId=${sessionId}`
       : `${baseURL}/auth/google`;
     window.location.href = url;
   };
 
   return (
-    <div 
+    <div
       className="auth-page"
       style={{
         backgroundImage: `url(${process.env.PUBLIC_URL}/img/img-nen-dangnhap/pexels-lulizler-3165335.jpg)`
@@ -192,9 +192,9 @@ const Login = () => {
             </div>
 
             <div className="social-login">
-              <button 
+              <button
                 type="button"
-                className="social-btn google-btn" 
+                className="social-btn google-btn"
                 onClick={handleGoogleLogin}
                 title="Đăng nhập với Google"
               >

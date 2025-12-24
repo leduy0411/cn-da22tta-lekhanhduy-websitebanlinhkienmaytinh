@@ -4,19 +4,18 @@ const User = require('../models/User');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Review = require('../models/Review');
-const { auth, isAdmin } = require('../middleware/auth');
+const { auth, isAdmin, isStaffOrAdmin } = require('../middleware/auth');
 
-// Tất cả routes đều yêu cầu auth và isAdmin
-router.use(auth, isAdmin);
+// Note: Removed global router.use(auth, isAdmin) to allow granular permissions
 
-// GET: Dashboard statistics
-router.get('/stats', async (req, res) => {
+// GET: Dashboard statistics (Admin Only)
+router.get('/stats', auth, isAdmin, async (req, res) => {
   try {
     const totalUsers = await User.countDocuments({ role: 'customer' });
     const totalProducts = await Product.countDocuments();
     // Chỉ đếm đơn hàng chưa bị hủy
     const totalOrders = await Order.countDocuments({ status: { $ne: 'cancelled' } });
-    
+
     const totalRevenue = await Order.aggregate([
       { $match: { status: { $ne: 'cancelled' } } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
@@ -38,9 +37,9 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// USER MANAGEMENT
+// USER MANAGEMENT (ADMIN ONLY)
 // GET: Lấy danh sách users
-router.get('/users', async (req, res) => {
+router.get('/users', auth, isAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -65,11 +64,11 @@ router.get('/users', async (req, res) => {
 });
 
 // PUT: Cập nhật role user
-router.put('/users/:id/role', async (req, res) => {
+router.put('/users/:id/role', auth, isAdmin, async (req, res) => {
   try {
     const { role } = req.body;
-    
-    if (!['customer', 'admin'].includes(role)) {
+
+    if (!['customer', 'admin', 'staff'].includes(role)) {
       return res.status(400).json({ message: 'Role không hợp lệ!' });
     }
 
@@ -90,10 +89,10 @@ router.put('/users/:id/role', async (req, res) => {
 });
 
 // PUT: Khóa/Mở khóa user
-router.put('/users/:id/toggle-status', async (req, res) => {
+router.put('/users/:id/toggle-status', auth, isAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy user!' });
     }
@@ -101,9 +100,9 @@ router.put('/users/:id/toggle-status', async (req, res) => {
     user.isActive = !user.isActive;
     await user.save();
 
-    res.json({ 
-      message: user.isActive ? 'Đã mở khóa user!' : 'Đã khóa user!', 
-      user 
+    res.json({
+      message: user.isActive ? 'Đã mở khóa user!' : 'Đã khóa user!',
+      user
     });
   } catch (error) {
     res.status(400).json({ message: 'Lỗi khi cập nhật!', error: error.message });
@@ -111,13 +110,13 @@ router.put('/users/:id/toggle-status', async (req, res) => {
 });
 
 // DELETE: Xóa user và tất cả đơn hàng liên quan
-router.delete('/users/:id', async (req, res) => {
+router.delete('/users/:id', auth, isAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
-    
+
     // Xóa tất cả đơn hàng của user này
     const deletedOrders = await Order.deleteMany({ user: userId });
-    
+
     // Xóa user
     const user = await User.findByIdAndDelete(userId);
 
@@ -125,7 +124,7 @@ router.delete('/users/:id', async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy user!' });
     }
 
-    res.json({ 
+    res.json({
       message: 'Đã xóa user và tất cả đơn hàng liên quan!',
       deletedOrdersCount: deletedOrders.deletedCount
     });
@@ -134,9 +133,9 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
-// ORDER MANAGEMENT - Enhanced
+// ORDER MANAGEMENT - Enhanced (Admin/Staff)
 // GET: Lấy tất cả đơn hàng với filter
-router.get('/orders', async (req, res) => {
+router.get('/orders', auth, isStaffOrAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -165,8 +164,8 @@ router.get('/orders', async (req, res) => {
   }
 });
 
-// DELETE: Xóa đơn hàng
-router.delete('/orders/:id', async (req, res) => {
+// DELETE: Xóa đơn hàng (Admin Only - sensitive action)
+router.delete('/orders/:id', auth, isAdmin, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
@@ -193,10 +192,10 @@ router.delete('/orders/:id', async (req, res) => {
   }
 });
 
-// ==================== REVIEW MANAGEMENT ====================
+// ==================== REVIEW MANAGEMENT (Admin/Staff) ====================
 
 // GET: Lấy tất cả đánh giá với filter
-router.get('/reviews', async (req, res) => {
+router.get('/reviews', auth, isStaffOrAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -239,8 +238,8 @@ router.get('/reviews', async (req, res) => {
   }
 });
 
-// PUT: Cập nhật trạng thái đánh giá
-router.put('/reviews/:id/status', async (req, res) => {
+// PUT: Cập nhật trạng thái đánh giá (Admin/Staff)
+router.put('/reviews/:id/status', auth, isStaffOrAdmin, async (req, res) => {
   try {
     const { status } = req.body;
     const review = await Review.findById(req.params.id);
@@ -257,31 +256,31 @@ router.put('/reviews/:id/status', async (req, res) => {
       pending: 'Đã chuyển về chờ duyệt!'
     };
 
-    res.json({ 
-      message: messages[review.status] || 'Đã cập nhật!', 
-      review 
+    res.json({
+      message: messages[review.status] || 'Đã cập nhật!',
+      review
     });
   } catch (error) {
     res.status(400).json({ message: 'Lỗi khi cập nhật!', error: error.message });
   }
 });
 
-// DELETE: Xóa đánh giá
-router.delete('/reviews/:id', async (req, res) => {
+// DELETE: Xóa đánh giá (Admin/Staff)
+router.delete('/reviews/:id', auth, isStaffOrAdmin, async (req, res) => {
   try {
     const review = await Review.findByIdAndDelete(req.params.id);
     if (!review) {
       return res.status(404).json({ message: 'Không tìm thấy đánh giá!' });
     }
-    
+
     // Cập nhật rating trung bình cho sản phẩm sau khi xóa review
     const mongoose = require('mongoose');
     const stats = await Review.aggregate([
-      { 
-        $match: { 
+      {
+        $match: {
           product: review.product,
           status: 'approved'
-        } 
+        }
       },
       {
         $group: {
@@ -295,19 +294,19 @@ router.delete('/reviews/:id', async (req, res) => {
     const rating = stats.length > 0 ? Math.round(stats[0].averageRating * 10) / 10 : 0;
     const reviewCount = stats.length > 0 ? stats[0].totalReviews : 0;
 
-    await Product.findByIdAndUpdate(review.product, { 
+    await Product.findByIdAndUpdate(review.product, {
       rating: rating,
       reviewCount: reviewCount
     });
-    
+
     res.json({ message: 'Đã xóa đánh giá!' });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi xóa đánh giá!', error: error.message });
   }
 });
 
-// POST: Cập nhật rating cho tất cả sản phẩm (sync từ reviews)
-router.post('/sync-ratings', async (req, res) => {
+// POST: Cập nhật rating cho tất cả sản phẩm (sync từ reviews) - Admin Only
+router.post('/sync-ratings', auth, isAdmin, async (req, res) => {
   try {
     const mongoose = require('mongoose');
     const products = await Product.find({});
@@ -315,11 +314,11 @@ router.post('/sync-ratings', async (req, res) => {
 
     for (const product of products) {
       const stats = await Review.aggregate([
-        { 
-          $match: { 
+        {
+          $match: {
             product: product._id,
             status: 'approved'
-          } 
+          }
         },
         {
           $group: {
@@ -333,16 +332,16 @@ router.post('/sync-ratings', async (req, res) => {
       const rating = stats.length > 0 ? Math.round(stats[0].averageRating * 10) / 10 : 0;
       const reviewCount = stats.length > 0 ? stats[0].totalReviews : 0;
 
-      await Product.findByIdAndUpdate(product._id, { 
+      await Product.findByIdAndUpdate(product._id, {
         rating: rating,
         reviewCount: reviewCount
       });
       updated++;
     }
 
-    res.json({ 
+    res.json({
       message: `Đã cập nhật rating cho ${updated} sản phẩm!`,
-      updated 
+      updated
     });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi đồng bộ rating!', error: error.message });

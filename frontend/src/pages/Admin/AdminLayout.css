@@ -6,7 +6,7 @@
 
 .admin-sidebar {
   width: 260px;
-  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+  background: linear-gradient(180deg, #312e81 0%, #4338ca 100%);
   color: white;
   position: fixed;
   height: 100vh;
@@ -24,21 +24,41 @@
 
 .sidebar-header {
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.brand-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
-.sidebar-header .header-icon {
-  font-size: 1.5rem;
-  color: #667eea;
+.brand-icon {
+  font-size: 2rem;
+  color: #ffffff;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
 }
 
-.sidebar-header h2 {
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
   margin: 0;
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 1px;
+}
+
+.brand-subtitle {
+  font-size: 0.8rem;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 2px;
 }
 
 .sidebar-nav {
@@ -54,7 +74,7 @@
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
 }
 
@@ -62,27 +82,28 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.5rem;
-  color: rgba(255, 255, 255, 0.8);
+  padding: 0.85rem 1.5rem;
+  color: #a0aec0;
   text-decoration: none;
-  transition: all 0.3s;
-  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  border-left: 4px solid transparent;
   background: none;
   border: none;
   width: 100%;
   text-align: left;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 500;
 }
 
 .sidebar-nav .nav-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   color: white;
 }
 
 .sidebar-nav .nav-item.active {
-  background: rgba(102, 126, 234, 0.2);
-  border-left-color: #667eea;
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: #63b3ed;
   color: white;
 }
 
@@ -107,7 +128,7 @@
 
 .sidebar-footer {
   padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .admin-info {
@@ -126,12 +147,12 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   border: 3px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
   position: relative;
   overflow: hidden;
 }

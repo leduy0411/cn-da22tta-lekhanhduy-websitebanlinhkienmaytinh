@@ -13,7 +13,7 @@ const Profile = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [userReviews, setUserReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
-  
+
   // Form states
   const [profileData, setProfileData] = useState({
     name: '',
@@ -22,13 +22,13 @@ const Profile = () => {
     address: '',
     avatar: ''
   });
-  
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState('');
 
@@ -93,7 +93,7 @@ const Profile = () => {
         setMessage({ type: 'error', text: 'Kích thước ảnh không được vượt quá 5MB' });
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarPreview(reader.result);
@@ -111,23 +111,23 @@ const Profile = () => {
     try {
       setLoading(true);
       setMessage({ type: '', text: '' });
-      
+
       await authAPI.updateProfile({
         name: profileData.name,
         phone: profileData.phone,
         address: profileData.address,
         avatar: profileData.avatar
       });
-      
+
       setMessage({ type: 'success', text: 'Cập nhật thông tin thành công!' });
       setIsEditing(false);
-      
+
       // Refresh user data
       window.location.reload();
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Lỗi khi cập nhật thông tin' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Lỗi khi cập nhật thông tin'
       });
     } finally {
       setLoading(false);
@@ -136,23 +136,23 @@ const Profile = () => {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setMessage({ type: 'error', text: 'Mật khẩu mới không khớp!' });
       return;
     }
-    
+
     if (passwordData.newPassword.length < 6) {
       setMessage({ type: 'error', text: 'Mật khẩu mới phải có ít nhất 6 ký tự!' });
       return;
     }
-    
+
     try {
       setLoading(true);
       setMessage({ type: '', text: '' });
-      
+
       await authAPI.changePassword(passwordData.currentPassword, passwordData.newPassword);
-      
+
       setMessage({ type: 'success', text: 'Đổi mật khẩu thành công!' });
       setPasswordData({
         currentPassword: '',
@@ -160,9 +160,9 @@ const Profile = () => {
         confirmPassword: ''
       });
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Lỗi khi đổi mật khẩu' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Lỗi khi đổi mật khẩu'
       });
     } finally {
       setLoading(false);
@@ -171,7 +171,7 @@ const Profile = () => {
 
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
-    
+
     try {
       await reviewAPI.deleteReview(reviewId);
       setUserReviews(prev => prev.filter(r => r._id !== reviewId));
@@ -191,8 +191,8 @@ const Profile = () => {
 
   const renderStars = (rating) => {
     return [...Array(5)].map((_, i) => (
-      <FiStar 
-        key={i} 
+      <FiStar
+        key={i}
         className={i < rating ? 'star-filled' : 'star-empty'}
         fill={i < rating ? '#f59e0b' : 'none'}
       />
@@ -213,9 +213,9 @@ const Profile = () => {
         <div className="profile-sidebar">
           <div className="profile-avatar-section">
             <div className="avatar-wrapper">
-              <img 
-                src={avatarPreview || '/img/default-avatar.svg'} 
-                alt="Avatar" 
+              <img
+                src={avatarPreview || '/img/default-avatar.svg'}
+                alt="Avatar"
                 className="profile-avatar"
                 onError={(e) => {
                   e.target.onerror = null;
@@ -225,54 +225,58 @@ const Profile = () => {
               {isEditing && (
                 <label className="avatar-upload-btn">
                   <FiCamera />
-                  <input 
-                    type="file" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    accept="image/*"
                     onChange={handleAvatarChange}
-                    hidden 
+                    hidden
                   />
                 </label>
               )}
             </div>
             <h2 className="profile-name">{user.name}</h2>
-            <p className="profile-email">{user.email}</p>
+            {user?.role !== 'staff' && <p className="profile-email">{user.email}</p>}
           </div>
-          
+
           <nav className="profile-nav">
-            <button 
+            <button
               className={`nav-item ${activeTab === 'info' ? 'active' : ''}`}
               onClick={() => setActiveTab('info')}
             >
               <FiUser /> Thông tin cá nhân
             </button>
-            <button 
+            <button
               className={`nav-item ${activeTab === 'password' ? 'active' : ''}`}
               onClick={() => setActiveTab('password')}
             >
               <FiLock /> Đổi mật khẩu
             </button>
-            <button 
-              className={`nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
-              onClick={() => setActiveTab('reviews')}
-            >
-              <FiStar /> Đánh giá của tôi
-            </button>
-            <button 
-              className="nav-item"
-              onClick={() => navigate('/my-orders')}
-            >
-              <FiPackage /> Đơn hàng của tôi
-            </button>
+            {user?.role !== 'staff' && (
+              <button
+                className={`nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
+                onClick={() => setActiveTab('reviews')}
+              >
+                <FiStar /> Đánh giá của tôi
+              </button>
+            )}
+            {user?.role !== 'staff' && (
+              <button
+                className="nav-item"
+                onClick={() => navigate('/my-orders')}
+              >
+                <FiPackage /> Đơn hàng của tôi
+              </button>
+            )}
           </nav>
         </div>
-        
+
         <div className="profile-content">
           {message.text && (
             <div className={`message ${message.type}`}>
               {message.text}
             </div>
           )}
-          
+
           {/* Tab: Thông tin cá nhân */}
           {activeTab === 'info' && (
             <div className="profile-section">
@@ -284,7 +288,7 @@ const Profile = () => {
                   </button>
                 )}
               </div>
-              
+
               <form onSubmit={handleProfileSubmit} className="profile-form">
                 <div className="form-group">
                   <label><FiUser /> Họ và tên</label>
@@ -297,7 +301,7 @@ const Profile = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="form-group">
                   <label><FiMail /> Email</label>
                   <input
@@ -309,7 +313,7 @@ const Profile = () => {
                   />
                   <small>Email không thể thay đổi</small>
                 </div>
-                
+
                 <div className="form-group">
                   <label><FiPhone /> Số điện thoại</label>
                   <input
@@ -321,7 +325,7 @@ const Profile = () => {
                     placeholder="Nhập số điện thoại"
                   />
                 </div>
-                
+
                 <div className="form-group">
                   <label><FiMapPin /> Địa chỉ</label>
                   <textarea
@@ -333,11 +337,11 @@ const Profile = () => {
                     rows="3"
                   />
                 </div>
-                
+
                 {isEditing && (
                   <div className="form-actions">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="cancel-btn"
                       onClick={() => {
                         setIsEditing(false);
@@ -361,21 +365,21 @@ const Profile = () => {
               </form>
             </div>
           )}
-          
+
           {/* Tab: Đổi mật khẩu */}
           {activeTab === 'password' && (
             <div className="profile-section">
               <div className="section-header">
                 <h2>Đổi mật khẩu</h2>
               </div>
-              
+
               {user.authProvider !== 'local' && (
                 <div className="oauth-notice">
-                  <p>⚠️ Bạn đã đăng nhập bằng Google. 
-                  Không thể đổi mật khẩu cho tài khoản liên kết.</p>
+                  <p>⚠️ Bạn đã đăng nhập bằng Google.
+                    Không thể đổi mật khẩu cho tài khoản liên kết.</p>
                 </div>
               )}
-              
+
               {user.authProvider === 'local' && (
                 <form onSubmit={handlePasswordSubmit} className="password-form">
                   <div className="form-group">
@@ -389,7 +393,7 @@ const Profile = () => {
                       placeholder="Nhập mật khẩu hiện tại"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label>Mật khẩu mới</label>
                     <input
@@ -402,7 +406,7 @@ const Profile = () => {
                       placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label>Xác nhận mật khẩu mới</label>
                     <input
@@ -414,7 +418,7 @@ const Profile = () => {
                       placeholder="Nhập lại mật khẩu mới"
                     />
                   </div>
-                  
+
                   <div className="form-actions">
                     <button type="submit" className="save-btn" disabled={loading}>
                       {loading ? 'Đang xử lý...' : 'Đổi mật khẩu'}
@@ -424,14 +428,14 @@ const Profile = () => {
               )}
             </div>
           )}
-          
+
           {/* Tab: Đánh giá của tôi */}
           {activeTab === 'reviews' && (
             <div className="profile-section">
               <div className="section-header">
                 <h2>Đánh giá của tôi</h2>
               </div>
-              
+
               {reviewsLoading ? (
                 <div className="reviews-loading">Đang tải đánh giá...</div>
               ) : userReviews.length === 0 ? (
@@ -447,8 +451,8 @@ const Profile = () => {
                   {userReviews.map((review) => (
                     <div key={review._id} className="review-card">
                       <div className="review-product">
-                        <img 
-                          src={review.product?.images?.[0] || 'https://via.placeholder.com/80'} 
+                        <img
+                          src={review.product?.images?.[0] || 'https://via.placeholder.com/80'}
                           alt={review.product?.name}
                           onClick={() => navigate(`/product/${review.product?._id}`)}
                         />
@@ -462,16 +466,16 @@ const Profile = () => {
                           <span className="review-date">{formatDate(review.createdAt)}</span>
                         </div>
                       </div>
-                      
+
                       <div className="review-content">
                         <p>{review.comment}</p>
-                        
+
                         {review.images && review.images.length > 0 && (
                           <div className="review-images">
                             {review.images.map((img, idx) => (
-                              <img 
-                                key={idx} 
-                                src={img} 
+                              <img
+                                key={idx}
+                                src={img}
                                 alt={`Review ${idx + 1}`}
                                 onClick={() => window.open(img, '_blank')}
                                 style={{ cursor: 'pointer' }}
@@ -480,9 +484,9 @@ const Profile = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="review-actions">
-                        <button 
+                        <button
                           className="delete-review-btn"
                           onClick={() => handleDeleteReview(review._id)}
                         >

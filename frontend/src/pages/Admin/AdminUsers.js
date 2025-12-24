@@ -25,7 +25,7 @@ function AdminUsers() {
         params: { page: currentPage, limit: 20 },
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       setUsers(response.data.users || response.data);
       setTotalPages(response.data.totalPages || 1);
     } catch (error) {
@@ -105,7 +105,7 @@ function AdminUsers() {
 
   const filteredUsers = users.filter(user => {
     const matchRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchSearch = 
+    const matchSearch =
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchRole && matchSearch;
@@ -129,8 +129,8 @@ function AdminUsers() {
       <div className="users-filters">
         <div className="filter-group">
           <FiShield className="filter-icon" />
-          <select 
-            value={roleFilter} 
+          <select
+            value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
             className="role-filter"
           >
@@ -189,7 +189,7 @@ function AdminUsers() {
                   <td>{user.email}</td>
                   <td>
                     <span className={`role-badge ${user.role}`}>
-                      {user.role === 'admin' ? 'Quản trị viên' : 'Khách hàng'}
+                      {user.role === 'admin' ? 'Quản trị viên' : (user.role === 'staff' ? 'Nhân viên' : 'Khách hàng')}
                     </span>
                   </td>
                   <td>
@@ -207,11 +207,11 @@ function AdminUsers() {
                       onChange={(e) => handleUpdateRole(user._id, e.target.value)}
                       title="Thay đổi quyền"
                     >
-                      <option value={user.role}>Đổi quyền...</option>
-                      {user.role === 'customer' && <option value="admin">Lên Admin</option>}
-                      {user.role === 'admin' && <option value="customer">Xuống Khách</option>}
+                      <option value="customer">Khách hàng</option>
+                      <option value="staff">Nhân viên</option>
+                      <option value="admin">Quản trị viên</option>
                     </select>
-                    
+
                     <button
                       className={`btn-toggle ${user.isActive !== false ? 'lock' : 'unlock'}`}
                       onClick={() => handleToggleStatus(user._id, user.isActive !== false)}
@@ -219,7 +219,7 @@ function AdminUsers() {
                     >
                       {user.isActive !== false ? <FiLock /> : <FiUnlock />}
                     </button>
-                    
+
                     <button
                       className="btn-delete"
                       onClick={() => handleDeleteUser(user._id)}
@@ -235,28 +235,30 @@ function AdminUsers() {
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button 
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-            className="btn-page"
-          >
-            Trước
-          </button>
-          <span className="page-info">
-            Trang {currentPage} / {totalPages}
-          </span>
-          <button 
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage === totalPages}
-            className="btn-page"
-          >
-            Sau
-          </button>
-        </div>
-      )}
-    </div>
+      {
+        totalPages > 1 && (
+          <div className="pagination">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="btn-page"
+            >
+              Trước
+            </button>
+            <span className="page-info">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="btn-page"
+            >
+              Sau
+            </button>
+          </div>
+        )
+      }
+    </div >
   );
 }
 

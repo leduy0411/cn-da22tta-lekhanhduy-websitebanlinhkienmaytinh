@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
 import { productAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import ProductReviews from '../components/ProductReviews';
@@ -11,6 +12,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -51,9 +53,15 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
+      navigate('/login');
+      return;
+    }
+
     setAdding(true);
     const result = await addToCart(product._id, quantity);
-    
+
     if (result.success) {
       alert('✅ Đã thêm vào giỏ hàng!');
     } else {
@@ -63,8 +71,14 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = async () => {
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để mua hàng');
+      navigate('/login');
+      return;
+    }
+
     if (product.stock === 0) return;
-    
+
     // Chuyển thẳng đến trang thanh toán với thông tin sản phẩm
     navigate('/checkout', {
       state: {
@@ -106,17 +120,17 @@ const ProductDetail = () => {
             <div className="main-image">
               <img src={selectedImage} alt={product.name} />
             </div>
-            
+
             {product.images && product.images.length > 0 && (
               <div className="image-thumbnails">
-                <div 
+                <div
                   className={`thumbnail ${selectedImage === product.image ? 'active' : ''}`}
                   onClick={() => setSelectedImage(product.image)}
                 >
                   <img src={product.image} alt={`${product.name} - main`} />
                 </div>
                 {product.images.map((img, index) => (
-                  <div 
+                  <div
                     key={index}
                     className={`thumbnail ${selectedImage === img ? 'active' : ''}`}
                     onClick={() => setSelectedImage(img)}
@@ -131,7 +145,7 @@ const ProductDetail = () => {
           <div className="product-info-section">
             <div className="brand-tag">{product.brand}</div>
             <h1 className="product-title">{product.name}</h1>
-            
+
             {product.rating > 0 && (
               <div className="rating">
                 ⭐ {product.rating.toFixed(1)} / 5.0
@@ -151,7 +165,7 @@ const ProductDetail = () => {
 
             <div className="description">
               <h3>Mô tả sản phẩm</h3>
-              <div 
+              <div
                 className="product-description-content"
                 dangerouslySetInnerHTML={{ __html: product.description }}
               />
@@ -208,7 +222,7 @@ const ProductDetail = () => {
                   <FiShoppingCart size={20} />
                   {adding ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
                 </button>
-                
+
                 <button
                   className="buy-now-btn-large"
                   onClick={handleBuyNow}

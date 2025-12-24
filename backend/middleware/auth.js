@@ -42,6 +42,14 @@ const isCustomerOrAdmin = (req, res, next) => {
   next();
 };
 
+// Middleware kiểm tra role admin hoặc staff
+const isStaffOrAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'staff') {
+    return res.status(403).json({ message: 'Bạn không có quyền truy cập!' });
+  }
+  next();
+};
+
 // Middleware xác thực token nhưng không bắt buộc (cho phép cả guest)
 const optionalAuth = async (req, res, next) => {
   try {
@@ -68,7 +76,7 @@ const optionalAuth = async (req, res, next) => {
       // Không có token → không set userId
       req.userId = undefined;
     }
-    
+
     next();
   } catch (error) {
     req.userId = undefined;
@@ -76,4 +84,4 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { auth, isAdmin, isCustomerOrAdmin, optionalAuth };
+module.exports = { auth, isAdmin, isCustomerOrAdmin, optionalAuth, isStaffOrAdmin };

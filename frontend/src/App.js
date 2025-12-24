@@ -34,13 +34,13 @@ import './App.css';
 
 // Protected Route cho Admin
 const AdminRoute = ({ children }) => {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, isStaff, loading } = useAuth();
 
   if (loading) {
     return <div className="loading">Đang tải...</div>;
   }
 
-  return isAdmin() ? children : <Navigate to="/login" />;
+  return (isAdmin() || isStaff()) ? children : <Navigate to="/login" />;
 };
 
 // Layout cho trang customer

@@ -40,17 +40,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login(email, password);
       const { token, user } = response.data;
-      
+
       // Xóa sessionId cũ khi đăng nhập
       clearSessionId();
-      
+
       localStorage.setItem('token', token);
       setToken(token);
       setUser(user);
-      
+
       // Trigger event để reload giỏ hàng
       window.dispatchEvent(new Event('auth-change'));
-      
+
       return { success: true, user };
     } catch (error) {
       return {
@@ -64,17 +64,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register(userData);
       const { token, user } = response.data;
-      
+
       // Xóa sessionId cũ khi đăng ký
       clearSessionId();
-      
+
       localStorage.setItem('token', token);
       setToken(token);
       setUser(user);
-      
+
       // Trigger event để reload giỏ hàng
       window.dispatchEvent(new Event('auth-change'));
-      
+
       return { success: true, user };
     } catch (error) {
       return {
@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
-    
+
     // Trigger event để reload giỏ hàng với sessionId mới
     window.dispatchEvent(new Event('auth-change'));
   };
@@ -114,6 +114,10 @@ export const AuthProvider = ({ children }) => {
     return user?.role === 'customer';
   };
 
+  const isStaff = () => {
+    return user?.role === 'staff';
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -125,6 +129,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         updateProfile,
         isAdmin,
+        isStaff,
         isCustomer,
         isAuthenticated: !!token && !!user,
       }}

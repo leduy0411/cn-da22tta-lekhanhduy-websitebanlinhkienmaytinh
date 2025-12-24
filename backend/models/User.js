@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: function() {
+    required: function () {
       // Password không bắt buộc nếu đăng nhập qua OAuth
       return !this.googleId && !this.facebookId;
     },
@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['customer', 'admin'],
+    enum: ['customer', 'admin', 'staff'],
     default: 'customer'
   },
   isActive: {
@@ -67,10 +67,10 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password trước khi lưu
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   // Bỏ qua nếu password không thay đổi hoặc không có password (OAuth)
   if (!this.isModified('password') || !this.password) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -81,12 +81,12 @@ userSchema.pre('save', async function(next) {
 });
 
 // Method để so sánh password
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Không trả về password khi query
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
   return obj;

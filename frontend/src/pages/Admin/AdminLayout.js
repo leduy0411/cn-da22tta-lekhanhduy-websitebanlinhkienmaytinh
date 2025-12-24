@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiSettings, FiTag } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiSettings, FiTag, FiCpu } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import './AdminLayout.css';
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isStaff } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    if (!isAdmin()) {
+    if (!isAdmin() && !isStaff()) {
       navigate('/');
     }
   }, [user]);
@@ -24,14 +24,14 @@ const AdminLayout = () => {
   };
 
   const menuItems = [
-    { path: '/admin', icon: FiBarChart2, label: 'Dashboard', exact: true },
-    { path: '/admin/products', icon: FiPackage, label: 'Sản phẩm' },
-    { path: '/admin/categories', icon: FiGrid, label: 'Danh mục' },
-    { path: '/admin/orders', icon: FiShoppingBag, label: 'Đơn hàng' },
-    { path: '/admin/users', icon: FiUsers, label: 'Người dùng' },
-    { path: '/admin/coupons', icon: FiTag, label: 'Mã giảm giá' },
-    { path: '/admin/reviews', icon: FiStar, label: 'Đánh giá' },
-    { path: '/admin/chat', icon: FiMessageCircle, label: 'Chat' },
+    { path: '/admin', icon: FiBarChart2, label: 'Dashboard', exact: true, roles: ['admin'] },
+    { path: '/admin/products', icon: FiPackage, label: 'Sản phẩm', roles: ['admin'] },
+    { path: '/admin/categories', icon: FiGrid, label: 'Danh mục', roles: ['admin'] },
+    { path: '/admin/orders', icon: FiShoppingBag, label: 'Đơn hàng', roles: ['admin', 'staff'] },
+    { path: '/admin/users', icon: FiUsers, label: 'Người dùng', roles: ['admin'] },
+    { path: '/admin/coupons', icon: FiTag, label: 'Mã giảm giá', roles: ['admin', 'staff'] },
+    { path: '/admin/reviews', icon: FiStar, label: 'Đánh giá', roles: ['admin', 'staff'] },
+    { path: '/admin/chat', icon: FiMessageCircle, label: 'Chat', roles: ['admin', 'staff'] },
   ];
 
   const isActive = (path, exact = false) => {
@@ -41,20 +41,34 @@ const AdminLayout = () => {
     return location.pathname.startsWith(path);
   };
 
-  if (!isAdmin()) {
+  if (!isAdmin() && !isStaff()) {
     return null;
   }
+
+  // Filter menu items based on user role
+  const allowedMenuItems = menuItems.filter(item => {
+    if (isAdmin()) return true;
+    if (isStaff()) return item.roles.includes('staff');
+    return false;
+  });
 
   return (
     <div className="admin-layout">
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
-          <FiSettings className="header-icon" />
-          <h2>Admin</h2>
+          <div className="brand-wrapper">
+            <FiCpu className="brand-icon" />
+            <div className="brand-text">
+              <h1 className="brand-title">TechStore</h1>
+              <span className="brand-subtitle">
+                {isAdmin() ? 'Quản trị viên' : 'Nhân viên'}
+              </span>
+            </div>
+          </div>
         </div>
 
         <nav className="sidebar-nav">
-          {menuItems.map((item) => (
+          {allowedMenuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
@@ -80,12 +94,17 @@ const AdminLayout = () => {
           <div className="admin-info">
             <div className="admin-avatar">
               <div className="avatar-circle">
-                <img src="/img/img-admin-logo/ADMIN.png" alt="Admin" className="avatar-image" />
+                <img
+                  src={user?.avatar ? (user.avatar.startsWith('http') ? user.avatar : `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${user.avatar}`) : '/img/img-admin-logo/ADMIN.png'}
+                  alt={user?.name || 'User'}
+                  className="avatar-image"
+                  onError={(e) => e.target.src = '/img/img-admin-logo/ADMIN.png'}
+                />
               </div>
             </div>
             <div className="admin-details">
               <p className="admin-name">{user?.name}</p>
-              <p className="admin-role">Administrator</p>
+              <p className="admin-role">{isAdmin() ? 'Administrator' : 'Staff'}</p>
             </div>
           </div>
         </div>

@@ -58,8 +58,8 @@
 }
 
 /* Override margin for subcategory label specifically */
-.form-group > label:has(+ div.subcategory-controls),
-.form-group > label:has(+ div.subcategory-list) {
+.form-group>label:has(+ div.subcategory-controls),
+.form-group>label:has(+ div.subcategory-list) {
   margin-bottom: 0.75rem;
 }
 
@@ -203,7 +203,7 @@
   border-color: #667eea;
 }
 
-.subcategory-checkbox input:checked ~ .checkmark {
+.subcategory-checkbox input:checked~.checkmark {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-color: #667eea;
 }
@@ -221,7 +221,7 @@
   transform: rotate(45deg);
 }
 
-.subcategory-checkbox input:checked ~ .checkmark:after {
+.subcategory-checkbox input:checked~.checkmark:after {
   display: block;
 }
 
@@ -232,7 +232,7 @@
   user-select: none;
 }
 
-.subcategory-checkbox input:checked ~ .subcategory-text {
+.subcategory-checkbox input:checked~.subcategory-text {
   color: #667eea;
   font-weight: 600;
 }
@@ -396,7 +396,7 @@
   background: white;
   padding: 2rem;
   border-radius: 16px;
-  max-width: 600px;
+  max-width: 800px !important;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;

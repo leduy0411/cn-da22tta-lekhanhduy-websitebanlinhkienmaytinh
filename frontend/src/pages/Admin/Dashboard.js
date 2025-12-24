@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiUsers, FiPackage, FiShoppingBag, FiDollarSign, FiAlertCircle, FiTrendingUp, FiEye, FiX } from 'react-icons/fi';
 import { adminAPI, orderAPI, productAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import './Dashboard.css';
 
@@ -14,6 +15,7 @@ const Dashboard = () => {
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [modalData, setModalData] = useState({ show: false, type: '', data: [], title: '' });
   const navigate = useNavigate();
+  const { isAdmin, user } = useAuth();
 
   useEffect(() => {
     fetchDashboardData();
@@ -21,17 +23,29 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [statsResponse, ordersResponse, productsResponse] = await Promise.all([
-        adminAPI.getStats(),
+      const promises = [
         orderAPI.getOrders({ status: 'pending', limit: 5 }),
         productAPI.getAll({ stock_lte: 10, limit: 5 })
-      ]);
-      
-      setStats(statsResponse.data);
-      setPendingOrders(ordersResponse.data.orders || []);
-      setLowStockProducts(productsResponse.data.products || productsResponse.data || []);
+      ];
+
+      if (isAdmin()) {
+        promises.unshift(adminAPI.getStats());
+      }
+
+      const results = await Promise.all(promises);
+
+      if (isAdmin()) {
+        const [statsResponse, ordersResponse, productsResponse] = results;
+        setStats(statsResponse.data);
+        setPendingOrders(ordersResponse.data.orders || []);
+        setLowStockProducts(productsResponse.data.products || productsResponse.data || []);
+      } else {
+        const [ordersResponse, productsResponse] = results;
+        setPendingOrders(ordersResponse.data.orders || []);
+        setLowStockProducts(productsResponse.data.products || productsResponse.data || []);
+      }
     } catch (error) {
-      console.error('Lỗi khi lấy thống kê:', error);
+      console.error('Lỗi khi lấy dữ liệu dashboard:', error);
     } finally {
       setLoading(false);
     }
@@ -195,41 +209,54 @@ const Dashboard = () => {
         <p className="dashboard-subtitle">Tổng quan hệ thống</p>
       </div>
 
-      <div className="stats-grid">
-        {statCards.map((card, index) => (
-          <div 
-            key={index} 
-            className="stat-card clickable" 
-            style={{ borderLeftColor: card.color }}
-            onClick={card.onClick}
-          >
-            <div className="stat-icon" style={{ background: card.bgColor, color: card.color }}>
-              <card.icon size={24} />
-            </div>
-            <div className="stat-content">
-              <h3 className="stat-title">{card.title}</h3>
-              <p className="stat-value">{card.value}</p>
+      {isAdmin() && (
+        <>
+          <div className="stats-grid">
+            {statCards.map((card, index) => (
+              <div
+                key={index}
+                className="stat-card clickable"
+                style={{ borderLeftColor: card.color }}
+                onClick={card.onClick}
+              >
+                <div className="stat-icon" style={{ background: card.bgColor, color: card.color }}>
+                  <card.icon size={24} />
+                </div>
+                <div className="stat-content">
+                  <h3 className="stat-title">{card.title}</h3>
+                  <p className="stat-value">{card.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="alerts-section">
+            <h2>Cảnh báo</h2>
+            <div className="alerts-grid">
+              {alertCards.map((card, index) => (
+                <div key={index} className="alert-card">
+                  <card.icon size={32} color={card.color} />
+                  <div className="alert-content">
+                    <h3>{card.title}</h3>
+                    <p className="alert-value" style={{ color: card.color }}>
+                      {card.value}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
-      <div className="alerts-section">
-        <h2>Cảnh báo</h2>
-        <div className="alerts-grid">
-          {alertCards.map((card, index) => (
-            <div key={index} className="alert-card">
-              <card.icon size={32} color={card.color} />
-              <div className="alert-content">
-                <h3>{card.title}</h3>
-                <p className="alert-value" style={{ color: card.color }}>
-                  {card.value}
-                </p>
-              </div>
-            </div>
-          ))}
+      {!isAdmin() && (
+        <div className="welcome-section" style={{ padding: '20px', background: 'white', borderRadius: '8px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+          <h2 style={{ marginTop: 0 }}>Xin chào, {user?.name || 'Nhân viên'}! 👋</h2>
+          <p style={{ color: '#666', marginBottom: 0 }}>
+            Chào mừng bạn đến với trang quản trị. Dưới đây là danh sách các đơn hàng cần xử lý.
+          </p>
         </div>
-      </div>
+      )}
 
       {/* Đơn hàng chờ xử lý */}
       <div className="pending-orders-section">
@@ -264,7 +291,7 @@ const Dashboard = () => {
                     <td className="price">{formatPrice(order.totalAmount)}</td>
                     <td className="date">{formatDate(order.createdAt)}</td>
                     <td>
-                      <span 
+                      <span
                         className="status-badge"
                         style={{ background: getStatusColor(order.status) + '20', color: getStatusColor(order.status) }}
                       >
@@ -272,7 +299,7 @@ const Dashboard = () => {
                       </span>
                     </td>
                     <td>
-                      <button 
+                      <button
                         className="btn-view-small"
                         onClick={() => navigate('/admin/orders')}
                         title="Xem chi tiết"
@@ -313,8 +340,8 @@ const Dashboard = () => {
                   <tr key={product._id}>
                     <td>
                       <div className="product-info">
-                        <img 
-                          src={product.image?.startsWith('http') ? product.image : `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${product.image}`} 
+                        <img
+                          src={product.image?.startsWith('http') ? product.image : `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${product.image}`}
                           alt={product.name}
                           onError={(e) => e.target.src = 'https://via.placeholder.com/50'}
                         />
@@ -329,7 +356,7 @@ const Dashboard = () => {
                       </span>
                     </td>
                     <td>
-                      <button 
+                      <button
                         className="btn-view-small"
                         onClick={() => navigate('/admin/products')}
                         title="Cập nhật"
@@ -428,8 +455,8 @@ const Dashboard = () => {
                         <tr key={product._id}>
                           <td>
                             <div className="product-info">
-                              <img 
-                                src={product.image?.startsWith('http') ? product.image : `${API_URL}${product.image}`} 
+                              <img
+                                src={product.image?.startsWith('http') ? product.image : `${API_URL}${product.image}`}
                                 alt={product.name}
                                 onError={(e) => e.target.src = 'https://via.placeholder.com/50'}
                               />
@@ -486,11 +513,11 @@ const Dashboard = () => {
                           </td>
                           <td className="price">{formatPrice(order.totalAmount)}</td>
                           <td>
-                            <span 
+                            <span
                               className="status-badge"
-                              style={{ 
-                                background: getStatusColor(order.status) + '20', 
-                                color: getStatusColor(order.status) 
+                              style={{
+                                background: getStatusColor(order.status) + '20',
+                                color: getStatusColor(order.status)
                               }}
                             >
                               {getStatusText(order.status)}
@@ -549,11 +576,11 @@ const Dashboard = () => {
                             </td>
                             <td className="price"><strong>{formatPrice(order.totalAmount)}</strong></td>
                             <td>
-                              <span 
+                              <span
                                 className="status-badge"
-                                style={{ 
-                                  background: getStatusColor(order.status) + '20', 
-                                  color: getStatusColor(order.status) 
+                                style={{
+                                  background: getStatusColor(order.status) + '20',
+                                  color: getStatusColor(order.status)
                                 }}
                               >
                                 {getStatusText(order.status)}

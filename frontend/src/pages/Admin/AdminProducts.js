@@ -33,8 +33,8 @@ const AdminProducts = () => {
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'indent': '-1' }, { 'indent': '+1' }],
       ['link', 'image'],
       [{ 'color': [] }, { 'background': [] }],
       [{ 'align': [] }],
@@ -80,7 +80,7 @@ const AdminProducts = () => {
       });
       const data = await response.json();
       setCategories(data);
-      
+
       // Đặt category mặc định nếu có danh mục
       if (data.length > 0 && !formData.category) {
         const firstCategory = data[0].name;
@@ -99,7 +99,7 @@ const AdminProducts = () => {
       setSubcategorySearch('');
       return;
     }
-    
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/categories/subcategories/${encodeURIComponent(category)}`);
       const data = await response.json();
@@ -117,7 +117,7 @@ const AdminProducts = () => {
     try {
       // Xử lý description từ Quill - loại bỏ HTML rỗng
       const cleanedDescription = formData.description.replace(/<p><br><\/p>/g, '').trim();
-      
+
       // Kiểm tra description không được rỗng
       if (!cleanedDescription || cleanedDescription === '<p></p>' || cleanedDescription === '') {
         alert('❌ Vui lòng nhập mô tả sản phẩm!');
@@ -305,18 +305,11 @@ const AdminProducts = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Danh mục con (có thể chọn nhiều)</label>
-                  
-                  {subcategories.length > 0 ? (
+
+
+                  {subcategories.length > 0 && (
                     <>
                       <div className="subcategory-controls">
-                        <input
-                          type="text"
-                          placeholder="🔍 Tìm kiếm danh mục con..."
-                          value={subcategorySearch}
-                          onChange={(e) => setSubcategorySearch(e.target.value)}
-                          className="subcategory-search"
-                        />
                         <div className="subcategory-buttons">
                           <button
                             type="button"
@@ -334,7 +327,7 @@ const AdminProducts = () => {
                           </button>
                         </div>
                       </div>
-                      
+
                       <div className="subcategory-list">
                         {subcategories
                           .filter(sub => sub.toLowerCase().includes(subcategorySearch.toLowerCase()))
@@ -358,18 +351,14 @@ const AdminProducts = () => {
                           ))}
                       </div>
                     </>
-                  ) : (
-                    <div className="subcategory-list">
-                      <p className="subcategory-empty">Chọn danh mục chính trước</p>
-                    </div>
                   )}
-                  
+
                   {formData.subcategory.length > 0 && (
                     <div className="selected-count">
                       Đã chọn: <strong>{formData.subcategory.length}</strong> danh mục
                     </div>
                   )}
-                  
+
                   {subcategories.length === 0 && formData.category && (
                     <small style={{ color: '#999', display: 'block', marginTop: '0.25rem', fontSize: '0.85rem' }}>
                       Danh mục này chưa có danh mục con
@@ -447,8 +436,8 @@ const AdminProducts = () => {
                   <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     {formData.images.map((img, index) => (
                       <div key={index} style={{ position: 'relative', width: '80px', height: '80px' }}>
-                        <img 
-                          src={img} 
+                        <img
+                          src={img}
                           alt={`Preview ${index + 1}`}
                           style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e0e0e0' }}
                         />

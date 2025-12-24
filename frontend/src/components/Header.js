@@ -79,7 +79,7 @@ const Header = ({ onSearch }) => {
             </div>
           </Link>
 
-          <button 
+          <button
             className="categories-button"
             onClick={handleCategoriesClick}
           >
@@ -103,44 +103,46 @@ const Header = ({ onSearch }) => {
               <FiPhone size={18} />
               <span>Hotline: 0348137209</span>
             </a>
-            
+
             {isAuthenticated ? (
               <div className="user-menu-container">
-                <button 
+                <button
                   className="user-button"
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
                   <FiUser size={20} />
                   <span>{user?.name}</span>
                 </button>
-                
+
                 {showUserMenu && (
                   <div className="user-dropdown">
                     <div className="user-info">
                       <p className="user-name">{user?.name}</p>
-                      <p className="user-email">{user?.email}</p>
+                      {user?.role !== 'staff' && <p className="user-email">{user?.email}</p>}
                       <span className="user-role-badge">
-                        {isAdmin() ? 'Admin' : 'Khách hàng'}
+                        {isAdmin() ? 'Admin' : (user?.role === 'staff' ? 'Nhân viên' : 'Khách hàng')}
                       </span>
                     </div>
-                    
-                    {isAdmin() && (
+
+                    {(isAdmin() || user?.role === 'staff') && (
                       <Link to="/admin" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
                         <FiSettings /> Quản trị
                       </Link>
                     )}
-                    
+
                     {!isAdmin() && (
                       <>
                         <Link to="/profile" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
                           <FiUser /> Thông tin cá nhân
                         </Link>
-                        <Link to="/my-orders" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
-                          <FiPackage /> Đơn hàng của tôi
-                        </Link>
+                        {user?.role !== 'staff' && (
+                          <Link to="/my-orders" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
+                            <FiPackage /> Đơn hàng của tôi
+                          </Link>
+                        )}
                       </>
                     )}
-                    
+
                     <button onClick={handleLogout} className="dropdown-item logout">
                       <FiLogOut /> Đăng xuất
                     </button>
