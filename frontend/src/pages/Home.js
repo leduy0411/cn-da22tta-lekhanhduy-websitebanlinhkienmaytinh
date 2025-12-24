@@ -39,7 +39,7 @@ const Home = ({ searchQuery }) => {
     `${process.env.PUBLIC_URL}/img/img-banner-dai/thang_04_pc_banner_web_collection_1920x420.jpg`,
   ];
 
-  const totalSlides = bannerImages.length + 1; // +1 cho slide "THÁNG MỚI - DEAL TỐT"
+  const totalSlides = bannerImages.length;
 
   // Auto slide banner
   useEffect(() => {
@@ -434,48 +434,11 @@ const Home = ({ searchQuery }) => {
       {!searchQuery && (
         <div className="promo-banner-slider">
           <div className="banner-slides-container">
-            {/* Slide "THÁNG MỚI - DEAL TỐT" */}
-            <div className={`banner-slide promo-slide ${currentSlide === 0 ? 'active' : ''}`}>
-              <div className="promo-content">
-                <div className="promo-robot">
-                  <div className="robot-body">
-                    <div className="robot-antenna"></div>
-                    <div className="robot-head">
-                      <div className="robot-eye left"></div>
-                      <div className="robot-eye right"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="promo-megaphone">📢</div>
-                <div className="promo-text">
-                  <div className="promo-month">THÁNG MỚI</div>
-                  <div className="promo-title">DEAL TỐT</div>
-                </div>
-                <div className="promo-features">
-                  <div className="promo-box">
-                    <div className="promo-icon">🎁</div>
-                    <div className="promo-label">Giảm<br/>50%</div>
-                  </div>
-                  <div className="promo-box">
-                    <div className="promo-icon">🛍️</div>
-                    <div className="promo-label">Mua 2<br/>Tặng 1</div>
-                  </div>
-                  <div className="promo-box">
-                    <div className="promo-icon">🚚</div>
-                    <div className="promo-label">FREE<br/>SHIP</div>
-                  </div>
-                </div>
-                <div className="promo-lightning promo-lightning-1">⚡</div>
-                <div className="promo-lightning promo-lightning-2">⚡</div>
-                <div className="promo-lightning promo-lightning-3">⚡</div>
-              </div>
-            </div>
-
             {/* 3 Slides ảnh banner */}
             {bannerImages.map((image, index) => (
               <div
                 key={index}
-                className={`banner-slide image-slide ${currentSlide === index + 1 ? 'active' : ''}`}
+                className={`banner-slide image-slide ${currentSlide === index ? 'active' : ''}`}
                 style={{ backgroundImage: `url(${image})` }}
               />
             ))}

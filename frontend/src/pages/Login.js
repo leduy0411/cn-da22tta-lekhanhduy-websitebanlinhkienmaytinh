@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaGoogle, FaFacebookF } from 'react-icons/fa';
+import { FaGoogle } from 'react-icons/fa';
 import { FiEye, FiEyeOff, FiMail, FiLock } from 'react-icons/fi';
 import './Login.css';
 
@@ -56,16 +56,6 @@ const Login = () => {
     const url = sessionId 
       ? `${baseURL}/auth/google?sessionId=${sessionId}`
       : `${baseURL}/auth/google`;
-    window.location.href = url;
-  };
-
-  const handleFacebookLogin = () => {
-    // Redirect to Facebook OAuth with sessionId for cart merging
-    const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    const sessionId = localStorage.getItem('sessionId');
-    const url = sessionId 
-      ? `${baseURL}/auth/facebook?sessionId=${sessionId}`
-      : `${baseURL}/auth/facebook`;
     window.location.href = url;
   };
 
@@ -211,14 +201,6 @@ const Login = () => {
                 <FaGoogle className="social-icon" />
                 Đăng nhập với Google
               </button>
-              {/* <button 
-                type="button"
-                className="social-btn facebook-btn" 
-                onClick={handleFacebookLogin}
-              >
-                <FaFacebookF className="social-icon" />
-                Đăng nhập với Facebook
-              </button> */}
             </div>
 
             <div className="auth-footer">

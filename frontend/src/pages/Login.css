@@ -488,18 +488,6 @@
   box-shadow: 0 4px 12px rgba(219, 68, 55, 0.4);
 }
 
-/* Facebook Button */
-.facebook-btn {
-  background: #1877F2;
-  box-shadow: 0 2px 8px rgba(24, 119, 242, 0.3);
-}
-
-.facebook-btn:hover {
-  background: #0d65d9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.4);
-}
-
 /* Footer */
 .auth-footer {
   text-align: center;

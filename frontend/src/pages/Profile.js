@@ -371,7 +371,7 @@ const Profile = () => {
               
               {user.authProvider !== 'local' && (
                 <div className="oauth-notice">
-                  <p>⚠️ Bạn đã đăng nhập bằng {user.authProvider === 'google' ? 'Google' : 'Facebook'}. 
+                  <p>⚠️ Bạn đã đăng nhập bằng Google. 
                   Không thể đổi mật khẩu cho tài khoản liên kết.</p>
                 </div>
               )}
