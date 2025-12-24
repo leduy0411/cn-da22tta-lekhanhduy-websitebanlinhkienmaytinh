@@ -2,10 +2,20 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const passport = require('../config/passport');
 const User = require('../models/User');
 const Cart = require('../models/Cart');
 const { auth } = require('../middleware/auth');
+
+// Cấu hình nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || 'Leduytctv2019@gmail.com',
+    pass: process.env.EMAIL_PASS || 'your-app-password' // Cần tạo App Password từ Google
+  }
+});
 
 // POST: Đăng ký user mới
 router.post('/register', async (req, res) => {
@@ -240,19 +250,65 @@ router.post('/forgot-password', async (req, res) => {
     // Tạo reset URL
     const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
 
-    // TODO: Gửi email thực tế (hiện tại chỉ log ra console)
-    console.log('\n==============================================');
-    console.log('📧 EMAIL RESET PASSWORD');
-    console.log('==============================================');
-    console.log(`Gửi đến: ${user.email}`);
-    console.log(`Tên: ${user.name}`);
-    console.log(`\nLink reset mật khẩu:\n${resetUrl}`);
-    console.log(`\nToken có hiệu lực trong 1 giờ`);
-    console.log('==============================================\n');
+    // Cấu hình email
+    const mailOptions = {
+      from: `"TechStore" <${process.env.EMAIL_USER || 'Leduytctv2019@gmail.com'}>`,
+      to: user.email,
+      subject: 'Đặt lại mật khẩu TechStore',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta name="color-scheme" content="light dark">
+          <meta name="supported-color-schemes" content="light dark">
+        </head>
+        <body style="margin: 0; padding: 0; background: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 0; background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);">
+            <div style="background: linear-gradient(135deg, #0080ff 0%, #00d4ff 100%); padding: 40px; text-align: center; box-shadow: 0 4px 20px rgba(0, 128, 255, 0.3);">
+              <h1 style="color: #ffffff; margin: 0; font-size: 36px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); font-weight: 700;">🖥️ TechStore</h1>
+            </div>
+            <div style="padding: 40px 35px; background-color: #ffffff;">
+              <h2 style="color: #000000; margin-top: 0; font-size: 24px; font-weight: 700;">Xin chào ${user.name},</h2>
+              <p style="color: #000000; font-size: 16px; line-height: 1.8; margin: 16px 0;">Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản TechStore của mình.</p>
+              <p style="color: #000000; font-size: 16px; line-height: 1.8; margin: 16px 0;">Vui lòng click vào nút bên dưới để đặt lại mật khẩu:</p>
+              <div style="text-align: center; margin: 40px 0;">
+                <a href="${resetUrl}" style="background: linear-gradient(135deg, #0080ff 0%, #00d4ff 100%); color: #ffffff; padding: 18px 45px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block; font-size: 17px; box-shadow: 0 4px 20px rgba(0, 128, 255, 0.4); mso-hide: all;">✨ Đặt lại mật khẩu</a>
+              </div>
+              <div style="background-color: #e0f2ff; padding: 20px; border-radius: 10px; margin: 30px 0; border-left: 4px solid #0080ff;">
+                <p style="color: #0066cc; font-size: 15px; margin: 0; font-weight: 700;">⏰ Link này sẽ hết hạn sau 1 giờ.</p>
+              </div>
+              <p style="color: #333333; font-size: 14px; margin: 16px 0;">Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+              <div style="border-top: 2px solid #e5e7eb; margin: 35px 0 20px 0; padding-top: 20px;">
+                <p style="color: #666666; font-size: 12px; text-align: center; margin: 0;">© 2025 TechStore. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    // Gửi email
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log('\n==============================================');
+      console.log('📧 EMAIL RESET PASSWORD ĐÃ ĐƯỢC GỬI');
+      console.log('==============================================');
+      console.log(`Gửi đến: ${user.email}`);
+      console.log(`Tên: ${user.name}`);
+      console.log('==============================================\n');
+    } catch (emailError) {
+      console.error('Lỗi gửi email:', emailError);
+      // Vẫn log link để debug nếu gửi email thất bại
+      console.log('\n==============================================');
+      console.log('⚠️ KHÔNG GỬI ĐƯỢC EMAIL - LINK RESET PASSWORD:');
+      console.log('==============================================');
+      console.log(`Link: ${resetUrl}`);
+      console.log('==============================================\n');
+    }
 
     res.json({ 
-      message: 'Email reset mật khẩu đã được gửi! Vui lòng kiểm tra console để lấy link.',
-      resetUrl // Trả về luôn để test (production nên bỏ)
+      message: 'Email đặt lại mật khẩu đã được gửi! Vui lòng kiểm tra hộp thư của bạn.'
     });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi gửi email reset!', error: error.message });
@@ -309,9 +365,17 @@ router.get('/google/callback',
   }),
   async (req, res) => {
     try {
-      // Tạo JWT token
+      console.log('✅ Google auth success! User:', req.user.email);
+      
+      // Tạo JWT token với thông tin user cơ bản
       const token = jwt.sign(
-        { userId: req.user._id, role: req.user.role },
+        { 
+          userId: req.user._id, 
+          role: req.user.role,
+          name: req.user.name,
+          email: req.user.email,
+          avatar: req.user.avatar
+        },
         process.env.JWT_SECRET || 'your_jwt_secret_key_here',
         { expiresIn: '7d' }
       );
@@ -350,11 +414,11 @@ router.get('/google/callback',
         }
       }
 
-      // Redirect về frontend với token
+      // Redirect về frontend chỉ với token
       const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendURL}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}`);
+      res.redirect(`${frontendURL}/auth/callback?token=${token}`);
     } catch (error) {
-      console.error('Google callback error:', error);
+      console.error('❌ Google callback error:', error);
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`);
     }
   }
@@ -377,6 +441,8 @@ router.get('/facebook/callback',
   }),
   async (req, res) => {
     try {
+      console.log('✅ Facebook auth success! User:', req.user.email);
+      
       // Tạo JWT token
       const token = jwt.sign(
         { userId: req.user._id, role: req.user.role },
@@ -418,11 +484,11 @@ router.get('/facebook/callback',
         }
       }
 
-      // Redirect về frontend với token
+      // Redirect về frontend chỉ với token
       const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendURL}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}`);
+      res.redirect(`${frontendURL}/auth/callback?token=${token}`);
     } catch (error) {
-      console.error('Facebook callback error:', error);
+      console.error('❌ Facebook callback error:', error);
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`);
     }
   }

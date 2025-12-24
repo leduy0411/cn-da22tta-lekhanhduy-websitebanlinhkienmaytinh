@@ -15,6 +15,8 @@ const ProductReviews = ({ productId }) => {
   const [editingReview, setEditingReview] = useState(null);
   const [reviewImages, setReviewImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [canReview, setCanReview] = useState(false);
+  const [reviewStatus, setReviewStatus] = useState({ reason: '', message: '' });
   
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
@@ -25,7 +27,27 @@ const ProductReviews = ({ productId }) => {
 
   useEffect(() => {
     fetchReviews();
-  }, [productId, currentPage, sortBy]);
+    if (isAuthenticated) {
+      checkCanReview();
+    }
+  }, [productId, currentPage, sortBy, isAuthenticated]);
+
+  const checkCanReview = async () => {
+    try {
+      const response = await reviewAPI.canReview(productId);
+      setCanReview(response.data.canReview);
+      setReviewStatus({
+        reason: response.data.reason || '',
+        message: response.data.message || ''
+      });
+      if (response.data.existingReview) {
+        setEditingReview(response.data.existingReview);
+      }
+    } catch (error) {
+      console.error('Error checking review status:', error);
+      setCanReview(false);
+    }
+  };
 
   const fetchReviews = async () => {
     try {
@@ -230,18 +252,33 @@ const ProductReviews = ({ productId }) => {
       )}
 
       <div className="reviews-actions">
-        {isAuthenticated && (
-          <button 
-            className="write-review-btn"
-            onClick={() => {
-              setEditingReview(null);
-              setReviewForm({ rating: 5, comment: '' });
-              setReviewImages([]);
-              setShowReviewForm(!showReviewForm);
-            }}
-          >
-            Viết đánh giá
-          </button>
+        {isAuthenticated ? (
+          canReview ? (
+            <button 
+              className="write-review-btn"
+              onClick={() => {
+                setEditingReview(null);
+                setReviewForm({ rating: 5, comment: '' });
+                setReviewImages([]);
+                setShowReviewForm(!showReviewForm);
+              }}
+            >
+              Viết đánh giá
+            </button>
+          ) : (
+            <div className="review-notice">
+              {reviewStatus.reason === 'not_purchased' && (
+                <span className="notice-warning">⚠️ Bạn cần mua và nhận sản phẩm này trước khi đánh giá</span>
+              )}
+              {reviewStatus.reason === 'already_reviewed' && (
+                <span className="notice-info">✅ Bạn đã đánh giá sản phẩm này</span>
+              )}
+            </div>
+          )
+        ) : (
+          <div className="review-notice">
+            <span className="notice-warning">🔒 Vui lòng đăng nhập để đánh giá</span>
+          </div>
         )}
 
         <select 

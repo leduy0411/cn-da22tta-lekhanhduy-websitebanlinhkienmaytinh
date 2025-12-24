@@ -219,7 +219,11 @@ const MyOrders = () => {
 
               <div className="order-products">
                 {order.items.map((item, index) => (
-                  <div key={index} className="order-product-item">
+                  <Link 
+                    key={index} 
+                    to={`/product/${item.product?._id || item.productId}`}
+                    className="order-product-item clickable"
+                  >
                     <img 
                       src={getImageUrl(item.image || item.product?.image)}
                       alt={item.name || item.product?.name || 'Sản phẩm'}
@@ -230,7 +234,7 @@ const MyOrders = () => {
                       <p className="product-quantity">Số lượng: {item.quantity}</p>
                       <p className="product-price">{formatPrice(item.price)}</p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
 
@@ -325,7 +329,12 @@ const MyOrders = () => {
                 <h3>Sản phẩm</h3>
                 <div className="detail-products">
                   {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="detail-product-item">
+                    <Link 
+                      key={index} 
+                      to={`/product/${item.product?._id || item.productId}`}
+                      className="detail-product-item clickable"
+                      onClick={() => setShowDetailModal(false)}
+                    >
                       <img 
                         src={getImageUrl(item.image || item.product?.image)}
                         alt={item.name || item.product?.name || 'Sản phẩm'}
@@ -339,7 +348,7 @@ const MyOrders = () => {
                       <div className="item-total">
                         {formatPrice(item.price * item.quantity)}
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

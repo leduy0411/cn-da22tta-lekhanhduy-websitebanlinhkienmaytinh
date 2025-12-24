@@ -206,18 +206,19 @@ const Login = () => {
                 type="button"
                 className="social-btn google-btn" 
                 onClick={handleGoogleLogin}
+                title="Đăng nhập với Google"
               >
                 <FaGoogle className="social-icon" />
                 Đăng nhập với Google
               </button>
-              <button 
+              {/* <button 
                 type="button"
                 className="social-btn facebook-btn" 
                 onClick={handleFacebookLogin}
               >
                 <FaFacebookF className="social-icon" />
                 Đăng nhập với Facebook
-              </button>
+              </button> */}
             </div>
 
             <div className="auth-footer">

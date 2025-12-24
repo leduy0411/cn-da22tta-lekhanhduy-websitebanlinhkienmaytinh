@@ -86,6 +86,25 @@
   margin-bottom: 2rem;
 }
 
+.review-notice {
+  padding: 0.75rem 1.25rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.review-notice .notice-warning {
+  color: #d97706;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.review-notice .notice-info {
+  color: #059669;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
 .write-review-btn {
   padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

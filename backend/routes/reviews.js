@@ -122,7 +122,51 @@ router.get('/product/:productId', async (req, res) => {
   }
 });
 
-// POST: Tạo review mới (yêu cầu đăng nhập)
+// GET: Kiểm tra user có thể đánh giá sản phẩm không
+router.get('/can-review/:productId', auth, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    // Kiểm tra user đã mua và nhận sản phẩm này chưa
+    const userOrders = await Order.find({
+      user: req.userId,
+      status: 'delivered',
+      'items.product': productId
+    });
+
+    if (userOrders.length === 0) {
+      return res.json({ 
+        canReview: false, 
+        reason: 'not_purchased',
+        message: 'Bạn cần mua và nhận sản phẩm này trước khi đánh giá' 
+      });
+    }
+
+    // Kiểm tra user đã đánh giá chưa
+    const existingReview = await Review.findOne({
+      product: productId,
+      user: req.userId
+    });
+
+    if (existingReview) {
+      return res.json({ 
+        canReview: false, 
+        reason: 'already_reviewed',
+        message: 'Bạn đã đánh giá sản phẩm này rồi',
+        existingReview
+      });
+    }
+
+    res.json({ 
+      canReview: true,
+      message: 'Bạn có thể đánh giá sản phẩm này'
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi kiểm tra', error: error.message });
+  }
+});
+
+// POST: Tạo review mới (yêu cầu đăng nhập và đã mua hàng)
 router.post('/', auth, async (req, res) => {
   try {
     const { productId, rating, comment, images, orderId } = req.body;
@@ -133,27 +177,40 @@ router.post('/', auth, async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
     }
 
-    // Kiểm tra user có mua sản phẩm này chưa (optional)
-    let verified = false;
+    // Kiểm tra user đã mua và nhận sản phẩm này chưa (BẮT BUỘC)
     const userOrders = await Order.find({
       user: req.userId,
       status: 'delivered',
       'items.product': productId
     });
 
-    if (userOrders.length > 0) {
-      verified = true;
+    if (userOrders.length === 0) {
+      return res.status(403).json({ 
+        message: 'Bạn cần mua và nhận sản phẩm này trước khi đánh giá' 
+      });
+    }
+
+    // Kiểm tra user đã đánh giá sản phẩm này chưa
+    const existingReview = await Review.findOne({
+      product: productId,
+      user: req.userId
+    });
+
+    if (existingReview) {
+      return res.status(400).json({ 
+        message: 'Bạn đã đánh giá sản phẩm này rồi. Vui lòng sửa đánh giá cũ nếu muốn thay đổi.' 
+      });
     }
 
     // Tạo review mới
     const review = new Review({
       product: productId,
       user: req.userId,
-      order: orderId || null,
+      order: orderId || userOrders[0]._id,
       rating,
       comment,
       images: images || [],
-      verified
+      verified: true // Đã xác nhận mua hàng
     });
 
     await review.save();

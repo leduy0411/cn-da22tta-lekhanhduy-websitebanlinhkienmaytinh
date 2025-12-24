@@ -52,7 +52,7 @@
   display: none; /* Chrome/Safari/Opera */
 }
 
-.nav-item {
+.sidebar-nav .nav-item {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -69,12 +69,12 @@
   font-size: 1rem;
 }
 
-.nav-item:hover {
+.sidebar-nav .nav-item:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;
 }
 
-.nav-item.active {
+.sidebar-nav .nav-item.active {
   background: rgba(102, 126, 234, 0.2);
   border-left-color: #667eea;
   color: white;

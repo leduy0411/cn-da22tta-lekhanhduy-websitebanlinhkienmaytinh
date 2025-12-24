@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { FiMail, FiArrowLeft } from 'react-icons/fi';
+import { FiMail, FiArrowLeft, FiCheckCircle } from 'react-icons/fi';
 import './ForgotPassword.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -11,24 +11,21 @@ function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [resetUrl, setResetUrl] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
     setError('');
-    setResetUrl('');
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/forgot-password`, {
+      const response = await axios.post(`${API_URL}/auth/forgot-password`, {
         email
       });
 
       setMessage(response.data.message);
-      if (response.data.resetUrl) {
-        setResetUrl(response.data.resetUrl);
-      }
+      setEmailSent(true);
       setEmail('');
     } catch (err) {
       setError(err.response?.data?.message || 'Có lỗi xảy ra!');
@@ -37,8 +34,15 @@ function ForgotPassword() {
     }
   };
 
+  const containerStyle = {
+    backgroundImage: `linear-gradient(135deg, rgba(153, 170, 245, 0.05) 0%, rgba(118, 75, 162, 0.5) 100%), url('/img/img-nen-dangnhap/pexels-lulizler-3165335.jpg')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+  };
+
   return (
-    <div className="forgot-password-container">
+    <div className="forgot-password-container" style={containerStyle}>
       <div className="forgot-password-box">
         <div className="forgot-password-header">
           <FiMail className="icon-large" />
@@ -48,18 +52,12 @@ function ForgotPassword() {
 
         {message && (
           <div className="alert alert-success">
-            <p>{message}</p>
-            {resetUrl && (
-              <div className="reset-url-box">
-                <p><strong>Link reset password:</strong></p>
-                <a href={resetUrl} className="reset-link">
-                  {resetUrl}
-                </a>
-                <p className="note">
-                  (Trong môi trường thực tế, link này sẽ được gửi qua email)
-                </p>
-              </div>
-            )}
+            <FiCheckCircle className="success-icon" />
+            <div>
+              <p className="success-title">Gửi email thành công!</p>
+              <p>{message}</p>
+              <p className="email-note">Nếu không thấy email, vui lòng kiểm tra thư mục Spam.</p>
+            </div>
           </div>
         )}
 
@@ -69,25 +67,36 @@ function ForgotPassword() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">
-              <FiMail /> Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Nhập email của bạn"
-              required
-            />
-          </div>
+        {!emailSent && (
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="email">
+                <FiMail /> Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Nhập email của bạn"
+                required
+              />
+            </div>
 
-          <button type="submit" className="btn-submit" disabled={loading}>
-            {loading ? 'Đang gửi...' : 'Gửi link reset mật khẩu'}
+            <button type="submit" className="btn-submit" disabled={loading}>
+              {loading ? 'Đang gửi...' : 'Gửi link reset mật khẩu'}
+            </button>
+          </form>
+        )}
+
+        {emailSent && (
+          <button 
+            className="btn-submit btn-resend" 
+            onClick={() => setEmailSent(false)}
+          >
+            Gửi lại email
           </button>
-        </form>
+        )}
 
         <div className="back-to-login">
           <Link to="/login">

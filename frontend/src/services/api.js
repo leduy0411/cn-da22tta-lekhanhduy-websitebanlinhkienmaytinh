@@ -117,6 +117,7 @@ export const reviewAPI = {
   deleteReview: (id) => api.delete(`/reviews/${id}`),
   markHelpful: (id) => api.post(`/reviews/${id}/helpful`),
   checkUserReview: (productId) => api.get(`/reviews/check/${productId}`),
+  canReview: (productId) => api.get(`/reviews/can-review/${productId}`),
 };
 
 export default api;

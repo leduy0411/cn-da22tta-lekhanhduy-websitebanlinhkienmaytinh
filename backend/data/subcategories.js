@@ -144,6 +144,7 @@ const SUBCATEGORIES = {
     // Tần số quét
     '60Hz',
     '75Hz',
+    '120Hz',
     '144Hz',
     '155Hz',
     '160Hz',
