@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiSettings } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiSettings, FiTag } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import './AdminLayout.css';
 
@@ -29,6 +29,7 @@ const AdminLayout = () => {
     { path: '/admin/categories', icon: FiGrid, label: 'Danh mục' },
     { path: '/admin/orders', icon: FiShoppingBag, label: 'Đơn hàng' },
     { path: '/admin/users', icon: FiUsers, label: 'Người dùng' },
+    { path: '/admin/coupons', icon: FiTag, label: 'Mã giảm giá' },
     { path: '/admin/reviews', icon: FiStar, label: 'Đánh giá' },
     { path: '/admin/chat', icon: FiMessageCircle, label: 'Chat' },
   ];
@@ -79,7 +80,7 @@ const AdminLayout = () => {
           <div className="admin-info">
             <div className="admin-avatar">
               <div className="avatar-circle">
-                <img src="/img/img-admin-logo/admin-logo.png" alt="Admin" className="avatar-image" />
+                <img src="/img/img-admin-logo/ADMIN.png" alt="Admin" className="avatar-image" />
               </div>
             </div>
             <div className="admin-details">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { productAPI } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import MegaMenu from '../components/MegaMenu';
@@ -60,7 +60,7 @@ const Home = ({ searchQuery }) => {
         priceRange: params.get('priceRange') || '',
         page: parseInt(params.get('page')) || 1,
       };
-      
+
       // Load subcategories từ URL
       const subcategoryParam = params.get('subcategory');
       if (subcategoryParam) {
@@ -70,36 +70,36 @@ const Home = ({ searchQuery }) => {
       } else {
         setSelectedSubcategories([]);
       }
-      
+
       // Fetch subcategories nếu có category
       if (newFilters.category) {
         fetchSubcategories(newFilters.category);
       }
-      
+
       // Thêm các bộ lọc động khác từ URL
       params.forEach((value, key) => {
         if (!['category', 'brand', 'page', 'priceRange', 'subcategory'].includes(key)) {
           newFilters[key] = value;
         }
       });
-      
+
       console.log('🔍 Home.js - URL changed, loading products with filters:', newFilters);
       setFilters(newFilters);
-      
+
       // GỌI API TRỰC TIẾP NGAY TỨC KHẮC
       try {
         setLoading(true);
-        
+
         const cleanFilters = Object.keys(newFilters).reduce((acc, key) => {
           if (newFilters[key] && newFilters[key] !== '') {
             acc[key] = newFilters[key];
           }
           return acc;
         }, {});
-        
+
         console.log('📡 Calling API with cleanFilters:', cleanFilters);
         const response = await productAPI.getAll(cleanFilters);
-        
+
         console.log('✅ API response:', response.data.products.length, 'products found');
         setProducts(response.data.products);
         setPagination({
@@ -114,7 +114,7 @@ const Home = ({ searchQuery }) => {
         setLoading(false);
       }
     };
-    
+
     loadProducts();
   }, [location.search]);
 
@@ -145,7 +145,7 @@ const Home = ({ searchQuery }) => {
   const fetchProductsWithFilters = async (filtersToUse) => {
     try {
       setLoading(true);
-      
+
       // Lọc bỏ các giá trị rỗng
       const cleanFilters = Object.keys(filtersToUse).reduce((acc, key) => {
         if (filtersToUse[key] && filtersToUse[key] !== '') {
@@ -153,9 +153,9 @@ const Home = ({ searchQuery }) => {
         }
         return acc;
       }, {});
-      
+
       const response = await productAPI.getAll(cleanFilters);
-      
+
       setProducts(response.data.products);
       setPagination({
         currentPage: response.data.currentPage,
@@ -229,10 +229,10 @@ const Home = ({ searchQuery }) => {
   const fetchDynamicFilters = async (category = '') => {
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-      const url = category 
+      const url = category
         ? `${API_URL}/filters?category=${category}`
         : `${API_URL}/filters`;
-      
+
       const response = await fetch(url);
       const data = await response.json();
       setDynamicFilters(Array.isArray(data) ? data : []);
@@ -248,7 +248,7 @@ const Home = ({ searchQuery }) => {
       setSelectedSubcategories([]);
       return;
     }
-    
+
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const response = await fetch(`${API_URL}/categories/subcategories/${encodeURIComponent(category)}`);
@@ -273,7 +273,7 @@ const Home = ({ searchQuery }) => {
     const params = new URLSearchParams(location.search);
     params.set('page', newPage.toString());
     navigate(`/?${params.toString()}`);
-    
+
     // Scroll to top of products section
     const productsSection = document.querySelector('.products-grid');
     if (productsSection) {
@@ -287,30 +287,30 @@ const Home = ({ searchQuery }) => {
 
   const handleCategoryClick = (categoryName) => {
     console.log('🖱️ Sidebar - Category clicked:', categoryName);
-    
+
     // Nếu click vào category đang chọn -> bỏ chọn
     if (filters.category === categoryName) {
       setSubcategories([]);
       setSelectedSubcategories([]);
       setSubcategorySearch('');
       setShowAllSubcategories(false);
-      
+
       // Xóa tất cả params, quay về trang chủ
       navigate('/');
       return;
     }
-    
+
     // Fetch subcategories cho category mới
     fetchSubcategories(categoryName);
     setSelectedSubcategories([]);
     setSubcategorySearch('');
     setShowAllSubcategories(false);
-    
+
     // Tạo URL params mới với category được chọn
     const params = new URLSearchParams(location.search);
     params.set('category', categoryName);
     params.set('page', '1'); // Reset về trang 1
-    
+
     // Xóa các filter khác khi chọn category mới
     const keysToDelete = [];
     params.forEach((value, key) => {
@@ -319,11 +319,11 @@ const Home = ({ searchQuery }) => {
       }
     });
     keysToDelete.forEach(key => params.delete(key));
-    
+
     const newUrl = `/?${params.toString()}`;
     console.log('🔗 Navigating to:', newUrl);
     navigate(newUrl);
-    
+
     // Scroll đến phần sản phẩm
     setTimeout(() => {
       const mainContent = document.querySelector('.main-content');
@@ -338,9 +338,9 @@ const Home = ({ searchQuery }) => {
     const newSelected = selectedSubcategories.includes(subcategory)
       ? selectedSubcategories.filter(s => s !== subcategory)
       : [...selectedSubcategories, subcategory];
-    
+
     setSelectedSubcategories(newSelected);
-    
+
     // Cập nhật URL
     const params = new URLSearchParams(location.search);
     if (newSelected.length > 0) {
@@ -354,7 +354,7 @@ const Home = ({ searchQuery }) => {
 
   const getCategoryImage = (categoryName) => {
     const name = categoryName.toLowerCase();
-    
+
     // Map category names to local images - tên file không dấu
     const imageMap = {
       'laptop': '/img/img-danhmucsanpham/Laptop.png',
@@ -403,20 +403,20 @@ const Home = ({ searchQuery }) => {
       'sạc dự phòng': '/img/img-danhmucsanpham/Sacdp.png',
       'powerbank': '/img/img-danhmucsanpham/Sacdp.png',
     };
-    
+
     // Tìm key phù hợp
     for (const [key, image] of Object.entries(imageMap)) {
       if (name.includes(key) || key.includes(name)) {
         return process.env.PUBLIC_URL + image;
       }
     }
-    
+
     // Default image
     return 'https://via.placeholder.com/150?text=' + encodeURIComponent(categoryName);
   };
 
   const getPriceRangeLabel = (range) => {
-    switch(range) {
+    switch (range) {
       case '0-15000000':
         return 'Dưới 15 triệu';
       case '15000000-20000000':
@@ -426,6 +426,20 @@ const Home = ({ searchQuery }) => {
       default:
         return '';
     }
+  };
+
+  // Xử lý click vào banner - navigate và scroll đến phần sản phẩm
+  const handleBannerClick = (url) => {
+    navigate(url);
+
+    // Scroll đến phần sản phẩm sau khi navigate
+    setTimeout(() => {
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) {
+        const offsetTop = mainContent.getBoundingClientRect().top + window.pageYOffset - 100;
+        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+      }
+    }, 300);
   };
 
   return (
@@ -474,35 +488,35 @@ const Home = ({ searchQuery }) => {
       {!searchQuery && (
         <div className="promo-cards-section">
           <div className="promo-cards-grid">
-            <div className="promo-card banner-image">
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Laptop&subcategory=Laptop%20Gaming')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-laptop-gaming-slider-bot-t8.png`} alt="Laptop Gaming" />
             </div>
 
-            <div className="promo-card banner-image">
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Laptop&subcategory=Laptop%20Văn%20Phòng')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-laptop-van-phong-slider-bot-t8.png`} alt="Laptop Văn Phòng" />
             </div>
 
-            <div className="promo-card banner-image">
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=PC')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-pc-amd-sub-t8.png`} alt="PC AMD" />
             </div>
 
-            <div className="promo-card banner-image">
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Chuột')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-gaming-gear-sub-t8.png`} alt="Gaming Gear" />
             </div>
 
-            <div className="promo-card banner-image">
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Bàn%20phím')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-ban-phim-slider-right-t8.png`} alt="Bàn Phím" />
             </div>
 
-            <div className="promo-card banner-image">
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=PC')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-build-pc-slider-right-t8.png`} alt="Build PC" />
             </div>
 
-            <div className="promo-card banner-image">
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Phụ%20kiện')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-gaming-gear-deal-hoi-sub-banner-t8.png`} alt="Gaming Gear Deal" />
             </div>
 
-            <div className="promo-card banner-image">
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Màn%20hình')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-man-hinh-sub-t8.png`} alt="Màn Hình Gaming" />
             </div>
           </div>
@@ -510,58 +524,60 @@ const Home = ({ searchQuery }) => {
       )}
 
       {/* Banner */}
-      {!searchQuery && (
-        <div className="banner-section">
-          <div className="banner-content">
-            <div className="banner-left">
-              <img 
-                src="https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=800" 
-                alt="PC Gaming Setup" 
-                className="banner-image"
-              />
-            </div>
-            <div className="banner-right">
-              <div className="banner-badge">Chuyên Mua Bán</div>
-              <h1 className="banner-title">LINH KIỆN - MÁY TÍNH</h1>
-              <div className="banner-features">
-                <div className="feature-item">
-                  <span className="feature-icon">✓</span>
-                  <span>Uy Tín Chất Lượng</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">✓</span>
-                  <span>Cam Kết Giá Rẻ Nhất</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">✓</span>
-                  <span>Bảo Hành 1 đổi 1</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">✓</span>
-                  <span>Tư Vấn Mua Hàng Miễn Phí</span>
-                </div>
+      {
+        !searchQuery && (
+          <div className="banner-section">
+            <div className="banner-content">
+              <div className="banner-left">
+                <img
+                  src="https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=800"
+                  alt="PC Gaming Setup"
+                  className="banner-image"
+                />
               </div>
-              <div className="banner-products">
-                <img 
-                  src="https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=150" 
-                  alt="SSD" 
-                  className="product-thumb"
-                />
-                <img 
-                  src="https://images.unsplash.com/photo-1612198188060-c7c2a3b66eae?w=150" 
-                  alt="VR Headset" 
-                  className="product-thumb"
-                />
-                <img 
-                  src="https://images.unsplash.com/photo-1625948515291-69613efd103f?w=150" 
-                  alt="Gaming Controller" 
-                  className="product-thumb"
-                />
+              <div className="banner-right">
+                <div className="banner-badge">Chuyên Mua Bán</div>
+                <h1 className="banner-title">LINH KIỆN - MÁY TÍNH</h1>
+                <div className="banner-features">
+                  <div className="feature-item">
+                    <span className="feature-icon">✓</span>
+                    <span>Uy Tín Chất Lượng</span>
+                  </div>
+                  <div className="feature-item">
+                    <span className="feature-icon">✓</span>
+                    <span>Cam Kết Giá Rẻ Nhất</span>
+                  </div>
+                  <div className="feature-item">
+                    <span className="feature-icon">✓</span>
+                    <span>Bảo Hành 1 đổi 1</span>
+                  </div>
+                  <div className="feature-item">
+                    <span className="feature-icon">✓</span>
+                    <span>Tư Vấn Mua Hàng Miễn Phí</span>
+                  </div>
+                </div>
+                <div className="banner-products">
+                  <img
+                    src="https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=150"
+                    alt="SSD"
+                    className="product-thumb"
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1612198188060-c7c2a3b66eae?w=150"
+                    alt="VR Headset"
+                    className="product-thumb"
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1625948515291-69613efd103f?w=150"
+                    alt="Gaming Controller"
+                    className="product-thumb"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <div className="container">
         {searchQuery && (
@@ -584,7 +600,7 @@ const Home = ({ searchQuery }) => {
                 </div>
               </div>
             )}
-            
+
             {!filters.category && (
               <div className="page-header">
                 <h2></h2>
@@ -608,93 +624,93 @@ const Home = ({ searchQuery }) => {
                       .filter(cat => cat.isActive !== false)
                       .sort((a, b) => (a.order || 0) - (b.order || 0))
                       .map((category) => (
-                        <div 
-                          key={category._id || category.name} 
+                        <div
+                          key={category._id || category.name}
                           className={`sidebar-category-item ${filters.category === category.name ? 'active' : ''}`}
                           onClick={() => handleCategoryClick(category.name)}
                         >
-                            <div className="sidebar-category-icon">
-                              {category.icon ? (
-                                category.icon.startsWith('http') || category.icon.startsWith('/') ? (
-                                  <img 
-                                    src={category.icon} 
-                                    alt={category.name}
-                                    onError={(e) => {
-                                      e.target.onerror = null;
-                                      e.target.src = getCategoryImage(category.name);
-                                    }}
-                                  />
-                                ) : /^[\p{Emoji}]$/u.test(category.icon) ? (
-                                  <span style={{ fontSize: '48px' }}>{category.icon}</span>
-                                ) : (
-                                  <img 
-                                    src={getCategoryImage(category.name)} 
-                                    alt={category.name}
-                                    onError={(e) => {
-                                      e.target.onerror = null;
-                                      e.target.src = 'https://via.placeholder.com/150?text=' + encodeURIComponent(category.name);
-                                    }}
-                                  />
-                                )
+                          <div className="sidebar-category-icon">
+                            {category.icon ? (
+                              category.icon.startsWith('http') || category.icon.startsWith('/') ? (
+                                <img
+                                  src={category.icon}
+                                  alt={category.name}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = getCategoryImage(category.name);
+                                  }}
+                                />
+                              ) : /^[\p{Emoji}]$/u.test(category.icon) ? (
+                                <span style={{ fontSize: '48px' }}>{category.icon}</span>
                               ) : (
-                                <img 
-                                  src={getCategoryImage(category.name)} 
+                                <img
+                                  src={getCategoryImage(category.name)}
                                   alt={category.name}
                                   onError={(e) => {
                                     e.target.onerror = null;
                                     e.target.src = 'https://via.placeholder.com/150?text=' + encodeURIComponent(category.name);
                                   }}
                                 />
-                              )}
-                            </div>
-                            <p className="sidebar-category-name">{category.name}</p>
+                              )
+                            ) : (
+                              <img
+                                src={getCategoryImage(category.name)}
+                                alt={category.name}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://via.placeholder.com/150?text=' + encodeURIComponent(category.name);
+                                }}
+                              />
+                            )}
                           </div>
-                        ))
-                    ) : (
-                      // Fallback: Hiển thị danh mục hardcode nếu chưa load được từ API
-                      [
-                        'Laptop',
-                        'PC',
-                        'Màn hình',
-                        'Mainboard',
-                        'CPU',
-                        'VGA',
-                        'RAM',
-                        'Ổ cứng',
-                        'Case',
-                        'Tản nhiệt',
-                        'Nguồn',
-                        'Bàn phím',
-                        'Chuột',
-                        'Ghế',
-                        'Tai nghe',
-                        'Loa',
-                        'Console',
-                        'Phụ kiện',
-                        'Thiết bị VP',
-                        'Sạc DP'
-                      ].map((categoryName, index) => (
-                        <div 
-                          key={index} 
-                          className={`sidebar-category-item ${filters.category === categoryName ? 'active' : ''}`}
-                          onClick={() => handleCategoryClick(categoryName)}
-                        >
-                          <div className="sidebar-category-icon">
-                            <img 
-                              src={getCategoryImage(categoryName)} 
-                              alt={categoryName}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = 'https://via.placeholder.com/150?text=' + encodeURIComponent(categoryName);
-                              }}
-                            />
-                          </div>
-                          <p className="sidebar-category-name">{categoryName}</p>
+                          <p className="sidebar-category-name">{category.name}</p>
                         </div>
                       ))
-                    )}
-                  </div>
+                  ) : (
+                    // Fallback: Hiển thị danh mục hardcode nếu chưa load được từ API
+                    [
+                      'Laptop',
+                      'PC',
+                      'Màn hình',
+                      'Mainboard',
+                      'CPU',
+                      'VGA',
+                      'RAM',
+                      'Ổ cứng',
+                      'Case',
+                      'Tản nhiệt',
+                      'Nguồn',
+                      'Bàn phím',
+                      'Chuột',
+                      'Ghế',
+                      'Tai nghe',
+                      'Loa',
+                      'Console',
+                      'Phụ kiện',
+                      'Thiết bị VP',
+                      'Sạc DP'
+                    ].map((categoryName, index) => (
+                      <div
+                        key={index}
+                        className={`sidebar-category-item ${filters.category === categoryName ? 'active' : ''}`}
+                        onClick={() => handleCategoryClick(categoryName)}
+                      >
+                        <div className="sidebar-category-icon">
+                          <img
+                            src={getCategoryImage(categoryName)}
+                            alt={categoryName}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/150?text=' + encodeURIComponent(categoryName);
+                            }}
+                          />
+                        </div>
+                        <p className="sidebar-category-name">{categoryName}</p>
+                      </div>
+                    ))
+                  )}
                 </div>
+              </div>
 
             </aside>
           )}
@@ -705,7 +721,7 @@ const Home = ({ searchQuery }) => {
               <div className="subcategories-filter-panel">
                 <div className="subcategories-header">
                   <h3 className="subcategories-title">
-                    <span 
+                    <span
                       className="category-badge clickable"
                       onClick={() => handleCategoryClick(filters.category)}
                       title="Click để bỏ chọn danh mục"
@@ -713,10 +729,10 @@ const Home = ({ searchQuery }) => {
                       {filters.category} ✕
                     </span>
                   </h3>
-                  
+
                   <div className="subcategories-actions">
                     {selectedSubcategories.length > 0 && (
-                      <button 
+                      <button
                         className="clear-all-btn"
                         onClick={() => {
                           setSelectedSubcategories([]);
@@ -731,7 +747,7 @@ const Home = ({ searchQuery }) => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="subcategories-columns">
                   {(() => {
                     // Định nghĩa các nhóm
@@ -762,7 +778,7 @@ const Home = ({ searchQuery }) => {
                         pattern: /^(Dưới|Từ|Trên)\s+\d+/i
                       }
                     };
-                    
+
                     // Phân loại subcategories vào các nhóm
                     const groups = {
                       brands: [],
@@ -772,7 +788,7 @@ const Home = ({ searchQuery }) => {
                       prices: [],
                       others: []
                     };
-                    
+
                     subcategories.forEach(sub => {
                       if (groupDefinitions.prices.pattern.test(sub)) {
                         groups.prices.push(sub);
@@ -788,25 +804,25 @@ const Home = ({ searchQuery }) => {
                         groups.others.push(sub);
                       }
                     });
-                    
+
                     // Render từng cột với giới hạn hiển thị
                     const VISIBLE_ITEMS = 5; // Số item hiển thị mặc định
-                    
+
                     const toggleColumnExpand = (groupKey) => {
-                      setExpandedColumns(prev => 
-                        prev.includes(groupKey) 
+                      setExpandedColumns(prev =>
+                        prev.includes(groupKey)
                           ? prev.filter(k => k !== groupKey)
                           : [...prev, groupKey]
                       );
                     };
-                    
+
                     const renderColumn = (groupKey, groupData) => {
                       if (groupData.length === 0) return null;
                       const def = groupDefinitions[groupKey] || { title: 'Khác', color: '#6b7280' };
                       const isExpanded = expandedColumns.includes(groupKey);
                       const visibleData = isExpanded ? groupData : groupData.slice(0, VISIBLE_ITEMS);
                       const hasMore = groupData.length > VISIBLE_ITEMS;
-                      
+
                       return (
                         <div key={groupKey} className="filter-column">
                           <h4 className="filter-column-title" style={{ color: def.color }}>
@@ -814,7 +830,7 @@ const Home = ({ searchQuery }) => {
                           </h4>
                           <ul className="filter-column-list">
                             {visibleData.map((sub, index) => (
-                              <li 
+                              <li
                                 key={index}
                                 className={`filter-column-item ${selectedSubcategories.includes(sub) ? 'active' : ''}`}
                                 onClick={() => handleSubcategoryToggle(sub)}
@@ -824,7 +840,7 @@ const Home = ({ searchQuery }) => {
                             ))}
                           </ul>
                           {hasMore && (
-                            <button 
+                            <button
                               className="filter-column-toggle"
                               onClick={() => toggleColumnExpand(groupKey)}
                               style={{ borderColor: def.color, color: def.color }}
@@ -839,7 +855,7 @@ const Home = ({ searchQuery }) => {
                         </div>
                       );
                     };
-                    
+
                     return (
                       <>
                         {renderColumn('brands', groups.brands)}
@@ -874,18 +890,18 @@ const Home = ({ searchQuery }) => {
                     >
                       ← Trước
                     </button>
-                    
+
                     <div className="pagination-numbers">
                       {(() => {
                         const pages = [];
                         const maxVisible = 5;
                         let startPage = Math.max(1, pagination.currentPage - Math.floor(maxVisible / 2));
                         let endPage = Math.min(pagination.totalPages, startPage + maxVisible - 1);
-                        
+
                         if (endPage - startPage < maxVisible - 1) {
                           startPage = Math.max(1, endPage - maxVisible + 1);
                         }
-                        
+
                         if (startPage > 1) {
                           pages.push(
                             <button
@@ -900,7 +916,7 @@ const Home = ({ searchQuery }) => {
                             pages.push(<span key="dots1" className="pagination-dots">...</span>);
                           }
                         }
-                        
+
                         for (let i = startPage; i <= endPage; i++) {
                           pages.push(
                             <button
@@ -912,7 +928,7 @@ const Home = ({ searchQuery }) => {
                             </button>
                           );
                         }
-                        
+
                         if (endPage < pagination.totalPages) {
                           if (endPage < pagination.totalPages - 1) {
                             pages.push(<span key="dots2" className="pagination-dots">...</span>);
@@ -927,11 +943,11 @@ const Home = ({ searchQuery }) => {
                             </button>
                           );
                         }
-                        
+
                         return pages;
                       })()}
                     </div>
-                    
+
                     <button
                       disabled={pagination.currentPage === pagination.totalPages}
                       onClick={() => handlePageChange(pagination.currentPage + 1)}
@@ -967,16 +983,16 @@ const Home = ({ searchQuery }) => {
                   .filter(cat => cat.isActive !== false)
                   .sort((a, b) => (a.order || 0) - (b.order || 0))
                   .map((category) => (
-                    <div 
+                    <div
                       key={category._id || category.name}
-                      className="category-card" 
+                      className="category-card"
                       onClick={() => handleCategoryClick(category.name)}
                     >
                       <div className="category-image">
                         {category.icon ? (
                           category.icon.startsWith('http') || category.icon.startsWith('/') ? (
-                            <img 
-                              src={category.icon} 
+                            <img
+                              src={category.icon}
                               alt={category.name}
                               onError={(e) => {
                                 e.target.onerror = null;
@@ -986,8 +1002,8 @@ const Home = ({ searchQuery }) => {
                           ) : /^[\p{Emoji}]$/u.test(category.icon) ? (
                             <span style={{ fontSize: '64px' }}>{category.icon}</span>
                           ) : (
-                            <img 
-                              src={getCategoryImage(category.name)} 
+                            <img
+                              src={getCategoryImage(category.name)}
                               alt={category.name}
                               onError={(e) => {
                                 e.target.onerror = null;
@@ -996,8 +1012,8 @@ const Home = ({ searchQuery }) => {
                             />
                           )
                         ) : (
-                          <img 
-                            src={getCategoryImage(category.name)} 
+                          <img
+                            src={getCategoryImage(category.name)}
                             alt={category.name}
                             onError={(e) => {
                               e.target.onerror = null;
@@ -1013,11 +1029,11 @@ const Home = ({ searchQuery }) => {
                             {category.description}
                           </p>
                           {category.description.length > 30 && (
-                            <button 
+                            <button
                               className="see-more-btn"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setExpandedCategories(prev => 
+                                setExpandedCategories(prev =>
                                   prev.includes(category._id || category.name)
                                     ? prev.filter(id => id !== (category._id || category.name))
                                     : [...prev, category._id || category.name]
@@ -1055,14 +1071,14 @@ const Home = ({ searchQuery }) => {
                   'Thiết bị VP',
                   'Sạc DP'
                 ].map((categoryName, index) => (
-                  <div 
-                    key={index} 
-                    className="category-card" 
+                  <div
+                    key={index}
+                    className="category-card"
                     onClick={() => handleCategoryClick(categoryName)}
                   >
                     <div className="category-image">
-                      <img 
-                        src={getCategoryImage(categoryName)} 
+                      <img
+                        src={getCategoryImage(categoryName)}
                         alt={categoryName}
                         onError={(e) => {
                           e.target.onerror = null;
@@ -1078,7 +1094,7 @@ const Home = ({ searchQuery }) => {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 };
 

@@ -1,0 +1,199 @@
+.coupon-section {
+    max-width: 1400px;
+    margin: 0 auto 2rem;
+    padding: 0 1rem;
+}
+
+.coupon-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.coupon-section-header .coupon-icon {
+    font-size: 1.5rem;
+    color: #f43f5e;
+}
+
+.coupon-section-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.coupon-count {
+    background: #fef2f2;
+    color: #f43f5e;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.coupon-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
+}
+
+.coupon-card {
+    display: flex;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px dashed #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.coupon-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    border-color: #f43f5e;
+}
+
+.coupon-left {
+    background: linear-gradient(135deg, #f43f5e, #ec4899);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+    position: relative;
+}
+
+.coupon-left::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+}
+
+.coupon-discount {
+    text-align: center;
+    color: white;
+}
+
+.discount-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.discount-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+.coupon-middle {
+    flex: 1;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.coupon-code-display {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.code-text {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    background: #f3f4f6;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    letter-spacing: 1px;
+}
+
+.copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: #5a67d8;
+}
+
+.copy-btn.copied {
+    background: #10b981;
+}
+
+.coupon-description {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+.coupon-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: auto;
+}
+
+.coupon-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.coupon-detail svg {
+    font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+    .coupon-list {
+        grid-template-columns: 1fr;
+    }
+
+    .coupon-card {
+        flex-direction: column;
+    }
+
+    .coupon-left {
+        min-width: 100%;
+        padding: 1rem;
+    }
+
+    .coupon-left::after {
+        display: none;
+    }
+
+    .coupon-discount {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .discount-value {
+        font-size: 1.5rem;
+    }
+}

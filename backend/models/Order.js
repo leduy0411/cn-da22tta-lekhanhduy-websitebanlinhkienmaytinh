@@ -42,6 +42,23 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  // Thông tin mã giảm giá
+  couponCode: {
+    type: String,
+    default: null
+  },
+  discountPercent: {
+    type: Number,
+    default: 0
+  },
+  discountAmount: {
+    type: Number,
+    default: 0
+  },
+  originalAmount: {
+    type: Number,
+    default: null
+  },
   paymentMethod: {
     type: String,
     required: true,

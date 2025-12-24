@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { orderAPI, zalopayAPI } from '../services/api';
-import { FiCreditCard, FiTruck, FiDollarSign } from 'react-icons/fi';
+import { orderAPI, zalopayAPI, couponAPI } from '../services/api';
+import { FiCreditCard, FiTruck, FiDollarSign, FiTag, FiX, FiCheck } from 'react-icons/fi';
 import AddressSelector from '../components/AddressSelector';
 import './Checkout.css';
 
@@ -16,12 +16,12 @@ const Checkout = () => {
   const [countdown, setCountdown] = useState(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  
+
   const formRef = useRef(null);
-  
+
   // Kiểm tra nếu là mua ngay
   const buyNowItem = location.state?.buyNowItem;
-  
+
   // Scroll đến form khi click "Mua ngay" từ trang chi tiết sản phẩm
   useEffect(() => {
     if (buyNowItem && formRef.current) {
@@ -30,7 +30,7 @@ const Checkout = () => {
       }, 100);
     }
   }, [buyNowItem]);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,6 +39,12 @@ const Checkout = () => {
     paymentMethod: 'COD',
     note: '',
   });
+
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -57,7 +63,7 @@ const Checkout = () => {
       ...formData,
       [name]: value,
     });
-    
+
     // Hiện QR code khi chọn chuyển khoản
     if (name === 'paymentMethod') {
       setShowQRCode(value === 'Banking');
@@ -75,7 +81,7 @@ const Checkout = () => {
     if (showQRCode && paymentStatus === 'checking') {
       // Start countdown from 5 seconds
       setCountdown(5);
-      
+
       const countdownInterval = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
@@ -83,17 +89,17 @@ const Checkout = () => {
             // Simulate successful payment after countdown
             setPaymentStatus('success');
             setShowSuccessModal(true);
-            
+
             // Play success sound
             const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
             audio.play().catch(e => console.log('Audio play failed:', e));
-            
+
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
-      
+
       return () => clearInterval(countdownInterval);
     }
   }, [showQRCode, paymentStatus]);
@@ -107,7 +113,7 @@ const Checkout = () => {
     try {
       setLoading(true);
       const totalAmount = getTotalAmount();
-      
+
       const response = await zalopayAPI.createOrder(
         orderId,
         totalAmount,
@@ -162,6 +168,22 @@ const Checkout = () => {
         note: formData.note,
       };
 
+      // Thêm thông tin coupon nếu có
+      if (appliedCoupon) {
+        orderData.couponCode = appliedCoupon.code;
+        orderData.discountPercent = appliedCoupon.discountPercent;
+        orderData.discountAmount = appliedCoupon.discountAmount;
+        orderData.originalAmount = getSubtotalAmount();
+        orderData.totalAmount = getFinalAmount();
+
+        // Gọi API để đánh dấu mã đã sử dụng
+        try {
+          await couponAPI.use(appliedCoupon.code);
+        } catch (err) {
+          console.error('Error marking coupon as used:', err);
+        }
+      }
+
       // Nếu là mua ngay, thêm thông tin sản phẩm
       if (buyNowItem) {
         orderData.buyNowItem = {
@@ -171,7 +193,7 @@ const Checkout = () => {
       }
 
       const response = await orderAPI.createOrder(orderData);
-      
+
       // Nếu chọn ZaloPay, chuyển hướng đến trang thanh toán
       if (formData.paymentMethod === 'ZaloPay') {
         // Lưu orderId vào localStorage để kiểm tra sau
@@ -180,14 +202,14 @@ const Checkout = () => {
         await handleZaloPayPayment(response.data.order._id);
         return;
       }
-      
+
       alert(`✅ ${response.data.message}\nMã đơn hàng: ${response.data.order.orderNumber}`);
-      
+
       // Nếu thanh toán từ giỏ hàng, xóa giỏ hàng
       if (!buyNowItem) {
         await clearCart();
       }
-      
+
       // Chuyển đến trang xác nhận
       navigate(`/order-success/${response.data.order._id}`);
     } catch (error) {
@@ -214,12 +236,59 @@ const Checkout = () => {
     );
   }
 
-  // Tính tổng tiền
-  const getTotalAmount = () => {
+  // Tính tổng tiền gốc (subtotal)
+  const getSubtotalAmount = () => {
     if (buyNowItem) {
       return buyNowItem.price * buyNowItem.quantity;
     }
     return cart?.totalAmount || 0;
+  };
+
+  // Tính tổng tiền (cũ - dùng cho getTotalAmount)
+  const getTotalAmount = () => {
+    return getSubtotalAmount();
+  };
+
+  // Tính số tiền được giảm
+  const getDiscountAmount = () => {
+    if (!appliedCoupon) return 0;
+    return appliedCoupon.discountAmount || 0;
+  };
+
+  // Tính tổng tiền sau giảm giá
+  const getFinalAmount = () => {
+    return getSubtotalAmount() - getDiscountAmount();
+  };
+
+  // Áp dụng mã giảm giá
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Vui lòng nhập mã giảm giá');
+      return;
+    }
+
+    try {
+      setCouponLoading(true);
+      setCouponError('');
+
+      const response = await couponAPI.validate(couponCode, getSubtotalAmount());
+
+      if (response.data.valid) {
+        setAppliedCoupon(response.data);
+        setCouponCode('');
+      }
+    } catch (error) {
+      setCouponError(error.response?.data?.message || 'Mã giảm giá không hợp lệ');
+      setAppliedCoupon(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // Xóa mã giảm giá
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError('');
   };
 
   // Lấy danh sách items để hiển thị
@@ -294,7 +363,7 @@ const Checkout = () => {
 
               <div className="form-group address-group">
                 <label>Địa chỉ giao hàng *</label>
-                <AddressSelector 
+                <AddressSelector
                   value={formData.address}
                   onChange={(value) => setFormData({ ...formData, address: value })}
                   required
@@ -320,7 +389,7 @@ const Checkout = () => {
                       <span className="payment-desc">COD - Trả tiền mặt khi giao hàng</span>
                     </div>
                   </label>
-                  
+
                   <label className={`payment-option ${formData.paymentMethod === 'Banking' || formData.paymentMethod === 'ZaloPay' ? 'active' : ''}`}>
                     <input
                       type="radio"
@@ -337,7 +406,7 @@ const Checkout = () => {
                       <span className="payment-desc">QR Banking hoặc ZaloPay</span>
                     </div>
                   </label>
-                  
+
                   {/* Sub-options for Banking/ZaloPay */}
                   {(formData.paymentMethod === 'Banking' || formData.paymentMethod === 'ZaloPay') && (
                     <div className="payment-sub-options">
@@ -365,7 +434,7 @@ const Checkout = () => {
                       </label>
                     </div>
                   )}
-                  
+
                   <label className={`payment-option ${formData.paymentMethod === 'Card' ? 'active' : ''}`}>
                     <input
                       type="radio"
@@ -392,7 +461,7 @@ const Checkout = () => {
                     <h3>🏦 Thông tin chuyển khoản</h3>
                     <p>Quét mã QR bên dưới để thanh toán</p>
                   </div>
-                  
+
                   {paymentStatus === 'success' && (
                     <div className="payment-success-banner">
                       <div className="success-icon">✅</div>
@@ -402,7 +471,7 @@ const Checkout = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {paymentStatus === 'checking' && (
                     <div className="payment-checking-banner">
                       <div className="checking-icon">
@@ -414,15 +483,15 @@ const Checkout = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="qr-code-content">
                     <div className="qr-code-image">
-                      <img 
-                        src="/img/img-thanhtoan-chuyenkhoannganhang/chuyenkhoannganhang.png" 
+                      <img
+                        src="/img/img-thanhtoan-chuyenkhoannganhang/chuyenkhoannganhang.png"
                         alt="QR Code Thanh toán"
                       />
                     </div>
-                    
+
                     <div className="bank-info">
                       <div className="bank-info-item">
                         <span className="label">Ngân hàng:</span>
@@ -446,10 +515,10 @@ const Checkout = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="qr-code-actions">
                     {paymentStatus === 'pending' && (
-                      <button 
+                      <button
                         type="button"
                         className="check-payment-btn"
                         onClick={handleCheckPayment}
@@ -458,7 +527,7 @@ const Checkout = () => {
                         🔍 Kiểm tra thanh toán
                       </button>
                     )}
-                    
+
                     {paymentStatus === 'success' && (
                       <div className="payment-confirmed">
                         <span className="confirmed-icon">✔️</span>
@@ -466,7 +535,7 @@ const Checkout = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="qr-code-note">
                     <p>⚠️ Vui lòng chuyển đúng số tiền và nội dung để đơn hàng được xử lý nhanh nhất</p>
                   </div>
@@ -494,7 +563,7 @@ const Checkout = () => {
           <div className="order-summary-section">
             <div className="order-summary">
               <h2>Đơn hàng của bạn</h2>
-              
+
               {buyNowItem && (
                 <div className="buy-now-badge">🚀 Mua ngay - Thanh toán nhanh</div>
               )}
@@ -514,26 +583,90 @@ const Checkout = () => {
                 ))}
               </div>
 
+              {/* Coupon Section */}
+              <div className="coupon-input-section">
+                <div className="coupon-input-header">
+                  <FiTag className="coupon-icon" />
+                  <span>Mã giảm giá</span>
+                </div>
+
+                {appliedCoupon ? (
+                  <div className="applied-coupon">
+                    <div className="applied-coupon-info">
+                      <span className="coupon-badge">
+                        <FiCheck /> {appliedCoupon.code}
+                      </span>
+                      <span className="coupon-discount-text">
+                        Giảm {appliedCoupon.discountPercent}%
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="remove-coupon-btn"
+                      onClick={handleRemoveCoupon}
+                    >
+                      <FiX />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="coupon-input-wrapper">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value.toUpperCase());
+                        setCouponError('');
+                      }}
+                      placeholder="Nhập mã giảm giá"
+                      className={couponError ? 'error' : ''}
+                    />
+                    <button
+                      type="button"
+                      className="apply-coupon-btn"
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading}
+                    >
+                      {couponLoading ? '...' : 'Áp dụng'}
+                    </button>
+                  </div>
+                )}
+
+                {couponError && (
+                  <p className="coupon-error">{couponError}</p>
+                )}
+              </div>
+
               <div className="order-totals">
                 <div className="total-row">
                   <span>Tạm tính:</span>
-                  <span>{formatPrice(totalAmount)}</span>
+                  <span>{formatPrice(getSubtotalAmount())}</span>
                 </div>
                 <div className="total-row">
                   <span>Phí vận chuyển:</span>
                   <span>Miễn phí</span>
                 </div>
+
+                {appliedCoupon && (
+                  <div className="total-row discount-row">
+                    <span>
+                      <FiTag className="discount-icon" />
+                      Giảm giá ({appliedCoupon.discountPercent}%):
+                    </span>
+                    <span className="discount-amount">-{formatPrice(getDiscountAmount())}</span>
+                  </div>
+                )}
+
                 <div className="total-divider"></div>
                 <div className="total-row grand-total">
                   <span>💰 Tổng cộng:</span>
-                  <span className="grand-total-price">{formatPrice(totalAmount)}</span>
+                  <span className="grand-total-price">{formatPrice(getFinalAmount())}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="payment-success-modal-overlay" onClick={() => setShowSuccessModal(false)}>
@@ -548,12 +681,12 @@ const Checkout = () => {
                 </div>
               </div>
             </div>
-            
+
             <h2 className="success-modal-title">🎉 Thanh toán thành công!</h2>
             <p className="success-modal-message">
               Chúng tôi đã nhận được khoản thanh toán của bạn
             </p>
-            
+
             <div className="success-modal-details">
               <div className="detail-row">
                 <span className="detail-label">Số tiền:</span>
@@ -568,9 +701,9 @@ const Checkout = () => {
                 <span className="detail-value success-status">✓ Đã xác nhận</span>
               </div>
             </div>
-            
+
             <div className="success-modal-actions">
-              <button 
+              <button
                 className="modal-close-btn"
                 onClick={() => setShowSuccessModal(false)}
               >

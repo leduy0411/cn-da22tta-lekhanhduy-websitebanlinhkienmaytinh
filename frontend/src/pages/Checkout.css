@@ -422,6 +422,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -579,8 +580,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .checking-text h4 {
@@ -602,6 +608,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -612,6 +619,7 @@
   from {
     transform: scale(0);
   }
+
   to {
     transform: scale(1);
   }
@@ -696,18 +704,18 @@
   .payment-desc {
     font-size: 0.75rem;
   }
-  
+
   .payment-sub-options {
     flex-direction: column;
     margin-left: 0.75rem;
     gap: 0.5rem;
   }
-  
+
   .check-payment-btn {
     width: 100%;
     padding: 0.7rem 1rem;
   }
-  
+
   .payment-success-banner,
   .payment-checking-banner {
     flex-direction: column;
@@ -732,8 +740,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .payment-success-modal {
@@ -752,6 +765,7 @@
     opacity: 0;
     transform: translateY(50px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -833,21 +847,25 @@
     left: 1px;
     top: 19px;
   }
+
   54% {
     width: 0;
     left: 1px;
     top: 19px;
   }
+
   70% {
     width: 50px;
     left: -8px;
     top: 37px;
   }
+
   84% {
     width: 17px;
     left: 21px;
     top: 48px;
   }
+
   100% {
     width: 25px;
     left: 14px;
@@ -861,16 +879,19 @@
     right: 46px;
     top: 54px;
   }
+
   65% {
     width: 0;
     right: 46px;
     top: 54px;
   }
+
   84% {
     width: 55px;
     right: 0px;
     top: 35px;
   }
+
   100% {
     width: 47px;
     right: 8px;
@@ -956,27 +977,178 @@
   .payment-success-modal {
     padding: 2rem 1.5rem;
   }
-  
+
   .success-modal-title {
     font-size: 1.5rem;
   }
-  
+
   .success-modal-message {
     font-size: 1rem;
   }
-  
+
   .success-checkmark {
     width: 80px;
     height: 80px;
   }
-  
+
   .check-icon {
     width: 80px;
     height: 80px;
   }
-  
+
   .icon-circle {
     width: 80px;
     height: 80px;
   }
+}
+
+/* === COUPON SECTION === */
+.coupon-input-section {
+  background: #f8f9fa;
+  border: 1px dashed #dee2e6;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.coupon-input-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.coupon-input-header .coupon-icon {
+  color: #f43f5e;
+}
+
+.coupon-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.coupon-input-wrapper input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  padding-right: 110px;
+  /* Chừa chỗ cho nút */
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: border-color 0.2s;
+}
+
+.coupon-input-wrapper input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.coupon-input-wrapper input.error {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.apply-coupon-btn {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  bottom: 4px;
+  padding: 0 1rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.apply-coupon-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.apply-coupon-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.coupon-error {
+  color: #dc2626;
+  font-size: 0.8rem;
+  margin: 0.5rem 0 0;
+}
+
+.applied-coupon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 2px solid #10b981;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.applied-coupon-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.coupon-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #10b981;
+  color: white;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.coupon-discount-text {
+  color: #065f46;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.remove-coupon-btn {
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  padding: 0.375rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.remove-coupon-btn:hover {
+  background: #fee2e2;
+}
+
+/* Discount Row in Order Totals */
+.total-row.discount-row {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.total-row.discount-row .discount-icon {
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+.discount-amount {
+  color: #10b981;
+  font-weight: 700;
 }

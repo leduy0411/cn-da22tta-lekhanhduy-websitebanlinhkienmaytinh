@@ -42,8 +42,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/thietbidientu')
-.then(() => console.log('✅ Kết nối MongoDB thành công!'))
-.catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
+  .then(() => console.log('✅ Kết nối MongoDB thành công!'))
+  .catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
 
 // Routes
 const productRoutes = require('./routes/products');
@@ -57,6 +57,7 @@ const chatRoutes = require('./routes/chat');
 const filterRoutes = require('./routes/filters');
 const zalopayRoutes = require('./routes/zalopay');
 const reviewRoutes = require('./routes/reviews');
+const couponRoutes = require('./routes/coupons');
 
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -69,6 +70,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/filters', filterRoutes);
 app.use('/api/zalopay', zalopayRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/coupons', couponRoutes);
 
 // Home route
 app.get('/', (req, res) => {
@@ -78,7 +80,7 @@ app.get('/', (req, res) => {
 // Serve Frontend in Production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'build')));
-  
+
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
   });

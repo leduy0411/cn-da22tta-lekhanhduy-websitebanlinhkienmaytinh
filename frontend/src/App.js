@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ChatBox from './components/ChatBox';
+import GiftBox from './components/GiftBox';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
@@ -28,23 +29,24 @@ import AdminOrders from './pages/Admin/AdminOrders';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminChat from './pages/Admin/AdminChat';
 import AdminReviews from './pages/Admin/AdminReviews';
+import AdminCoupons from './pages/Admin/AdminCoupons';
 import './App.css';
 
 // Protected Route cho Admin
 const AdminRoute = ({ children }) => {
   const { isAdmin, loading } = useAuth();
-  
+
   if (loading) {
     return <div className="loading">Đang tải...</div>;
   }
-  
+
   return isAdmin() ? children : <Navigate to="/login" />;
 };
 
 // Layout cho trang customer
 const CustomerLayout = ({ children, onSearch }) => {
   const navigate = useNavigate();
-  
+
   const handleSearchWithRedirect = (query) => {
     onSearch(query);
     if (query && window.location.pathname !== '/') {
@@ -56,6 +58,7 @@ const CustomerLayout = ({ children, onSearch }) => {
     <>
       <Header onSearch={handleSearchWithRedirect} />
       {children}
+      <GiftBox />
       <ChatBox />
       <Footer />
     </>
@@ -90,6 +93,7 @@ function AppContent() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="coupons" element={<AdminCoupons />} />
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="chat" element={<AdminChat />} />
         </Route>
@@ -131,7 +135,7 @@ function AppContent() {
             <Profile />
           </CustomerLayout>
         } />
-        
+
         {/* Policy Pages */}
         <Route path="/:slug" element={
           <CustomerLayout onSearch={handleSearch}>

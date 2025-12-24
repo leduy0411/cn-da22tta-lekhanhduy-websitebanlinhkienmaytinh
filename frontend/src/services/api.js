@@ -28,13 +28,13 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   // Luôn gửi sessionId (cho cả user đã đăng nhập và chưa đăng nhập)
   config.headers['x-session-id'] = getSessionId();
-  
+
   // Thêm token nếu có
   const token = localStorage.getItem('token');
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return config;
 });
 
@@ -75,7 +75,7 @@ export const authAPI = {
   login: (email, password) => api.post('/auth/login', { email, password }),
   getCurrentUser: () => api.get('/auth/me'),
   updateProfile: (userData) => api.put('/auth/profile', userData),
-  changePassword: (currentPassword, newPassword) => 
+  changePassword: (currentPassword, newPassword) =>
     api.put('/auth/change-password', { currentPassword, newPassword }),
   logout: () => api.post('/auth/logout'),
   getUserReviews: () => api.get('/auth/reviews'),
@@ -85,16 +85,16 @@ export const authAPI = {
 export const adminAPI = {
   // Statistics
   getStats: () => api.get('/admin/stats'),
-  
+
   // Users Management
   getUsers: (params) => api.get('/admin/users', { params }),
   updateUserRole: (userId, role) => api.put(`/admin/users/${userId}/role`, { role }),
   toggleUserStatus: (userId) => api.put(`/admin/users/${userId}/toggle-status`),
   deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
-  
+
   // Orders Management
   getAllOrders: (params) => api.get('/admin/orders', { params }),
-  
+
   // Products Management (sử dụng productAPI nhưng với quyền admin)
   createProduct: (productData) => api.post('/products', productData),
   updateProduct: (id, productData) => api.put(`/products/${id}`, productData),
@@ -103,9 +103,9 @@ export const adminAPI = {
 
 // ZaloPay API
 export const zalopayAPI = {
-  createOrder: (orderId, amount, description) => 
+  createOrder: (orderId, amount, description) =>
     api.post('/zalopay/create', { orderId, amount, description }),
-  checkStatus: (app_trans_id) => 
+  checkStatus: (app_trans_id) =>
     api.post('/zalopay/check-status', { app_trans_id }),
 };
 
@@ -118,6 +118,19 @@ export const reviewAPI = {
   markHelpful: (id) => api.post(`/reviews/${id}/helpful`),
   checkUserReview: (productId) => api.get(`/reviews/check/${productId}`),
   canReview: (productId) => api.get(`/reviews/can-review/${productId}`),
+};
+
+// Coupon API
+export const couponAPI = {
+  // Admin
+  getAll: () => api.get('/coupons'),
+  create: (couponData) => api.post('/coupons', couponData),
+  update: (id, couponData) => api.put(`/coupons/${id}`, couponData),
+  delete: (id) => api.delete(`/coupons/${id}`),
+  // User
+  getAvailable: () => api.get('/coupons/available'),
+  validate: (code, orderAmount) => api.post('/coupons/validate', { code, orderAmount }),
+  use: (code) => api.post('/coupons/use', { code }),
 };
 
 export default api;
