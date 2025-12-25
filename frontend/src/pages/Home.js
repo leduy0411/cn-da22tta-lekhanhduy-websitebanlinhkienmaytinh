@@ -488,11 +488,11 @@ const Home = ({ searchQuery }) => {
       {!searchQuery && (
         <div className="promo-cards-section">
           <div className="promo-cards-grid">
-            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Laptop&subcategory=Laptop%20Gaming')}>
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Laptop&subcategory=Gaming')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-laptop-gaming-slider-bot-t8.png`} alt="Laptop Gaming" />
             </div>
 
-            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Laptop&subcategory=Laptop%20Văn%20Phòng')}>
+            <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Laptop&subcategory=H%E1%BB%8Dc%20sinh%20-%20Sinh%20vi%C3%AAn')}>
               <img src={`${process.env.PUBLIC_URL}/img/gearvn-laptop-van-phong-slider-bot-t8.png`} alt="Laptop Văn Phòng" />
             </div>
 

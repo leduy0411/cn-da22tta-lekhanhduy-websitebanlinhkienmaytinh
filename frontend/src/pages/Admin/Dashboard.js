@@ -24,24 +24,26 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const promises = [
-        orderAPI.getOrders({ status: 'pending', limit: 5 }),
         productAPI.getAll({ stock_lte: 10, limit: 5 })
       ];
 
       if (isAdmin()) {
         promises.unshift(adminAPI.getStats());
+        promises.push(adminAPI.getAllOrders({ status: 'pending', limit: 5 }));
+      } else {
+        promises.unshift(orderAPI.getOrders({ status: 'pending', limit: 5 }));
       }
 
       const results = await Promise.all(promises);
 
       if (isAdmin()) {
-        const [statsResponse, ordersResponse, productsResponse] = results;
+        const [statsResponse, productsResponse, ordersResponse] = results;
         setStats(statsResponse.data);
-        setPendingOrders(ordersResponse.data.orders || []);
         setLowStockProducts(productsResponse.data.products || productsResponse.data || []);
+        setPendingOrders(ordersResponse.data.orders || []);
       } else {
         const [ordersResponse, productsResponse] = results;
-        setPendingOrders(ordersResponse.data.orders || []);
+        setPendingOrders(ordersResponse.data || []);
         setLowStockProducts(productsResponse.data.products || productsResponse.data || []);
       }
     } catch (error) {

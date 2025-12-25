@@ -1,6 +1,6 @@
 /* Header Styles - Neon Blue Theme */
 .header {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%) !important;
+  background: #d7262b !important;
   color: white;
   padding: 1rem 0;
   box-shadow: 0 4px 25px rgba(79, 70, 229, 0.5);
