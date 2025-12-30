@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiStar, FiThumbsUp, FiCheckCircle, FiEdit2, FiTrash2, FiCamera, FiX } from 'react-icons/fi';
 import { reviewAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import Swal from 'sweetalert2';
 import './ProductReviews.css';
 
 const ProductReviews = ({ productId }) => {
@@ -76,7 +77,7 @@ const ProductReviews = ({ productId }) => {
     e.preventDefault();
     
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để đánh giá');
+      Swal.fire('Thông báo', 'Vui lòng đăng nhập để đánh giá', 'warning');
       return;
     }
 
@@ -90,7 +91,7 @@ const ProductReviews = ({ productId }) => {
           comment: reviewForm.comment,
           images: reviewImages
         });
-        alert('✅ Đã cập nhật đánh giá thành công!');
+        Swal.fire('Thành công', 'Đã cập nhật đánh giá thành công!', 'success');
         setEditingReview(null);
       } else {
         // Tạo review mới
@@ -100,7 +101,7 @@ const ProductReviews = ({ productId }) => {
           comment: reviewForm.comment,
           images: reviewImages
         });
-        alert('✅ Đã gửi đánh giá thành công!');
+        Swal.fire('Thành công', 'Đã gửi đánh giá thành công!', 'success');
       }
       
       setReviewForm({ rating: 5, comment: '' });
@@ -108,7 +109,7 @@ const ProductReviews = ({ productId }) => {
       setShowReviewForm(false);
       fetchReviews();
     } catch (error) {
-      alert('❌ ' + (error.response?.data?.message || 'Lỗi khi gửi đánh giá'));
+      Swal.fire('Lỗi', error.response?.data?.message || 'Lỗi khi gửi đánh giá', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -125,16 +126,24 @@ const ProductReviews = ({ productId }) => {
   };
 
   const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa đánh giá này?')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc muốn xóa đánh giá này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       await reviewAPI.deleteReview(reviewId);
-      alert('✅ Đã xóa đánh giá thành công!');
+      Swal.fire('Thành công', 'Đã xóa đánh giá thành công!', 'success');
       fetchReviews();
     } catch (error) {
-      alert('❌ ' + (error.response?.data?.message || 'Lỗi khi xóa đánh giá'));
+      Swal.fire('Lỗi', error.response?.data?.message || 'Lỗi khi xóa đánh giá', 'error');
     }
   };
 
@@ -149,7 +158,7 @@ const ProductReviews = ({ productId }) => {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + reviewImages.length > 5) {
-      alert('Tối đa 5 hình ảnh!');
+      Swal.fire('Thông báo', 'Tối đa 5 hình ảnh!', 'warning');
       return;
     }
 
@@ -157,7 +166,7 @@ const ProductReviews = ({ productId }) => {
     
     files.forEach(file => {
       if (file.size > 5 * 1024 * 1024) {
-        alert('Kích thước mỗi ảnh không được vượt quá 5MB');
+        Swal.fire('Thông báo', 'Kích thước mỗi ảnh không được vượt quá 5MB', 'warning');
         setUploadingImages(false);
         return;
       }
@@ -177,7 +186,7 @@ const ProductReviews = ({ productId }) => {
 
   const handleMarkHelpful = async (reviewId) => {
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập');
+      Swal.fire('Thông báo', 'Vui lòng đăng nhập', 'warning');
       return;
     }
 

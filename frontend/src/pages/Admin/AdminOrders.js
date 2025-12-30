@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiShoppingBag, FiEye, FiRefreshCw, FiFilter, FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiTrash2 } from 'react-icons/fi';
+import Swal from 'sweetalert2';
 import './AdminOrders.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -44,16 +45,22 @@ function AdminOrders() {
       setOrders(response.data.orders || response.data);
     } catch (error) {
       console.error('Lỗi khi lấy đơn hàng:', error);
-      alert('Không thể tải danh sách đơn hàng!');
+      Swal.fire('Lỗi', 'Không thể tải danh sách đơn hàng!', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleUpdateStatus = async (orderId, newStatus) => {
-    if (!window.confirm(`Bạn có chắc muốn cập nhật trạng thái đơn hàng thành "${statusColors[newStatus].label}"?`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận',
+      text: `Bạn có chắc muốn cập nhật trạng thái đơn hàng thành "${statusColors[newStatus].label}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Xác nhận',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -62,17 +69,24 @@ function AdminOrders() {
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Cập nhật trạng thái thành công!');
+      Swal.fire('Thành công', 'Cập nhật trạng thái thành công!', 'success');
       fetchOrders();
     } catch (error) {
-      alert(error.response?.data?.message || 'Có lỗi khi cập nhật trạng thái!');
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi khi cập nhật trạng thái!', 'error');
     }
   };
 
   const handleDeliverOrder = async (orderId) => {
-    if (!window.confirm('Xác nhận đơn hàng đã được giao thành công?')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận giao hàng',
+      text: 'Xác nhận đơn hàng đã được giao thành công?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      confirmButtonText: 'Xác nhận',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -81,24 +95,31 @@ function AdminOrders() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Đã xác nhận giao hàng thành công!');
+      Swal.fire('Thành công', 'Đã xác nhận giao hàng thành công!', 'success');
       fetchOrders();
       if (showDetailModal) setShowDetailModal(false);
     } catch (error) {
-      alert(error.response?.data?.message || 'Có lỗi khi xác nhận giao hàng!');
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi khi xác nhận giao hàng!', 'error');
     }
   };
 
   const handleCancelOrder = async (orderId) => {
-    const reason = prompt('Nhập lý do hủy đơn hàng:');
-    if (!reason) {
-      alert('Vui lòng nhập lý do hủy đơn!');
-      return;
-    }
-
-    if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) {
-      return;
-    }
+    const { value: reason } = await Swal.fire({
+      title: 'Hủy đơn hàng',
+      input: 'text',
+      inputLabel: 'Nhập lý do hủy đơn hàng:',
+      inputPlaceholder: 'Lý do hủy...',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Hủy đơn',
+      cancelButtonText: 'Đóng',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Vui lòng nhập lý do hủy đơn!';
+        }
+      }
+    });
+    if (!reason) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -107,18 +128,26 @@ function AdminOrders() {
         { reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Đã hủy đơn hàng và hoàn trả sản phẩm vào kho!');
+      Swal.fire('Thành công', 'Đã hủy đơn hàng và hoàn trả sản phẩm vào kho!', 'success');
       fetchOrders();
       if (showDetailModal) setShowDetailModal(false);
     } catch (error) {
-      alert(error.response?.data?.message || 'Có lỗi khi hủy đơn hàng!');
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi khi hủy đơn hàng!', 'error');
     }
   };
 
   const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm('Bạn có chắc muốn XÓA VĨNH VIỄN đơn hàng này? Hành động này không thể hoàn tác!')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc muốn XÓA VĨNH VIỄN đơn hàng này? Hành động này không thể hoàn tác!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa vĩnh viễn',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -126,11 +155,11 @@ function AdminOrders() {
         `${API_URL}/admin/orders/${orderId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Đã xóa đơn hàng!');
+      Swal.fire('Đã xóa!', 'Đã xóa đơn hàng!', 'success');
       fetchOrders();
       if (showDetailModal) setShowDetailModal(false);
     } catch (error) {
-      alert(error.response?.data?.message || 'Có lỗi khi xóa đơn hàng!');
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi khi xóa đơn hàng!', 'error');
     }
   };
 

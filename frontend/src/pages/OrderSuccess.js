@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiCheckCircle, FiPackage, FiX, FiClock, FiTruck, FiAlertCircle } from 'react-icons/fi';
 import { orderAPI } from '../services/api';
+import Swal from 'sweetalert2';
 import './OrderSuccess.css';
 
 const OrderSuccess = () => {
@@ -21,7 +22,7 @@ const OrderSuccess = () => {
       setOrder(response.data);
     } catch (error) {
       console.error('Lỗi khi lấy thông tin đơn hàng:', error);
-      alert('Không tìm thấy đơn hàng');
+      Swal.fire('Lỗi', 'Không tìm thấy đơn hàng', 'error');
       navigate('/');
     } finally {
       setLoading(false);
@@ -40,9 +41,17 @@ const OrderSuccess = () => {
   };
 
   const handleCancelOrder = async () => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận hủy',
+      text: 'Bạn có chắc chắn muốn hủy đơn hàng này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Hủy đơn',
+      cancelButtonText: 'Không'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       setCancelling(true);
@@ -50,7 +59,7 @@ const OrderSuccess = () => {
       await fetchOrder(); // Reload order data
     } catch (error) {
       console.error('Lỗi khi hủy đơn hàng:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Không thể hủy đơn hàng. Vui lòng thử lại.'));
+      Swal.fire('Lỗi', error.response?.data?.message || 'Không thể hủy đơn hàng. Vui lòng thử lại.', 'error');
     } finally {
       setCancelling(false);
     }

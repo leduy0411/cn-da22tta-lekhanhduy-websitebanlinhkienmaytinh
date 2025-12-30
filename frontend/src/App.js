@@ -30,6 +30,7 @@ import AdminUsers from './pages/Admin/AdminUsers';
 import AdminChat from './pages/Admin/AdminChat';
 import AdminReviews from './pages/Admin/AdminReviews';
 import AdminCoupons from './pages/Admin/AdminCoupons';
+import AdminSubcategories from './pages/Admin/AdminSubcategories';
 import './App.css';
 
 // Protected Route cho Admin
@@ -90,7 +91,9 @@ function AppContent() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
+          <Route path="products/add" element={<AdminProducts openAddModal={true} />} />
           <Route path="categories" element={<AdminCategories />} />
+          <Route path="subcategories" element={<AdminSubcategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="coupons" element={<AdminCoupons />} />

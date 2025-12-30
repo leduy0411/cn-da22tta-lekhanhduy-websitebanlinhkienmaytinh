@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import Swal from 'sweetalert2';
 import './ProductCard.css';
 
 const ProductCard = ({ product }) => {
@@ -14,7 +15,7 @@ const ProductCard = ({ product }) => {
   const handleAddToCart = async (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
+      Swal.fire('Thông báo', 'Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
       navigate('/login');
       return;
     }
@@ -23,9 +24,9 @@ const ProductCard = ({ product }) => {
     const result = await addToCart(product._id, 1);
 
     if (result.success) {
-      alert('✅ Đã thêm vào giỏ hàng!');
+      Swal.fire('Thành công', 'Đã thêm vào giỏ hàng!', 'success');
     } else {
-      alert('❌ ' + result.message);
+      Swal.fire('Lỗi', result.message, 'error');
     }
     setAdding(false);
   };
@@ -33,7 +34,7 @@ const ProductCard = ({ product }) => {
   const handleBuyNow = async (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để mua hàng');
+      Swal.fire('Thông báo', 'Vui lòng đăng nhập để mua hàng', 'warning');
       navigate('/login');
       return;
     }

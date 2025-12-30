@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { orderAPI, zalopayAPI, couponAPI } from '../services/api';
 import { FiCreditCard, FiTruck, FiDollarSign, FiTag, FiX, FiCheck } from 'react-icons/fi';
 import AddressSelector from '../components/AddressSelector';
+import Swal from 'sweetalert2';
 import './Checkout.css';
 
 const Checkout = () => {
@@ -124,11 +125,11 @@ const Checkout = () => {
         // Mở trang thanh toán ZaloPay
         window.location.href = response.data.order_url;
       } else {
-        alert('❌ Không thể tạo liên kết thanh toán ZaloPay');
+        Swal.fire('Lỗi', 'Không thể tạo liên kết thanh toán ZaloPay', 'error');
       }
     } catch (error) {
       console.error('ZaloPay payment error:', error);
-      alert('❌ Lỗi khi tạo thanh toán ZaloPay: ' + (error.response?.data?.message || error.message));
+      Swal.fire('Lỗi', 'Lỗi khi tạo thanh toán ZaloPay: ' + (error.response?.data?.message || error.message), 'error');
     } finally {
       setLoading(false);
     }
@@ -138,19 +139,19 @@ const Checkout = () => {
     e.preventDefault();
 
     if (!formData.name || !formData.email || !formData.phone || !formData.address) {
-      alert('Vui lòng điền đầy đủ thông tin!');
+      Swal.fire('Thông báo', 'Vui lòng điền đầy đủ thông tin!', 'warning');
       return;
     }
 
     // Kiểm tra thanh toán cho phương thức Banking
     if (formData.paymentMethod === 'Banking' && paymentStatus !== 'success') {
-      alert('⚠️ Vui lòng quét mã QR và kiểm tra thanh toán trước khi đặt hàng!');
+      Swal.fire('Thông báo', 'Vui lòng quét mã QR và kiểm tra thanh toán trước khi đặt hàng!', 'warning');
       return;
     }
 
     // Kiểm tra: Nếu không phải mua ngay và giỏ hàng trống
     if (!buyNowItem && (!cart || !cart.items || cart.items.length === 0)) {
-      alert('Giỏ hàng trống!');
+      Swal.fire('Thông báo', 'Giỏ hàng trống!', 'warning');
       navigate('/');
       return;
     }
@@ -203,7 +204,7 @@ const Checkout = () => {
         return;
       }
 
-      alert(`✅ ${response.data.message}\nMã đơn hàng: ${response.data.order.orderNumber}`);
+      Swal.fire('Thành công', `${response.data.message}\nMã đơn hàng: ${response.data.order.orderNumber}`, 'success');
 
       // Nếu thanh toán từ giỏ hàng, xóa giỏ hàng
       if (!buyNowItem) {
@@ -213,7 +214,7 @@ const Checkout = () => {
       // Chuyển đến trang xác nhận
       navigate(`/order-success/${response.data.order._id}`);
     } catch (error) {
-      alert('❌ ' + (error.response?.data?.message || 'Lỗi khi đặt hàng'));
+      Swal.fire('Lỗi', error.response?.data?.message || 'Lỗi khi đặt hàng', 'error');
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiPlus, FiEdit2, FiTrash2, FiPackage, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
+import Swal from 'sweetalert2';
 import './AdminCategories.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -91,13 +92,13 @@ function AdminCategories() {
 
     // Kiểm tra loại file
     if (!file.type.startsWith('image/')) {
-      alert('Vui lòng chọn file ảnh!');
+      Swal.fire('Lỗi', 'Vui lòng chọn file ảnh!', 'error');
       return;
     }
 
     // Kiểm tra kích thước (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert('Kích thước ảnh không được vượt quá 2MB!');
+      Swal.fire('Lỗi', 'Kích thước ảnh không được vượt quá 2MB!', 'error');
       return;
     }
 
@@ -120,10 +121,10 @@ function AdminCategories() {
         icon: response.data.imageUrl
       }));
 
-      alert('Upload ảnh thành công!');
+      Swal.fire('Thành công', 'Upload ảnh thành công!', 'success');
     } catch (error) {
       console.error('Lỗi khi upload ảnh:', error);
-      alert(error.response?.data?.message || 'Có lỗi khi upload ảnh!');
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi khi upload ảnh!', 'error');
     } finally {
       setUploadingImage(false);
     }
@@ -152,7 +153,7 @@ function AdminCategories() {
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        alert('Cập nhật danh mục thành công!');
+        Swal.fire('Thành công', 'Cập nhật danh mục thành công!', 'success');
       } else {
         // Tạo mới
         await axios.post(
@@ -160,7 +161,7 @@ function AdminCategories() {
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        alert('Thêm danh mục thành công!');
+        Swal.fire('Thành công', 'Thêm danh mục thành công!', 'success');
       }
 
       handleCloseModal();
@@ -171,19 +172,28 @@ function AdminCategories() {
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa danh mục "${name}"?`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: `Bạn có chắc muốn xóa danh mục "${name}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`${API_URL}/categories/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Xóa danh mục thành công!');
+      Swal.fire('Đã xóa!', 'Xóa danh mục thành công!', 'success');
       fetchCategories();
     } catch (error) {
-      alert(error.response?.data?.message || 'Có lỗi khi xóa danh mục!');
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi khi xóa danh mục!', 'error');
     }
   };
 
@@ -197,7 +207,7 @@ function AdminCategories() {
       );
       fetchCategories();
     } catch (error) {
-      alert('Có lỗi khi cập nhật trạng thái!');
+      Swal.fire('Lỗi', 'Có lỗi khi cập nhật trạng thái!', 'error');
     }
   };
 

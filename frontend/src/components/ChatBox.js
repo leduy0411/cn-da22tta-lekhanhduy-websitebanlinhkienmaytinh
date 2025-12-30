@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiMessageCircle, FiX, FiSend } from 'react-icons/fi';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import './ChatBox.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -70,7 +71,7 @@ const ChatBox = () => {
       await loadChatHistory(sessionId);
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn:', error);
-      alert('Không thể gửi tin nhắn. Vui lòng thử lại.');
+      Swal.fire('Lỗi', 'Không thể gửi tin nhắn. Vui lòng thử lại.', 'error');
     }
   };
 

@@ -267,6 +267,29 @@
   font-size: 1rem;
 }
 
+.stock-filter {
+  padding: 0.6rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 180px;
+  font-weight: 500;
+}
+
+.stock-filter:hover {
+  border-color: #667eea;
+}
+
+.stock-filter:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 .products-table-container {
   background: white;
   border-radius: 12px;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
+import Swal from 'sweetalert2';
 import './AdminFilters.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -150,7 +151,7 @@ const AdminFilters = () => {
     
     // Validate options
     if (formData.type !== 'range' && formData.options.length === 0) {
-      alert('⚠️ Vui lòng thêm ít nhất 1 tùy chọn cho bộ lọc!');
+      Swal.fire('Thông báo', 'Vui lòng thêm ít nhất 1 tùy chọn cho bộ lọc!', 'warning');
       return;
     }
     
@@ -176,15 +177,15 @@ const AdminFilters = () => {
       const data = await response.json();
       
       if (response.ok) {
-        alert('✅ ' + data.message);
+        Swal.fire('Thành công', data.message, 'success');
         setShowModal(false);
         resetForm();
         fetchFilters();
       } else {
-        alert('❌ ' + data.message);
+        Swal.fire('Lỗi', data.message, 'error');
       }
     } catch (error) {
-      alert('❌ Có lỗi xảy ra: ' + error.message);
+      Swal.fire('Lỗi', 'Có lỗi xảy ra: ' + error.message, 'error');
     }
   };
 
@@ -203,7 +204,17 @@ const AdminFilters = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa bộ lọc này?')) return;
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc muốn xóa bộ lọc này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -213,10 +224,10 @@ const AdminFilters = () => {
       });
 
       const data = await response.json();
-      alert(data.message);
+      Swal.fire('Thành công', data.message, 'success');
       fetchFilters();
     } catch (error) {
-      alert('❌ Lỗi khi xóa: ' + error.message);
+      Swal.fire('Lỗi', 'Lỗi khi xóa: ' + error.message, 'error');
     }
   };
 
@@ -232,16 +243,16 @@ const AdminFilters = () => {
       if (response.ok) {
         fetchFilters();
       } else {
-        alert('❌ ' + data.message);
+        Swal.fire('Lỗi', data.message, 'error');
       }
     } catch (error) {
-      alert('❌ Lỗi: ' + error.message);
+      Swal.fire('Lỗi', 'Lỗi: ' + error.message, 'error');
     }
   };
 
   const addOption = () => {
     if (!newOption.value || !newOption.label) {
-      alert('Vui lòng nhập đầy đủ giá trị và nhãn');
+      Swal.fire('Thông báo', 'Vui lòng nhập đầy đủ giá trị và nhãn', 'warning');
       return;
     }
 
@@ -251,7 +262,7 @@ const AdminFilters = () => {
     );
 
     if (isDuplicate) {
-      alert('⚠️ Tùy chọn này đã tồn tại!');
+      Swal.fire('Thông báo', 'Tùy chọn này đã tồn tại!', 'warning');
       return;
     }
 
@@ -269,7 +280,7 @@ const AdminFilters = () => {
     );
 
     if (isDuplicate) {
-      alert('⚠️ ' + suggestion.label + ' đã có trong danh sách!');
+      Swal.fire('Thông báo', suggestion.label + ' đã có trong danh sách!', 'warning');
       return;
     }
 
@@ -281,7 +292,7 @@ const AdminFilters = () => {
 
   const addBulkOptions = () => {
     if (!bulkOptionsText.trim()) {
-      alert('Vui lòng nhập danh sách tùy chọn');
+      Swal.fire('Thông báo', 'Vui lòng nhập danh sách tùy chọn', 'warning');
       return;
     }
 
@@ -314,9 +325,9 @@ const AdminFilters = () => {
       });
       setBulkOptionsText('');
       setShowBulkAdd(false);
-      alert(`✅ Đã thêm ${newOptions.length} tùy chọn!`);
+      Swal.fire('Thành công', `Đã thêm ${newOptions.length} tùy chọn!`, 'success');
     } else {
-      alert('⚠️ Không có tùy chọn hợp lệ nào để thêm!');
+      Swal.fire('Thông báo', 'Không có tùy chọn hợp lệ nào để thêm!', 'warning');
     }
   };
 

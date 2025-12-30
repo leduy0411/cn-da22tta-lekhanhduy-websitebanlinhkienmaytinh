@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
+import Swal from 'sweetalert2';
 import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -212,7 +213,7 @@ const Dashboard = () => {
       setModalData({ show: true, type, data, title });
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu:', error);
-      alert('Không thể tải dữ liệu!');
+      Swal.fire('Lỗi', 'Không thể tải dữ liệu!', 'error');
     }
   };
 
@@ -277,7 +278,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1>Dashboard</h1>
+        <h1>Thống kê và báo cáo</h1>
         <p className="dashboard-subtitle">Tổng quan hệ thống</p>
       </div>
 

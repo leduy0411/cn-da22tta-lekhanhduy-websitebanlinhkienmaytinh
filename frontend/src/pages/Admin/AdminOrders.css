@@ -1,7 +1,5 @@
 .admin-orders {
   padding: 1.25rem;
-  max-height: 100vh;
-  overflow-y: auto;
   box-sizing: border-box;
 }
 
@@ -120,9 +118,7 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: auto;
   border: 1px solid #dee2e6;
-  max-height: calc(100vh - 280px);
 }
 
 .orders-table {

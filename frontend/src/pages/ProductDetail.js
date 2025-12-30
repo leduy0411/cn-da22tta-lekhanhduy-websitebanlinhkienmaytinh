@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import ProductReviews from '../components/ProductReviews';
+import Swal from 'sweetalert2';
 import './ProductDetail.css';
 
 const ProductDetail = () => {
@@ -33,7 +34,7 @@ const ProductDetail = () => {
       setSelectedImage(response.data.image);
     } catch (error) {
       console.error('Lỗi khi lấy thông tin sản phẩm:', error);
-      alert('Không tìm thấy sản phẩm');
+      Swal.fire('Lỗi', 'Không tìm thấy sản phẩm', 'error');
       navigate('/');
     } finally {
       setLoading(false);
@@ -54,7 +55,7 @@ const ProductDetail = () => {
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
+      Swal.fire('Thông báo', 'Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
       navigate('/login');
       return;
     }
@@ -63,16 +64,16 @@ const ProductDetail = () => {
     const result = await addToCart(product._id, quantity);
 
     if (result.success) {
-      alert('✅ Đã thêm vào giỏ hàng!');
+      Swal.fire('Thành công', 'Đã thêm vào giỏ hàng!', 'success');
     } else {
-      alert('❌ ' + result.message);
+      Swal.fire('Lỗi', result.message, 'error');
     }
     setAdding(false);
   };
 
   const handleBuyNow = async () => {
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để mua hàng');
+      Swal.fire('Thông báo', 'Vui lòng đăng nhập để mua hàng', 'warning');
       navigate('/login');
       return;
     }

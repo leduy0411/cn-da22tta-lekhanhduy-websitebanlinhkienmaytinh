@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiUsers, FiEdit, FiTrash2, FiRefreshCw, FiSearch, FiShield, FiUser, FiLock, FiUnlock } from 'react-icons/fi';
+import Swal from 'sweetalert2';
 import './AdminUsers.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -30,16 +31,22 @@ function AdminUsers() {
       setTotalPages(response.data.totalPages || 1);
     } catch (error) {
       console.error('Lỗi khi lấy danh sách users:', error);
-      alert('Không thể tải danh sách người dùng!');
+      Swal.fire('Lỗi', 'Không thể tải danh sách người dùng!', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleUpdateRole = async (userId, newRole) => {
-    if (!window.confirm(`Bạn có chắc muốn thay đổi quyền user này thành "${newRole}"?`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận',
+      text: `Bạn có chắc muốn thay đổi quyền user này thành "${newRole}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Xác nhận',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -48,18 +55,24 @@ function AdminUsers() {
         { role: newRole },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Cập nhật quyền thành công!');
+      Swal.fire('Thành công', 'Cập nhật quyền thành công!', 'success');
       fetchUsers();
     } catch (error) {
-      alert(error.response?.data?.message || 'Có lỗi khi cập nhật quyền!');
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi khi cập nhật quyền!', 'error');
     }
   };
 
   const handleToggleStatus = async (userId, currentStatus) => {
     const action = currentStatus ? 'khóa' : 'mở khóa';
-    if (!window.confirm(`Bạn có chắc muốn ${action} user này?`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận',
+      text: `Bạn có chắc muốn ${action} user này?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Xác nhận',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -68,17 +81,25 @@ function AdminUsers() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert(`Đã ${action} user thành công!`);
+      Swal.fire('Thành công', `Đã ${action} user thành công!`, 'success');
       fetchUsers();
     } catch (error) {
-      alert(error.response?.data?.message || `Có lỗi khi ${action} user!`);
+      Swal.fire('Lỗi', error.response?.data?.message || `Có lỗi khi ${action} user!`, 'error');
     }
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa user này? Hành động này không thể hoàn tác!')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc muốn xóa user này? Hành động này không thể hoàn tác!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -86,10 +107,10 @@ function AdminUsers() {
         `${API_URL}/admin/users/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Đã xóa user thành công!');
+      Swal.fire('Đã xóa!', 'Đã xóa user thành công!', 'success');
       fetchUsers();
     } catch (error) {
-      alert(error.response?.data?.message || 'Có lỗi khi xóa user!');
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi khi xóa user!', 'error');
     }
   };
 

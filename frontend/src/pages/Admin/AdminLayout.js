@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiSettings, FiTag, FiCpu } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiSettings, FiTag, FiCpu, FiChevronDown, FiList, FiPlusCircle, FiLayers } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import Swal from 'sweetalert2';
 import './AdminLayout.css';
 
 const AdminLayout = () => {
@@ -9,6 +10,7 @@ const AdminLayout = () => {
   const location = useLocation();
   const { user, logout, isAdmin, isStaff } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [openDropdowns, setOpenDropdowns] = useState({});
 
   useEffect(() => {
     if (!isAdmin() && !isStaff()) {
@@ -16,22 +18,69 @@ const AdminLayout = () => {
     }
   }, [user]);
 
-  const handleLogout = () => {
-    if (window.confirm('Bạn có chắc muốn đăng xuất?')) {
+  // Auto open dropdown if current path matches
+  useEffect(() => {
+    menuItems.forEach(item => {
+      if (item.children) {
+        const isChildActive = item.children.some(child => 
+          location.pathname === child.path || location.pathname.startsWith(child.path + '/')
+        );
+        if (isChildActive) {
+          setOpenDropdowns(prev => ({ ...prev, [item.id]: true }));
+        }
+      }
+    });
+  }, [location.pathname]);
+
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: 'Đăng xuất',
+      text: 'Bạn có chắc muốn đăng xuất?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Đăng xuất',
+      cancelButtonText: 'Hủy'
+    });
+    if (result.isConfirmed) {
       logout();
       navigate('/');
     }
   };
 
+  const toggleDropdown = (id) => {
+    setOpenDropdowns(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   const menuItems = [
-    { path: '/admin', icon: FiBarChart2, label: 'Dashboard', exact: true, roles: ['admin'] },
-    { path: '/admin/products', icon: FiPackage, label: 'Sản phẩm', roles: ['admin'] },
-    { path: '/admin/categories', icon: FiGrid, label: 'Danh mục', roles: ['admin'] },
-    { path: '/admin/orders', icon: FiShoppingBag, label: 'Đơn hàng', roles: ['admin', 'staff'] },
-    { path: '/admin/users', icon: FiUsers, label: 'Người dùng', roles: ['admin'] },
-    { path: '/admin/coupons', icon: FiTag, label: 'Mã giảm giá', roles: ['admin', 'staff'] },
-    { path: '/admin/reviews', icon: FiStar, label: 'Đánh giá', roles: ['admin', 'staff'] },
-    { path: '/admin/chat', icon: FiMessageCircle, label: 'Chat', roles: ['admin', 'staff'] },
+    { id: 'dashboard', path: '/admin', icon: FiBarChart2, label: 'Thống kê và báo cáo', exact: true, roles: ['admin'] },
+    { 
+      id: 'products',
+      icon: FiPackage, 
+      label: 'Sản phẩm', 
+      roles: ['admin'],
+      children: [
+        { path: '/admin/products', icon: FiList, label: 'Danh sách sản phẩm' },
+        { path: '/admin/products/add', icon: FiPlusCircle, label: 'Thêm sản phẩm' },
+      ]
+    },
+    { 
+      id: 'categories',
+      icon: FiGrid, 
+      label: 'Danh mục', 
+      roles: ['admin'],
+      children: [
+        { path: '/admin/categories', icon: FiList, label: 'Danh sách danh mục' },
+        { path: '/admin/subcategories', icon: FiLayers, label: 'Danh mục con' },
+      ]
+    },
+    { id: 'orders', path: '/admin/orders', icon: FiShoppingBag, label: 'Đơn hàng', roles: ['admin', 'staff'] },
+    { id: 'users', path: '/admin/users', icon: FiUsers, label: 'Người dùng', roles: ['admin'] },
+    { id: 'coupons', path: '/admin/coupons', icon: FiTag, label: 'Mã giảm giá', roles: ['admin', 'staff'] },
+    { id: 'reviews', path: '/admin/reviews', icon: FiStar, label: 'Đánh giá', roles: ['admin', 'staff'] },
+    { id: 'chat', path: '/admin/chat', icon: FiMessageCircle, label: 'Chat', roles: ['admin', 'staff'] },
   ];
 
   const isActive = (path, exact = false) => {
@@ -39,6 +88,10 @@ const AdminLayout = () => {
       return location.pathname === path;
     }
     return location.pathname.startsWith(path);
+  };
+
+  const isDropdownActive = (children) => {
+    return children?.some(child => location.pathname === child.path || location.pathname.startsWith(child.path + '/'));
   };
 
   if (!isAdmin() && !isStaff()) {
@@ -51,6 +104,53 @@ const AdminLayout = () => {
     if (isStaff()) return item.roles.includes('staff');
     return false;
   });
+
+  const renderMenuItem = (item) => {
+    // Item with dropdown
+    if (item.children) {
+      const isOpen = openDropdowns[item.id];
+      const hasActiveChild = isDropdownActive(item.children);
+      
+      return (
+        <div key={item.id} className="nav-item-dropdown">
+          <button 
+            className={`nav-item-header ${hasActiveChild ? 'active' : ''}`}
+            onClick={() => toggleDropdown(item.id)}
+          >
+            <div className="nav-item-left">
+              <item.icon className="nav-icon" />
+              <span className="nav-label">{item.label}</span>
+            </div>
+            <FiChevronDown className={`dropdown-arrow ${isOpen ? 'open' : ''}`} />
+          </button>
+          <div className={`dropdown-menu ${isOpen ? 'open' : ''}`}>
+            {item.children.map((child) => (
+              <Link
+                key={child.path}
+                to={child.path}
+                className={`dropdown-item ${isActive(child.path, true) ? 'active' : ''}`}
+              >
+                <child.icon className="dropdown-item-icon" />
+                <span>{child.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Regular item without dropdown
+    return (
+      <Link
+        key={item.path}
+        to={item.path}
+        className={`nav-item ${isActive(item.path, item.exact) ? 'active' : ''}`}
+      >
+        <item.icon className="nav-icon" />
+        <span className="nav-label">{item.label}</span>
+      </Link>
+    );
+  };
 
   return (
     <div className="admin-layout">
@@ -68,16 +168,7 @@ const AdminLayout = () => {
         </div>
 
         <nav className="sidebar-nav">
-          {allowedMenuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`nav-item ${isActive(item.path, item.exact) ? 'active' : ''}`}
-            >
-              <item.icon className="nav-icon" />
-              <span className="nav-label">{item.label}</span>
-            </Link>
-          ))}
+          {allowedMenuItems.map((item) => renderMenuItem(item))}
 
           <Link to="/" className="nav-item">
             <FiHome className="nav-icon" />

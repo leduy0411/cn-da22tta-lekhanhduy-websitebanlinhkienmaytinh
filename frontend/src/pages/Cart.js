@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiTrash2, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
+import Swal from 'sweetalert2';
 import './Cart.css';
 
 const Cart = () => {
@@ -21,20 +22,40 @@ const Cart = () => {
   };
 
   const handleRemove = async (productId) => {
-    if (window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+    const result = await Swal.fire({
+      title: 'Xác nhận',
+      text: 'Bạn có chắc muốn xóa sản phẩm này?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (result.isConfirmed) {
       await removeFromCart(productId);
     }
   };
 
   const handleClearCart = async () => {
-    if (window.confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) {
+    const result = await Swal.fire({
+      title: 'Xác nhận',
+      text: 'Bạn có chắc muốn xóa toàn bộ giỏ hàng?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa tất cả',
+      cancelButtonText: 'Hủy'
+    });
+    if (result.isConfirmed) {
       await clearCart();
     }
   };
 
   const handleCheckout = () => {
     if (!cart || !cart.items || cart.items.length === 0) {
-      alert('Giỏ hàng trống!');
+      Swal.fire('Thông báo', 'Giỏ hàng trống!', 'warning');
       return;
     }
     navigate('/checkout');

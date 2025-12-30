@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { productAPI, adminAPI } from '../../services/api';
 import ImageUpload from '../../components/ImageUpload';
 import CategoryDropdown from '../../components/CategoryDropdown';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import Swal from 'sweetalert2';
 import './AdminProducts.css';
 
-const AdminProducts = () => {
+const AdminProducts = ({ openAddModal }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [stockFilter, setStockFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -57,6 +62,34 @@ const AdminProducts = () => {
     fetchProducts();
     fetchCategories();
   }, []);
+
+  // Mở modal thêm sản phẩm nếu route là /admin/products/add
+  useEffect(() => {
+    if (openAddModal || location.pathname === '/admin/products/add') {
+      setEditingProduct(null);
+      setFormData({
+        name: '',
+        description: '',
+        price: '',
+        category: '',
+        subcategory: [],
+        brand: '',
+        image: '',
+        images: [],
+        stock: '',
+      });
+      setShowModal(true);
+    }
+  }, [openAddModal, location.pathname]);
+
+  // Đóng modal và chuyển về trang danh sách sản phẩm
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingProduct(null);
+    if (location.pathname === '/admin/products/add') {
+      navigate('/admin/products');
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -120,7 +153,7 @@ const AdminProducts = () => {
 
       // Kiểm tra description không được rỗng
       if (!cleanedDescription || cleanedDescription === '<p></p>' || cleanedDescription === '') {
-        alert('❌ Vui lòng nhập mô tả sản phẩm!');
+        Swal.fire('Lỗi', 'Vui lòng nhập mô tả sản phẩm!', 'error');
         return;
       }
 
@@ -131,17 +164,17 @@ const AdminProducts = () => {
 
       if (editingProduct) {
         await adminAPI.updateProduct(editingProduct._id, productData);
-        alert('✅ Cập nhật sản phẩm thành công!');
+        Swal.fire('Thành công', 'Cập nhật sản phẩm thành công!', 'success');
       } else {
         await adminAPI.createProduct(productData);
-        alert('✅ Thêm sản phẩm thành công!');
+        Swal.fire('Thành công', 'Thêm sản phẩm thành công!', 'success');
       }
-      setShowModal(false);
+      handleCloseModal();
       resetForm();
       fetchProducts();
     } catch (error) {
       console.error('Chi tiết lỗi:', error);
-      alert('❌ ' + (error.response?.data?.message || error.message || 'Có lỗi xảy ra!'));
+      Swal.fire('Lỗi', error.response?.data?.message || error.message || 'Có lỗi xảy ra!', 'error');
     }
   };
 
@@ -163,14 +196,24 @@ const AdminProducts = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc muốn xóa sản phẩm này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       await adminAPI.deleteProduct(id);
-      alert('✅ Xóa sản phẩm thành công!');
+      Swal.fire('Thành công', 'Xóa sản phẩm thành công!', 'success');
       fetchProducts();
     } catch (error) {
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra!'));
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi xảy ra!', 'error');
     }
   };
 
@@ -200,10 +243,17 @@ const AdminProducts = () => {
     }).format(price);
   };
 
-  const filteredProducts = products.filter(product =>
-    (product.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.brand || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = (product.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.brand || '').toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStock = 
+      stockFilter === 'all' ? true :
+      stockFilter === 'low' ? product.stock <= 1 :
+      stockFilter === 'out' ? product.stock === 0 : true;
+    
+    return matchesSearch && matchesStock;
+  });
 
   return (
     <div className="admin-products">
@@ -222,6 +272,15 @@ const AdminProducts = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+        <select 
+          className="stock-filter"
+          value={stockFilter}
+          onChange={(e) => setStockFilter(e.target.value)}
+        >
+          <option value="all">Tất cả sản phẩm</option>
+          <option value="low">Sắp hết hàng (≤ 1)</option>
+          <option value="out">Hết hàng</option>
+        </select>
       </div>
 
       {loading ? (
@@ -271,7 +330,7 @@ const AdminProducts = () => {
       )}
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => { setShowModal(false); resetForm(); }}>
+        <div className="modal-overlay" onClick={() => { handleCloseModal(); resetForm(); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>{editingProduct ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'}</h2>
             <form onSubmit={handleSubmit}>
@@ -473,7 +532,7 @@ const AdminProducts = () => {
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); resetForm(); }}>
+                <button type="button" className="btn-cancel" onClick={() => { handleCloseModal(); resetForm(); }}>
                   Hủy
                 </button>
                 <button type="submit" className="btn-submit">

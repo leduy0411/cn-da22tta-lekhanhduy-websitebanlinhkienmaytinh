@@ -255,7 +255,7 @@
   box-shadow: 0 2px 10px rgba(79, 70, 229, 0.5);
 }
 
-.dropdown-item {
+.header-dropdown-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -268,18 +268,19 @@
   text-align: left;
   cursor: pointer;
   transition: background 0.3s;
+  font-size: 0.95rem;
 }
 
-.dropdown-item:hover {
+.header-dropdown-item:hover {
   background: #f8f9fa;
 }
 
-.dropdown-item.logout {
+.header-dropdown-item.logout {
   color: #ff6b6b;
   border-top: 1px solid #e0e0e0;
 }
 
-.dropdown-item.logout:hover {
+.header-dropdown-item.logout:hover {
   background: #fff0f0;
 }
 

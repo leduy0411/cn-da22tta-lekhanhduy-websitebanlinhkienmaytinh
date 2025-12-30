@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiPercent, FiCalendar, FiUsers, FiCheck, FiX } from 'react-icons/fi';
 import { couponAPI } from '../../services/api';
+import Swal from 'sweetalert2';
 import './AdminCoupons.css';
 
 const AdminCoupons = () => {
@@ -45,17 +46,28 @@ const AdminCoupons = () => {
             fetchCoupons();
             closeModal();
         } catch (error) {
-            alert(error.response?.data?.message || 'Có lỗi xảy ra');
+            Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi xảy ra', 'error');
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Bạn có chắc muốn xóa mã giảm giá này?')) {
+        const result = await Swal.fire({
+            title: 'Xác nhận xóa',
+            text: 'Bạn có chắc muốn xóa mã giảm giá này?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        });
+        if (result.isConfirmed) {
             try {
                 await couponAPI.delete(id);
                 fetchCoupons();
+                Swal.fire('Thành công', 'Đã xóa mã giảm giá!', 'success');
             } catch (error) {
-                alert('Lỗi xóa mã giảm giá');
+                Swal.fire('Lỗi', 'Lỗi xóa mã giảm giá', 'error');
             }
         }
     };

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI, reviewAPI } from '../services/api';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiEdit2, FiCamera, FiLock, FiStar, FiPackage, FiTrash2 } from 'react-icons/fi';
+import Swal from 'sweetalert2';
 import './Profile.css';
 
 const Profile = () => {
@@ -170,7 +171,17 @@ const Profile = () => {
   };
 
   const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc muốn xóa đánh giá này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       await reviewAPI.deleteReview(reviewId);
@@ -257,14 +268,6 @@ const Profile = () => {
                 onClick={() => setActiveTab('reviews')}
               >
                 <FiStar /> Đánh giá của tôi
-              </button>
-            )}
-            {user?.role !== 'staff' && (
-              <button
-                className="nav-item"
-                onClick={() => navigate('/my-orders')}
-              >
-                <FiPackage /> Đơn hàng của tôi
               </button>
             )}
           </nav>

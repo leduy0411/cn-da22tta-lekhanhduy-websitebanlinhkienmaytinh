@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiTrash2, FiSend, FiMessageCircle } from 'react-icons/fi';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import './AdminChat.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -67,14 +68,24 @@ const AdminChat = () => {
       await fetchSessions();
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn:', error);
-      alert('Không thể gửi tin nhắn');
+      Swal.fire('Lỗi', 'Không thể gửi tin nhắn', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteSession = async (sessionId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa cuộc hội thoại này?')) return;
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc muốn xóa cuộc hội thoại này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -87,10 +98,10 @@ const AdminChat = () => {
       }
       
       await fetchSessions();
-      alert('Đã xóa cuộc hội thoại');
+      Swal.fire('Thành công', 'Đã xóa cuộc hội thoại', 'success');
     } catch (error) {
       console.error('Lỗi khi xóa chat:', error);
-      alert('Không thể xóa cuộc hội thoại');
+      Swal.fire('Lỗi', 'Không thể xóa cuộc hội thoại', 'error');
     }
   };
 

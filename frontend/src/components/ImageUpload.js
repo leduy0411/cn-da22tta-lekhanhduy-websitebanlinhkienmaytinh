@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { FiUpload, FiX, FiImage } from 'react-icons/fi';
+import Swal from 'sweetalert2';
 import './ImageUpload.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -16,7 +17,7 @@ function ImageUpload({ value, onChange, multiple = false, maxFiles = 10 }) {
 
     // Kiểm tra số lượng file nếu multiple
     if (multiple && value && value.length + files.length > maxFiles) {
-      alert(`Bạn chỉ có thể upload tối đa ${maxFiles} ảnh!`);
+      Swal.fire('Thông báo', `Bạn chỉ có thể upload tối đa ${maxFiles} ảnh!`, 'warning');
       return;
     }
 
@@ -64,10 +65,10 @@ function ImageUpload({ value, onChange, multiple = false, maxFiles = 10 }) {
         onChange(`${API_URL}${response.data.imageUrl}`);
       }
 
-      alert('Upload ảnh thành công!');
+      Swal.fire('Thành công', 'Upload ảnh thành công!', 'success');
     } catch (error) {
       console.error('Upload error:', error);
-      alert(error.response?.data?.message || 'Có lỗi khi upload ảnh!');
+      Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi khi upload ảnh!', 'error');
     } finally {
       setUploading(false);
     }
@@ -211,7 +212,7 @@ function ImageUpload({ value, onChange, multiple = false, maxFiles = 10 }) {
                   setImageUrl("");
                 }
               } else {
-                alert('Vui lòng nhập đúng định dạng URL ảnh!');
+                Swal.fire('Thông báo', 'Vui lòng nhập đúng định dạng URL ảnh!', 'warning');
               }
             }}
           >Thêm</button>

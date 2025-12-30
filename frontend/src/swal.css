@@ -1,0 +1,564 @@
+/* ============================================
+   🎨 SweetAlert2 - Neumorphism Dark Theme
+   Modern Dark UI with Soft Shadows
+   ============================================ */
+
+/* Import Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* CSS Variables */
+:root {
+  --swal-dark-bg: #1a1a2e;
+  --swal-dark-surface: #16213e;
+  --swal-dark-card: #1f2940;
+  --swal-accent-cyan: #00d9ff;
+  --swal-accent-pink: #ff006e;
+  --swal-accent-purple: #8338ec;
+  --swal-accent-green: #00f5a0;
+  --swal-accent-orange: #ff9f1c;
+  --swal-accent-red: #ff3366;
+  --swal-text-primary: #ffffff;
+  --swal-text-secondary: #a0aec0;
+}
+
+/* ============================================
+   Backdrop - Transparent
+   ============================================ */
+.swal2-container {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ============================================
+   Main Popup Container
+   ============================================ */
+.swal2-popup {
+  font-family: 'Poppins', sans-serif !important;
+  background: linear-gradient(145deg, #1f2940 0%, #16213e 100%) !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(0, 217, 255, 0.2) !important;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 60px -15px rgba(0, 217, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  padding: 2.5rem !important;
+  max-width: 420px !important;
+  animation: popupSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glow Border Effect */
+.swal2-popup::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    var(--swal-accent-cyan), 
+    var(--swal-accent-purple), 
+    var(--swal-accent-pink),
+    var(--swal-accent-cyan));
+  background-size: 400% 400%;
+  border-radius: 22px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: borderGlow 3s ease infinite;
+}
+
+.swal2-popup:hover::before {
+  opacity: 1;
+}
+
+@keyframes borderGlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes popupSlideIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ============================================
+   Icon Styles - Neon Glow
+   ============================================ */
+.swal2-icon {
+  border-width: 3px !important;
+  margin: 1.5rem auto !important;
+  position: relative;
+}
+
+/* Success Icon - Cyan Neon */
+.swal2-icon.swal2-success {
+  border-color: var(--swal-accent-green) !important;
+  color: var(--swal-accent-green) !important;
+  box-shadow: 
+    0 0 30px rgba(0, 245, 160, 0.4),
+    inset 0 0 20px rgba(0, 245, 160, 0.1) !important;
+  animation: neonPulse 2s ease-in-out infinite !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+  border-color: rgba(0, 245, 160, 0.3) !important;
+}
+
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+  background-color: var(--swal-accent-green) !important;
+}
+
+/* Error Icon - Red Neon */
+.swal2-icon.swal2-error {
+  border-color: var(--swal-accent-red) !important;
+  box-shadow: 
+    0 0 30px rgba(255, 51, 102, 0.4),
+    inset 0 0 20px rgba(255, 51, 102, 0.1) !important;
+  animation: neonShake 0.6s ease-in-out !important;
+}
+
+.swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+  background-color: var(--swal-accent-red) !important;
+}
+
+/* Warning Icon - Orange Neon */
+.swal2-icon.swal2-warning {
+  border-color: var(--swal-accent-orange) !important;
+  color: var(--swal-accent-orange) !important;
+  box-shadow: 
+    0 0 30px rgba(255, 159, 28, 0.4),
+    inset 0 0 20px rgba(255, 159, 28, 0.1) !important;
+  animation: neonBounce 1s ease infinite !important;
+}
+
+/* Info Icon - Cyan Neon */
+.swal2-icon.swal2-info {
+  border-color: var(--swal-accent-cyan) !important;
+  color: var(--swal-accent-cyan) !important;
+  box-shadow: 
+    0 0 30px rgba(0, 217, 255, 0.4),
+    inset 0 0 20px rgba(0, 217, 255, 0.1) !important;
+  animation: neonPulse 2s ease-in-out infinite !important;
+}
+
+/* Question Icon - Purple Neon */
+.swal2-icon.swal2-question {
+  border-color: var(--swal-accent-purple) !important;
+  color: var(--swal-accent-purple) !important;
+  box-shadow: 
+    0 0 30px rgba(131, 56, 236, 0.4),
+    inset 0 0 20px rgba(131, 56, 236, 0.1) !important;
+  animation: neonFloat 3s ease-in-out infinite !important;
+}
+
+/* Icon Animations */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 30px rgba(0, 245, 160, 0.4),
+      inset 0 0 20px rgba(0, 245, 160, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 50px rgba(0, 245, 160, 0.6),
+      inset 0 0 30px rgba(0, 245, 160, 0.2);
+  }
+}
+
+@keyframes neonShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes neonBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes neonFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-5px) rotate(2deg); }
+  75% { transform: translateY(5px) rotate(-2deg); }
+}
+
+/* ============================================
+   Title & Content
+   ============================================ */
+.swal2-title {
+  color: var(--swal-text-primary) !important;
+  font-size: 1.6rem !important;
+  font-weight: 600 !important;
+  text-shadow: 0 0 30px rgba(0, 217, 255, 0.3) !important;
+  margin-bottom: 0.5rem !important;
+  letter-spacing: 0.5px !important;
+}
+
+.swal2-html-container {
+  color: var(--swal-text-secondary) !important;
+  font-size: 1rem !important;
+  line-height: 1.7 !important;
+  font-weight: 400 !important;
+}
+
+/* ============================================
+   Buttons - Cyberpunk Style
+   ============================================ */
+.swal2-actions {
+  margin-top: 1.5rem !important;
+  gap: 12px !important;
+}
+
+.swal2-styled {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  padding: 12px 32px !important;
+  border-radius: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+  border: none !important;
+}
+
+/* Confirm Button - Gradient Cyan */
+.swal2-confirm {
+  background: linear-gradient(135deg, var(--swal-accent-cyan) 0%, var(--swal-accent-purple) 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 
+    0 4px 15px rgba(0, 217, 255, 0.4),
+    0 0 0 0 rgba(0, 217, 255, 0.4) !important;
+}
+
+.swal2-confirm::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent);
+  transition: left 0.5s ease;
+}
+
+.swal2-confirm:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 
+    0 8px 25px rgba(0, 217, 255, 0.5),
+    0 0 40px rgba(0, 217, 255, 0.3) !important;
+}
+
+.swal2-confirm:hover::before {
+  left: 100%;
+}
+
+.swal2-confirm:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* Cancel Button - Glass Style */
+.swal2-cancel {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--swal-text-secondary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+}
+
+.swal2-cancel:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: var(--swal-text-primary) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Deny Button - Pink Gradient */
+.swal2-deny {
+  background: linear-gradient(135deg, var(--swal-accent-pink) 0%, var(--swal-accent-red) 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(255, 0, 110, 0.4) !important;
+}
+
+.swal2-deny:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 
+    0 8px 25px rgba(255, 0, 110, 0.5),
+    0 0 40px rgba(255, 0, 110, 0.3) !important;
+}
+
+/* ============================================
+   Input Fields - Dark Theme
+   ============================================ */
+.swal2-input,
+.swal2-textarea,
+.swal2-select {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  color: var(--swal-text-primary) !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 1rem !important;
+  padding: 12px 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.swal2-input:focus,
+.swal2-textarea:focus,
+.swal2-select:focus {
+  border-color: var(--swal-accent-cyan) !important;
+  box-shadow: 
+    0 0 0 3px rgba(0, 217, 255, 0.2),
+    0 0 20px rgba(0, 217, 255, 0.2) !important;
+  outline: none !important;
+}
+
+.swal2-input::placeholder,
+.swal2-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* ============================================
+   Close Button
+   ============================================ */
+.swal2-close {
+  color: var(--swal-text-secondary) !important;
+  font-size: 2rem !important;
+  font-weight: 300 !important;
+  transition: all 0.3s ease !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.swal2-close:hover {
+  color: var(--swal-accent-red) !important;
+  background: rgba(255, 51, 102, 0.1) !important;
+  transform: rotate(90deg) !important;
+  box-shadow: 0 0 20px rgba(255, 51, 102, 0.3) !important;
+}
+
+/* ============================================
+   Timer Progress Bar
+   ============================================ */
+.swal2-timer-progress-bar {
+  background: linear-gradient(90deg, 
+    var(--swal-accent-cyan), 
+    var(--swal-accent-purple), 
+    var(--swal-accent-pink)) !important;
+  height: 4px !important;
+}
+
+/* ============================================
+   Toast Notifications
+   ============================================ */
+.swal2-popup.swal2-toast {
+  background: linear-gradient(145deg, #1f2940 0%, #16213e 100%) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 217, 255, 0.2) !important;
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(0, 217, 255, 0.2) !important;
+  padding: 1rem 1.5rem !important;
+  animation: toastSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+}
+
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.swal2-popup.swal2-toast .swal2-title {
+  font-size: 0.95rem !important;
+  margin: 0 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon {
+  margin: 0 12px 0 0 !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* ============================================
+   Loading Animation
+   ============================================ */
+.swal2-loading .swal2-styled.swal2-confirm {
+  background: transparent !important;
+  border: 3px solid rgba(0, 217, 255, 0.3) !important;
+  border-top-color: var(--swal-accent-cyan) !important;
+  border-radius: 50% !important;
+  width: 50px !important;
+  height: 50px !important;
+  padding: 0 !important;
+  animation: spinLoader 1s linear infinite !important;
+}
+
+@keyframes spinLoader {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   Validation Message
+   ============================================ */
+.swal2-validation-message {
+  background: rgba(255, 51, 102, 0.1) !important;
+  color: var(--swal-accent-red) !important;
+  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  font-size: 0.9rem !important;
+  border-left: 3px solid var(--swal-accent-red) !important;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.swal2-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--swal-text-secondary) !important;
+  font-size: 0.85rem !important;
+  margin-top: 1.5rem !important;
+  padding-top: 1rem !important;
+}
+
+.swal2-footer a {
+  color: var(--swal-accent-cyan) !important;
+  text-decoration: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.swal2-footer a:hover {
+  color: var(--swal-accent-purple) !important;
+  text-shadow: 0 0 10px rgba(0, 217, 255, 0.5) !important;
+}
+
+/* ============================================
+   Checkbox & Radio
+   ============================================ */
+.swal2-checkbox,
+.swal2-radio {
+  color: var(--swal-text-secondary) !important;
+}
+
+.swal2-checkbox input,
+.swal2-radio input {
+  accent-color: var(--swal-accent-cyan) !important;
+}
+
+/* ============================================
+   Image
+   ============================================ */
+.swal2-image {
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ============================================
+   Scrollbar
+   ============================================ */
+.swal2-popup::-webkit-scrollbar {
+  width: 6px;
+}
+
+.swal2-popup::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.swal2-popup::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--swal-accent-cyan), var(--swal-accent-purple));
+  border-radius: 3px;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 480px) {
+  .swal2-popup {
+    padding: 1.5rem !important;
+    margin: 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  .swal2-title {
+    font-size: 1.3rem !important;
+  }
+
+  .swal2-html-container {
+    font-size: 0.9rem !important;
+  }
+
+  .swal2-styled {
+    padding: 10px 24px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .swal2-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .swal2-styled {
+    width: 100% !important;
+  }
+}
+
+/* ============================================
+   Special Effects - Particle Background
+   ============================================ */
+.swal2-popup::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(0, 217, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(131, 56, 236, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 0, 110, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 20px;
+}
+
+/* ============================================
+   Animation on Show
+   ============================================ */
+.swal2-show {
+  animation: popupSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+}
+
+.swal2-hide {
+  animation: popupFadeOut 0.3s ease-out !important;
+}
+
+@keyframes popupFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}

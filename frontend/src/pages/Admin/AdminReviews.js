@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiStar, FiCheckCircle, FiTrash2, FiEye, FiSearch, FiRefreshCw } from 'react-icons/fi';
 import api from '../../services/api';
+import Swal from 'sweetalert2';
 import './AdminReviews.css';
 
 const AdminReviews = () => {
@@ -46,16 +47,26 @@ const AdminReviews = () => {
   };
 
   const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc muốn xóa đánh giá này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
     
     try {
       await api.delete(`/admin/reviews/${reviewId}`);
       fetchReviews();
       setShowModal(false);
-      alert('✅ Đã xóa đánh giá!');
+      Swal.fire('Thành công', 'Đã xóa đánh giá!', 'success');
     } catch (error) {
       console.error('Error deleting review:', error);
-      alert('❌ Lỗi khi xóa đánh giá');
+      Swal.fire('Lỗi', 'Lỗi khi xóa đánh giá', 'error');
     }
   };
 

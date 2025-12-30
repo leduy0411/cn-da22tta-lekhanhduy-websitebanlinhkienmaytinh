@@ -125,25 +125,16 @@ const Header = ({ onSearch }) => {
                     </div>
 
                     {(isAdmin() || user?.role === 'staff') && (
-                      <Link to="/admin" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
+                      <Link to="/admin" className="header-dropdown-item" onClick={() => setShowUserMenu(false)}>
                         <FiSettings /> Quản trị
                       </Link>
                     )}
 
-                    {!isAdmin() && (
-                      <>
-                        <Link to="/profile" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
-                          <FiUser /> Thông tin cá nhân
-                        </Link>
-                        {user?.role !== 'staff' && (
-                          <Link to="/my-orders" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
-                            <FiPackage /> Đơn hàng của tôi
-                          </Link>
-                        )}
-                      </>
-                    )}
+                    <Link to="/profile" className="header-dropdown-item" onClick={() => setShowUserMenu(false)}>
+                      <FiUser /> Thông tin cá nhân
+                    </Link>
 
-                    <button onClick={handleLogout} className="dropdown-item logout">
+                    <button onClick={handleLogout} className="header-dropdown-item logout">
                       <FiLogOut /> Đăng xuất
                     </button>
                   </div>
