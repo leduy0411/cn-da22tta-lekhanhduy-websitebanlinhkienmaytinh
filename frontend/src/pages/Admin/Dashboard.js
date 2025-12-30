@@ -230,32 +230,32 @@ const Dashboard = () => {
       icon: FiUsers,
       title: 'Tổng khách hàng',
       value: stats?.totalUsers || 0,
-      color: '#667eea',
-      bgColor: '#f0f3ff',
+      color1: '#667eea',
+      color2: '#764ba2',
       onClick: () => handleStatCardClick('users')
     },
     {
       icon: FiPackage,
       title: 'Tổng sản phẩm',
       value: stats?.totalProducts || 0,
-      color: '#51cf66',
-      bgColor: '#e7f9ec',
+      color1: '#11998e',
+      color2: '#38ef7d',
       onClick: () => handleStatCardClick('products')
     },
     {
       icon: FiShoppingBag,
       title: 'Tổng đơn hàng',
       value: stats?.totalOrders || 0,
-      color: '#ff6b6b',
-      bgColor: '#ffe5e5',
+      color1: '#eb3349',
+      color2: '#f45c43',
       onClick: () => handleStatCardClick('orders')
     },
     {
       icon: FiDollarSign,
       title: 'Tổng doanh thu',
       value: formatPrice(stats?.totalRevenue || 0),
-      color: '#ffa500',
-      bgColor: '#fff4e5',
+      color1: '#f2994a',
+      color2: '#f2c94c',
       onClick: () => handleStatCardClick('revenue')
     },
   ];
@@ -289,11 +289,14 @@ const Dashboard = () => {
               <div
                 key={index}
                 className="stat-card clickable"
-                style={{ borderLeftColor: card.color }}
+                style={{ 
+                  '--card-color-1': card.color1,
+                  '--card-color-2': card.color2
+                }}
                 onClick={card.onClick}
               >
-                <div className="stat-icon" style={{ background: card.bgColor, color: card.color }}>
-                  <card.icon size={24} />
+                <div className="stat-icon">
+                  <card.icon />
                 </div>
                 <div className="stat-content">
                   <h3 className="stat-title">{card.title}</h3>
