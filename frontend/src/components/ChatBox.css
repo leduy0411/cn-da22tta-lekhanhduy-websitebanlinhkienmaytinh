@@ -15,7 +15,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  z-index: 999;
+  z-index: 99999;
 }
 
 .chat-button:hover {
@@ -51,7 +51,9 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  z-index: 999;
+  z-index: 99999;
+  /* Prevent header from overlapping: keep some top spacing and limit height */
+  max-height: calc(100vh - 120px);
   overflow: hidden;
   animation: slideUp 0.3s ease;
 }
@@ -250,7 +252,9 @@
 @media (max-width: 768px) {
   .chat-box {
     width: calc(100vw - 40px);
-    height: calc(100vh - 100px);
+    /* Use max-height instead of forcing full height so header remains visible */
+    max-height: calc(100vh - 100px);
+    height: auto;
     bottom: 20px;
     right: 20px;
   }

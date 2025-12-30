@@ -415,6 +415,21 @@ const ProductReviews = ({ productId }) => {
                 )}
               </div>
 
+              {/* Phản hồi từ Admin/Shop */}
+              {review.adminReply && review.adminReply.content && (
+                <div className="admin-reply">
+                  <div className="admin-reply-header">
+                    <span className="admin-badge">🏪 {review.adminReply.repliedBy || 'TechStore'}</span>
+                    <span className="reply-date">
+                      {review.adminReply.repliedAt && formatDate(review.adminReply.repliedAt)}
+                    </span>
+                  </div>
+                  <div className="admin-reply-content">
+                    {review.adminReply.content}
+                  </div>
+                </div>
+              )}
+
               <div className="review-actions">
                 <button 
                   className={`helpful-btn ${review.helpfulBy?.includes(user?._id) ? 'active' : ''}`}

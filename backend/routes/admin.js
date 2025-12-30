@@ -22,7 +22,7 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
     ]);
 
     const pendingOrders = await Order.countDocuments({ status: 'pending' });
-    const lowStockProducts = await Product.countDocuments({ stock: { $lte: 10 } });
+    const lowStockProducts = await Product.countDocuments({ stock: { $lte: 1 } });
 
     res.json({
       totalUsers,

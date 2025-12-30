@@ -183,8 +183,17 @@ router.get('/', async (req, res) => {
       }
     }
     
-    // 4. DYNAMIC FILTERS (specifications)
-    const excludedParams = ['page', 'limit', 'category', 'brand', 'priceRange', 'subcategory'];
+    // 5. STOCK FILTER - Lọc sản phẩm theo số lượng tồn kho
+    if (req.query.stock_lte) {
+      const stockLimit = parseInt(req.query.stock_lte);
+      if (!isNaN(stockLimit)) {
+        andConditions.push({ stock: { $lte: stockLimit } });
+        console.log('📦 Stock filter (<=):', stockLimit);
+      }
+    }
+    
+    // 6. DYNAMIC FILTERS (specifications)
+    const excludedParams = ['page', 'limit', 'category', 'brand', 'priceRange', 'subcategory', 'stock_lte'];
     Object.keys(req.query).forEach(key => {
       if (!excludedParams.includes(key)) {
         const values = req.query[key].split(',').map(v => v.trim()).filter(v => v);

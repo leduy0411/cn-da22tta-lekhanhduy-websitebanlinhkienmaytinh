@@ -4,6 +4,7 @@ import { adminAPI, orderAPI, productAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
 import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -13,6 +14,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
+  const [orderStatusData, setOrderStatusData] = useState([]);
   const [modalData, setModalData] = useState({ show: false, type: '', data: [], title: '' });
   const navigate = useNavigate();
   const { isAdmin, user } = useAuth();
@@ -24,12 +27,20 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const promises = [
-        productAPI.getAll({ stock_lte: 10, limit: 5 })
+        productAPI.getAll({ stock_lte: 1, limit: 5 })
       ];
 
       if (isAdmin()) {
         promises.unshift(adminAPI.getStats());
         promises.push(adminAPI.getAllOrders({ status: 'pending', limit: 5 }));
+        // Fetch all orders for revenue chart
+        const token = localStorage.getItem('token');
+        promises.push(
+          axios.get(`${API_URL}/admin/orders`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { limit: 500 }
+          })
+        );
       } else {
         promises.unshift(orderAPI.getOrders({ status: 'pending', limit: 5 }));
       }
@@ -37,10 +48,14 @@ const Dashboard = () => {
       const results = await Promise.all(promises);
 
       if (isAdmin()) {
-        const [statsResponse, productsResponse, ordersResponse] = results;
+        const [statsResponse, productsResponse, ordersResponse, allOrdersResponse] = results;
         setStats(statsResponse.data);
         setLowStockProducts(productsResponse.data.products || productsResponse.data || []);
         setPendingOrders(ordersResponse.data.orders || []);
+        
+        // Process revenue data for charts
+        const allOrders = allOrdersResponse?.data?.orders || allOrdersResponse?.data || [];
+        processRevenueData(allOrders);
       } else {
         const [ordersResponse, productsResponse] = results;
         setPendingOrders(ordersResponse.data || []);
@@ -51,6 +66,61 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const processRevenueData = (orders) => {
+    // Doanh thu theo 7 ngày gần nhất
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      last7Days.push({
+        date: dateStr,
+        fullDate: date.toDateString(),
+        revenue: 0,
+        orders: 0
+      });
+    }
+
+    // Tính doanh thu từng ngày
+    orders.forEach(order => {
+      if (order.status !== 'cancelled') {
+        const orderDate = new Date(order.createdAt).toDateString();
+        const dayData = last7Days.find(d => d.fullDate === orderDate);
+        if (dayData) {
+          dayData.revenue += order.totalAmount || 0;
+          dayData.orders += 1;
+        }
+      }
+    });
+
+    setRevenueData(last7Days);
+
+    // Thống kê theo trạng thái đơn hàng
+    const statusCount = {
+      pending: 0,
+      processing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0
+    };
+
+    orders.forEach(order => {
+      if (statusCount.hasOwnProperty(order.status)) {
+        statusCount[order.status]++;
+      }
+    });
+
+    const statusData = [
+      { name: 'Chờ xử lý', value: statusCount.pending, color: '#FFB74D' },
+      { name: 'Đang xử lý', value: statusCount.processing, color: '#64B5F6' },
+      { name: 'Đang giao', value: statusCount.shipped, color: '#9575CD' },
+      { name: 'Đã giao', value: statusCount.delivered, color: '#4CAF50' },
+      { name: 'Đã hủy', value: statusCount.cancelled, color: '#EF5350' }
+    ].filter(s => s.value > 0);
+
+    setOrderStatusData(statusData);
   };
 
   const formatPrice = (price) => {
@@ -246,6 +316,119 @@ const Dashboard = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Biểu đồ doanh thu */}
+          <div className="charts-section">
+            <div className="charts-grid">
+              {/* Biểu đồ doanh thu theo ngày */}
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>📊 Doanh thu 7 ngày gần nhất</h3>
+                  <span className="chart-subtitle">Tổng: {formatPrice(revenueData.reduce((sum, d) => sum + d.revenue, 0))}</span>
+                </div>
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                      <YAxis 
+                        tickFormatter={(value) => value >= 1000000 ? `${(value / 1000000).toFixed(1)}M` : value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [formatPrice(value), 'Doanh thu']}
+                        labelStyle={{ fontWeight: 'bold' }}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+                      />
+                      <Bar dataKey="revenue" fill="url(#colorRevenue)" radius={[4, 4, 0, 0]} />
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#667eea" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#764ba2" stopOpacity={0.8}/>
+                        </linearGradient>
+                      </defs>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Biểu đồ số đơn hàng */}
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>📈 Số đơn hàng theo ngày</h3>
+                  <span className="chart-subtitle">Tổng: {revenueData.reduce((sum, d) => sum + d.orders, 0)} đơn</span>
+                </div>
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <Tooltip 
+                        formatter={(value) => [value + ' đơn', 'Số đơn hàng']}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="orders" 
+                        stroke="#10b981" 
+                        strokeWidth={3}
+                        dot={{ fill: '#10b981', strokeWidth: 2, r: 5 }}
+                        activeDot={{ r: 7, fill: '#10b981' }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Biểu đồ cột trạng thái đơn hàng */}
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>📦 Trạng thái đơn hàng</h3>
+                  <span className="chart-subtitle">{orderStatusData.reduce((sum, d) => sum + d.value, 0)} đơn</span>
+                </div>
+                <div className="chart-container">
+                  {orderStatusData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart 
+                        data={orderStatusData} 
+                        margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 12, fill: '#666' }}
+                          angle={-15}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 11, fill: '#666' }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip 
+                          formatter={(value) => [value + ' đơn hàng', 'Số lượng']}
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+                          cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
+                        />
+                        <Bar 
+                          dataKey="value" 
+                          radius={[8, 8, 0, 0]}
+                          maxBarSize={60}
+                        >
+                          {orderStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="no-chart-data">Chưa có dữ liệu đơn hàng</div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </>

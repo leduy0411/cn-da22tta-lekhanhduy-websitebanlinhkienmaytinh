@@ -251,7 +251,7 @@ const AdminProducts = () => {
                   <td>{product.brand}</td>
                   <td className="price">{formatPrice(product.price)}</td>
                   <td>
-                    <span className={`stock ${product.stock <= 10 ? 'low' : ''}`}>
+                    <span className={`stock ${product.stock <= 1 ? 'low' : ''}`}>
                       {product.stock}
                     </span>
                   </td>

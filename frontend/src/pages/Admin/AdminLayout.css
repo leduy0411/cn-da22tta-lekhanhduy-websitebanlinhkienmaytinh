@@ -14,7 +14,7 @@
 
 .admin-sidebar {
   width: 260px;
-  background: #d7262b;
+  background: #126cd7;
   color: white;
   position: fixed;
   height: 100vh;
@@ -96,7 +96,7 @@
   padding: 0.85rem 1.5rem;
   color: white;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: none;
   border-left: 4px solid transparent;
   background: none;
   border: none;
@@ -109,10 +109,10 @@
 }
 
 .sidebar-nav .nav-item:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: none;
   color: white;
-  transform: translateX(5px);
-  border-left-color: rgba(255, 255, 255, 0.5);
+  transform: none;
+  border-left-color: transparent;
 }
 
 .sidebar-nav .nav-item.active {

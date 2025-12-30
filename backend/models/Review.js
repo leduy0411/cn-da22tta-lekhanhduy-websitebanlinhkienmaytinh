@@ -47,6 +47,20 @@ const reviewSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'approved' // Có thể thêm moderation nếu cần
+  },
+  // Phản hồi tự động từ admin/shop
+  adminReply: {
+    content: {
+      type: String,
+      default: ''
+    },
+    repliedAt: {
+      type: Date
+    },
+    repliedBy: {
+      type: String,
+      default: 'TechStore'
+    }
   }
 }, {
   timestamps: true

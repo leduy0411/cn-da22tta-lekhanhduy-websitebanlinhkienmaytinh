@@ -40,6 +40,42 @@ const updateProductRating = async (productId) => {
   }
 };
 
+// Helper function: Tạo câu trả lời tự động dựa trên rating và nội dung đánh giá
+const generateAutoReply = (rating, userName, productName) => {
+  const firstName = userName?.split(' ').pop() || 'Quý khách';
+  
+  // Các mẫu câu trả lời theo mức rating
+  const replies = {
+    5: [
+      `Cảm ơn ${firstName} đã tin tưởng và đánh giá 5 sao cho sản phẩm! 🌟 TechStore rất vui khi sản phẩm đáp ứng được kỳ vọng của bạn. Chúc bạn có trải nghiệm tuyệt vời với ${productName}! Hẹn gặp lại bạn trong những đơn hàng tiếp theo! 💙`,
+      `TechStore xin chân thành cảm ơn ${firstName} đã dành 5 sao cho sản phẩm! ⭐ Sự hài lòng của bạn là động lực để chúng tôi tiếp tục cải thiện. Rất mong được phục vụ bạn trong tương lai! 🙏`,
+      `Wow! Cảm ơn ${firstName} đã đánh giá 5 sao tuyệt vời! 🎉 TechStore rất hạnh phúc khi mang đến cho bạn sản phẩm chất lượng. Đừng quên ghé thăm shop để khám phá thêm nhiều sản phẩm hay nhé! 💙`
+    ],
+    4: [
+      `Cảm ơn ${firstName} đã đánh giá 4 sao! ⭐ TechStore rất vui vì bạn hài lòng với sản phẩm. Nếu có bất kỳ góp ý nào để chúng tôi hoàn thiện hơn, đừng ngại liên hệ nhé! Chúc bạn sử dụng sản phẩm vui vẻ! 💙`,
+      `TechStore cảm ơn ${firstName} đã tin tưởng! 🌟 Đánh giá 4 sao của bạn là nguồn động viên lớn cho shop. Hy vọng ${productName} sẽ phục vụ bạn tốt. Hẹn gặp lại! 🙏`
+    ],
+    3: [
+      `Cảm ơn ${firstName} đã dành thời gian đánh giá! TechStore ghi nhận feedback của bạn và sẽ cố gắng cải thiện. Nếu có bất kỳ vấn đề gì, vui lòng liên hệ hotline 1900-xxxx để được hỗ trợ tốt nhất nhé! 💙`,
+      `TechStore xin cảm ơn phản hồi của ${firstName}! Chúng tôi luôn lắng nghe và cải thiện chất lượng dịch vụ. Nếu cần hỗ trợ thêm về ${productName}, đừng ngại inbox shop nhé! 🙏`
+    ],
+    2: [
+      `TechStore rất tiếc khi trải nghiệm của ${firstName} chưa được tốt. 😔 Chúng tôi sẽ ghi nhận góp ý và cải thiện. Vui lòng liên hệ hotline 1900-xxxx hoặc inbox shop để được hỗ trợ giải quyết vấn đề nhé! 💙`,
+      `Cảm ơn ${firstName} đã phản hồi! TechStore rất lấy làm tiếc và mong muốn hỗ trợ bạn. Xin vui lòng liên hệ bộ phận CSKH để chúng tôi có thể giúp đỡ bạn tốt hơn! 🙏`
+    ],
+    1: [
+      `TechStore thành thật xin lỗi ${firstName} vì trải nghiệm không tốt! 😢 Chúng tôi rất quan tâm đến phản hồi của bạn. Vui lòng liên hệ ngay hotline 0348137209 để được hỗ trợ và giải quyết vấn đề. TechStore cam kết sẽ cố gắng hết sức! 💙`,
+      `TechStore xin gửi lời xin lỗi chân thành đến ${firstName}! Feedback của bạn rất quan trọng với chúng tôi. Shop sẽ liên hệ trực tiếp để hỗ trợ bạn. Cảm ơn bạn đã cho chúng tôi cơ hội cải thiện! 🙏`
+    ]
+  };
+
+  // Chọn ngẫu nhiên một câu trả lời từ danh sách
+  const replyOptions = replies[rating] || replies[3];
+  const randomIndex = Math.floor(Math.random() * replyOptions.length);
+  
+  return replyOptions[randomIndex];
+};
+
 // GET: Lấy danh sách reviews của một sản phẩm
 router.get('/product/:productId', async (req, res) => {
   try {
@@ -215,11 +251,22 @@ router.post('/', auth, async (req, res) => {
 
     await review.save();
 
+    // Populate user info để lấy tên
+    await review.populate('user', 'name email');
+
+    // Tạo câu trả lời tự động từ admin
+    const autoReply = generateAutoReply(rating, review.user.name, product.name);
+    review.adminReply = {
+      content: autoReply,
+      repliedAt: new Date(),
+      repliedBy: 'TechStore'
+    };
+    await review.save();
+
     // Cập nhật rating trung bình cho sản phẩm
     await updateProductRating(productId);
 
-    // Populate user info trước khi trả về
-    await review.populate('user', 'name email');
+    console.log(`✅ Auto-reply generated for review by ${review.user.name} (Rating: ${rating})`);
 
     res.status(201).json({ 
       message: 'Đánh giá thành công', 
@@ -238,22 +285,35 @@ router.put('/:id', auth, async (req, res) => {
     const review = await Review.findOne({
       _id: req.params.id,
       user: req.userId
-    });
+    }).populate('product', 'name');
 
     if (!review) {
       return res.status(404).json({ message: 'Không tìm thấy đánh giá hoặc bạn không có quyền chỉnh sửa' });
     }
 
+    const oldRating = review.rating;
     review.rating = rating || review.rating;
     review.comment = comment || review.comment;
     review.images = images || review.images;
 
+    // Populate user info để lấy tên
+    await review.populate('user', 'name email');
+
+    // Nếu rating thay đổi, cập nhật lại phản hồi tự động
+    if (rating && rating !== oldRating) {
+      const autoReply = generateAutoReply(review.rating, review.user.name, review.product.name);
+      review.adminReply = {
+        content: autoReply,
+        repliedAt: new Date(),
+        repliedBy: 'TechStore'
+      };
+      console.log(`🔄 Auto-reply updated for review by ${review.user.name} (Rating: ${oldRating} → ${rating})`);
+    }
+
     await review.save();
     
     // Cập nhật rating trung bình cho sản phẩm
-    await updateProductRating(review.product);
-    
-    await review.populate('user', 'name email');
+    await updateProductRating(review.product._id || review.product);
 
     res.json({ message: 'Cập nhật đánh giá thành công', review });
   } catch (error) {
