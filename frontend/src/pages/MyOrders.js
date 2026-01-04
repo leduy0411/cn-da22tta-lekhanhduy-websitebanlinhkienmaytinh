@@ -108,7 +108,7 @@ const MyOrders = () => {
 
     try {
       setCancellingOrderId(orderId);
-      await orderAPI.updateOrderStatus(orderId, 'cancelled');
+      await orderAPI.customerCancelOrder(orderId);
       await fetchOrders();
       Swal.fire('Thành công', 'Đã hủy đơn hàng!', 'success');
     } catch (error) {
@@ -124,11 +124,14 @@ const MyOrders = () => {
   };
 
   const getImageUrl = (imagePath) => {
-    console.log('Image path:', imagePath); // Debug
     if (!imagePath) return '/img/no-image.png';
+    // Nếu là URL đầy đủ
     if (imagePath.startsWith('http')) return imagePath;
+    // Nếu là đường dẫn uploads
     if (imagePath.startsWith('/uploads')) return `${API_URL}${imagePath}`;
-    // Nếu path không có /uploads, thêm vào
+    // Nếu là đường dẫn public (ảnh local)
+    if (imagePath.startsWith('/img')) return imagePath;
+    // Nếu path không có prefix, thêm /uploads/
     if (!imagePath.startsWith('/')) return `${API_URL}/uploads/${imagePath}`;
     return `${API_URL}${imagePath}`;
   };
@@ -202,6 +205,12 @@ const MyOrders = () => {
           onClick={() => setFilter('delivered')}
         >
           Đã giao ({countByStatus('delivered')})
+        </button>
+        <button 
+          className={filter === 'cancelled' ? 'filter-btn active' : 'filter-btn'}
+          onClick={() => setFilter('cancelled')}
+        >
+          Đã hủy ({countByStatus('cancelled')})
         </button>
       </div>
 

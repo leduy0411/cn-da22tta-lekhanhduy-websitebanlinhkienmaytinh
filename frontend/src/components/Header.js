@@ -134,6 +134,12 @@ const Header = ({ onSearch }) => {
                       <FiUser /> Thông tin cá nhân
                     </Link>
 
+                    {!isAdmin() && user?.role !== 'staff' && (
+                      <Link to="/my-orders" className="header-dropdown-item" onClick={() => setShowUserMenu(false)}>
+                        <FiPackage /> Đơn hàng của tôi
+                      </Link>
+                    )}
+
                     <button onClick={handleLogout} className="header-dropdown-item logout">
                       <FiLogOut /> Đăng xuất
                     </button>

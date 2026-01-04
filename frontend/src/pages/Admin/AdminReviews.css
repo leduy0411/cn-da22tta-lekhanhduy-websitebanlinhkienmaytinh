@@ -565,25 +565,36 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.65rem 1.25rem;
-  border: none;
+  padding: 0.65rem 1.5rem;
+  border: none !important;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   font-size: 0.9rem;
   transition: all 0.2s;
   white-space: nowrap;
+  outline: none !important;
+  box-shadow: none;
+  min-width: 140px;
+  justify-content: center;
 }
 
 .modal-footer .btn-delete {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border: none !important;
+  outline: none !important;
 }
 
 .modal-footer .btn-delete:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.modal-footer .btn-delete:focus {
+  outline: none !important;
+  border: none !important;
 }
 
 /* Loading & Empty State */

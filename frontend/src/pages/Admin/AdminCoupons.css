@@ -49,7 +49,7 @@
 /* Stats Cards */
 .coupons-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
@@ -64,29 +64,39 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.stat-icon {
+.stat-card .stat-icon {
   font-size: 1.5rem;
-  color: #667eea;
+  color: #667eea !important;
+  width: 40px;
+  height: 40px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: #f0f4ff;
+  border-radius: 10px;
+  flex-shrink: 0;
 }
 
-.stat-icon.active {
-  color: #10b981;
+.stat-card .stat-icon.active {
+  color: #10b981 !important;
+  background: #d1fae5;
 }
 
-.stat-info {
+.stat-card .stat-info {
   display: flex;
   flex-direction: column;
 }
 
-.stat-value {
+.stat-card .stat-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #1e293b !important;
+  line-height: 1.2;
 }
 
-.stat-label {
+.stat-card .stat-label {
   font-size: 0.8rem;
-  color: #666;
+  color: #64748b;
 }
 
 /* Table */

@@ -1,37 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { orderAPI, zalopayAPI } from '../services/api';
-import './OrderSuccess.css';
+import './ZaloPayCallback.css';
 
 const ZaloPayCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState('checking'); // checking, success, failed
-  const [message, setMessage] = useState('Đang xác nhận thanh toán...');
+  const [status, setStatus] = useState('pending'); // pending, checking, success, failed
+  const [message, setMessage] = useState('');
+  const [orderId, setOrderId] = useState(null);
 
   useEffect(() => {
-    const checkPayment = async () => {
-      try {
-        const orderId = localStorage.getItem('pendingOrderId');
-        const orderNumber = localStorage.getItem('pendingOrderNumber');
+    const storedOrderId = localStorage.getItem('pendingOrderId');
+    if (storedOrderId) {
+      setOrderId(storedOrderId);
+    }
+  }, []);
 
-        if (!orderId) {
-          setStatus('failed');
-          setMessage('Không tìm thấy thông tin đơn hàng');
-          return;
-        }
+  // Giả định thanh toán thành công
+  const handleSimulateSuccess = async () => {
+    try {
+      setStatus('checking');
+      setMessage('Đang xử lý thanh toán...');
 
-        // GIẢ LẬP THANH TOÁN THÀNH CÔNG - Sandbox mode
-        // Trong môi trường sandbox, luôn coi như thanh toán thành công
-        setStatus('success');
-        setMessage('🎉 Thanh toán thành công!');
-        
-        // Cập nhật trạng thái đơn hàng thành đã thanh toán
+      const storedOrderId = localStorage.getItem('pendingOrderId');
+      
+      if (storedOrderId) {
+        // Cập nhật trạng thái đơn hàng thành đã thanh toán (dùng API mới không cần admin)
         try {
-          await orderAPI.updateOrderStatus(orderId, 'Processing');
+          await orderAPI.confirmPayment(storedOrderId);
         } catch (err) {
           console.log('Could not update order status:', err);
         }
+        
+        setStatus('success');
+        setMessage('🎉 Thanh toán thành công!');
         
         // Xóa pending order
         localStorage.removeItem('pendingOrderId');
@@ -39,35 +42,82 @@ const ZaloPayCallback = () => {
         
         // Chuyển đến trang order success sau 2 giây
         setTimeout(() => {
-          navigate(`/order-success/${orderId}`);
+          navigate(`/order-success/${storedOrderId}`);
         }, 2000);
-
-      } catch (error) {
-        console.error('Error checking payment:', error);
-        // Vẫn coi như thành công trong sandbox
-        const orderId = localStorage.getItem('pendingOrderId');
-        if (orderId) {
-          setStatus('success');
-          setMessage('🎉 Thanh toán thành công!');
-          localStorage.removeItem('pendingOrderId');
-          localStorage.removeItem('pendingOrderNumber');
-          setTimeout(() => {
-            navigate(`/order-success/${orderId}`);
-          }, 2000);
-        } else {
-          setStatus('failed');
-          setMessage('Lỗi khi xác nhận thanh toán');
-        }
+      } else {
+        setStatus('failed');
+        setMessage('Không tìm thấy thông tin đơn hàng');
       }
-    };
+    } catch (error) {
+      console.error('Error:', error);
+      setStatus('failed');
+      setMessage('Lỗi khi xử lý thanh toán');
+    }
+  };
 
-    checkPayment();
-  }, [searchParams, navigate]);
+  // Quay lại trang thanh toán
+  const handleGoBack = () => {
+    navigate('/checkout');
+  };
+
+  // Hủy đơn hàng và quay về giỏ hàng
+  const handleCancelOrder = async () => {
+    const storedOrderId = localStorage.getItem('pendingOrderId');
+    if (storedOrderId) {
+      try {
+        await orderAPI.customerCancelOrder(storedOrderId);
+      } catch (err) {
+        console.log('Could not cancel order:', err);
+      }
+      localStorage.removeItem('pendingOrderId');
+      localStorage.removeItem('pendingOrderNumber');
+    }
+    navigate('/cart');
+  };
 
   return (
-    <div className="order-success-page">
+    <div className="zalopay-callback-page">
       <div className="container">
-        <div className="success-card">
+        <div className="callback-card">
+          {status === 'pending' && (
+            <>
+              <div className="zalopay-logo">
+                <img src="/img/img-zalopay/zalopay-logo.png" alt="ZaloPay" onError={(e) => e.target.style.display = 'none'} />
+              </div>
+              <h2>Thanh toán ZaloPay</h2>
+              <p className="subtitle">Bạn đã hủy thanh toán hoặc gặp sự cố?</p>
+              
+              <div className="callback-options">
+                <div className="option-card simulate">
+                  <div className="option-icon">✅</div>
+                  <h3>Giả định thanh toán thành công</h3>
+                  <p>Dùng cho mục đích demo/test. Đơn hàng sẽ được xác nhận như đã thanh toán.</p>
+                  <button className="btn-simulate" onClick={handleSimulateSuccess}>
+                    Xác nhận thanh toán (Demo)
+                  </button>
+                </div>
+
+                <div className="option-card retry">
+                  <div className="option-icon">🔄</div>
+                  <h3>Thử lại thanh toán</h3>
+                  <p>Quay lại trang thanh toán để chọn phương thức khác.</p>
+                  <button className="btn-retry" onClick={handleGoBack}>
+                    Quay lại thanh toán
+                  </button>
+                </div>
+
+                <div className="option-card cancel">
+                  <div className="option-icon">❌</div>
+                  <h3>Hủy đơn hàng</h3>
+                  <p>Hủy đơn hàng này và quay về giỏ hàng.</p>
+                  <button className="btn-cancel" onClick={handleCancelOrder}>
+                    Hủy đơn hàng
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+          
           {status === 'checking' && (
             <>
               <div className="spinner-large"></div>
@@ -88,7 +138,14 @@ const ZaloPayCallback = () => {
             <>
               <div className="error-icon-large">❌</div>
               <h2>{message}</h2>
-              <p>Bạn sẽ được chuyển về trang thanh toán...</p>
+              <div className="failed-actions">
+                <button className="btn-retry" onClick={handleGoBack}>
+                  Quay lại thanh toán
+                </button>
+                <button className="btn-cancel" onClick={handleCancelOrder}>
+                  Hủy đơn hàng
+                </button>
+              </div>
             </>
           )}
         </div>

@@ -67,6 +67,10 @@ export const orderAPI = {
   getOrderById: (id) => api.get(`/orders/${id}`),
   trackOrder: (orderNumber) => api.get(`/orders/tracking/${orderNumber}`),
   updateOrderStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
+  // Thanh toán thành công (không cần admin)
+  confirmPayment: (id) => api.put(`/orders/${id}/payment-success`),
+  // Khách hàng hủy đơn (không cần admin)
+  customerCancelOrder: (id) => api.put(`/orders/${id}/customer-cancel`),
 };
 
 // Auth API

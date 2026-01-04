@@ -307,4 +307,70 @@ router.put('/:id/cancel', auth, async (req, res) => {
   }
 });
 
+// PUT: Xác nhận thanh toán thành công (cho ZaloPay callback - không cần admin)
+router.put('/:id/payment-success', optionalAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+    }
+
+    // Chỉ cho phép cập nhật nếu đơn hàng đang pending
+    if (order.status !== 'pending') {
+      return res.status(400).json({ message: 'Đơn hàng đã được xử lý' });
+    }
+
+    // Cập nhật trạng thái thanh toán
+    order.status = 'processing';
+    order.paymentStatus = 'Paid';
+    order.paidAt = new Date();
+    await order.save();
+
+    res.json({ 
+      message: 'Xác nhận thanh toán thành công', 
+      order 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi xác nhận thanh toán', error: error.message });
+  }
+});
+
+// PUT: Hủy đơn hàng bởi khách hàng (không cần admin)
+router.put('/:id/customer-cancel', optionalAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('items.product');
+
+    if (!order) {
+      return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+    }
+
+    // Chỉ cho phép hủy nếu đơn hàng đang pending
+    if (order.status !== 'pending') {
+      return res.status(400).json({ message: 'Không thể hủy đơn hàng này' });
+    }
+
+    // Hoàn trả số lượng sản phẩm vào kho
+    for (const item of order.items) {
+      const product = await Product.findById(item.product._id || item.product);
+      if (product) {
+        product.stock += item.quantity;
+        await product.save();
+      }
+    }
+
+    order.status = 'cancelled';
+    order.cancelledAt = new Date();
+    order.cancelReason = 'Khách hàng hủy đơn';
+    await order.save();
+
+    res.json({ 
+      message: 'Đã hủy đơn hàng', 
+      order 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi hủy đơn hàng', error: error.message });
+  }
+});
+
 module.exports = router;
