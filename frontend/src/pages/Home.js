@@ -1028,21 +1028,6 @@ const Home = ({ searchQuery }) => {
                           <p className={`category-description ${expandedCategories.includes(category._id || category.name) ? 'expanded' : ''}`}>
                             {category.description}
                           </p>
-                          {category.description.length > 30 && (
-                            <button
-                              className="see-more-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExpandedCategories(prev =>
-                                  prev.includes(category._id || category.name)
-                                    ? prev.filter(id => id !== (category._id || category.name))
-                                    : [...prev, category._id || category.name]
-                                );
-                              }}
-                            >
-                              {expandedCategories.includes(category._id || category.name) ? 'Thu gọn' : 'Xem thêm'}
-                            </button>
-                          )}
                         </div>
                       )}
                     </div>

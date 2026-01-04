@@ -16,6 +16,7 @@ const AdminProducts = ({ openAddModal }) => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [stockFilter, setStockFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -63,6 +64,11 @@ const AdminProducts = ({ openAddModal }) => {
     fetchCategories();
   }, []);
 
+  // Debug: Log khi filter thay đổi
+  useEffect(() => {
+    console.log('🔍 Filters:', { categoryFilter, searchTerm, stockFilter, totalProducts: products.length });
+  }, [categoryFilter, searchTerm, stockFilter, products]);
+
   // Mở modal thêm sản phẩm nếu route là /admin/products/add
   useEffect(() => {
     if (openAddModal || location.pathname === '/admin/products/add') {
@@ -94,7 +100,8 @@ const AdminProducts = ({ openAddModal }) => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await productAPI.getAll({ limit: 100 });
+      const response = await productAPI.getAll({ limit: 1000 }); // Tăng limit để lấy tất cả sản phẩm
+      console.log('✅ Loaded products:', response.data.products.length);
       setProducts(response.data.products);
     } catch (error) {
       console.error('Lỗi khi lấy sản phẩm:', error);
@@ -252,7 +259,18 @@ const AdminProducts = ({ openAddModal }) => {
       stockFilter === 'low' ? product.stock <= 1 :
       stockFilter === 'out' ? product.stock === 0 : true;
     
-    return matchesSearch && matchesStock;
+    const matchesCategory = 
+      categoryFilter === 'all' ? true :
+      (product.category || '') === categoryFilter;
+    
+    return matchesSearch && matchesStock && matchesCategory;
+  });
+
+  console.log('📊 Filtered Results:', {
+    total: products.length,
+    filtered: filteredProducts.length,
+    categoryFilter,
+    sampleCategories: products.slice(0, 5).map(p => p.category)
   });
 
   return (
@@ -272,6 +290,16 @@ const AdminProducts = ({ openAddModal }) => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+        <select 
+          className="category-filter"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+        >
+          <option value="all">Tất cả danh mục</option>
+          {categories.map((cat) => (
+            <option key={cat._id} value={cat.name}>{cat.name}</option>
+          ))}
+        </select>
         <select 
           className="stock-filter"
           value={stockFilter}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiSettings, FiTag, FiCpu, FiChevronDown, FiList, FiPlusCircle, FiLayers } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiTag, FiCpu } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import Swal from 'sweetalert2';
 import './AdminLayout.css';
@@ -10,27 +10,12 @@ const AdminLayout = () => {
   const location = useLocation();
   const { user, logout, isAdmin, isStaff } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [openDropdowns, setOpenDropdowns] = useState({});
 
   useEffect(() => {
     if (!isAdmin() && !isStaff()) {
       navigate('/');
     }
   }, [user]);
-
-  // Auto open dropdown if current path matches
-  useEffect(() => {
-    menuItems.forEach(item => {
-      if (item.children) {
-        const isChildActive = item.children.some(child => 
-          location.pathname === child.path || location.pathname.startsWith(child.path + '/')
-        );
-        if (isChildActive) {
-          setOpenDropdowns(prev => ({ ...prev, [item.id]: true }));
-        }
-      }
-    });
-  }, [location.pathname]);
 
   const handleLogout = async () => {
     const result = await Swal.fire({
@@ -47,35 +32,10 @@ const AdminLayout = () => {
     }
   };
 
-  const toggleDropdown = (id) => {
-    setOpenDropdowns(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
   const menuItems = [
     { id: 'dashboard', path: '/admin', icon: FiBarChart2, label: 'Thống kê và báo cáo', exact: true, roles: ['admin'] },
-    { 
-      id: 'products',
-      icon: FiPackage, 
-      label: 'Sản phẩm', 
-      roles: ['admin'],
-      children: [
-        { path: '/admin/products', icon: FiList, label: 'Danh sách sản phẩm' },
-        { path: '/admin/products/add', icon: FiPlusCircle, label: 'Thêm sản phẩm' },
-      ]
-    },
-    { 
-      id: 'categories',
-      icon: FiGrid, 
-      label: 'Danh mục', 
-      roles: ['admin'],
-      children: [
-        { path: '/admin/categories', icon: FiList, label: 'Danh sách danh mục' },
-        { path: '/admin/subcategories', icon: FiLayers, label: 'Danh mục con' },
-      ]
-    },
+    { id: 'products', path: '/admin/products', icon: FiPackage, label: 'Sản phẩm', roles: ['admin'] },
+    { id: 'categories', path: '/admin/categories', icon: FiGrid, label: 'Danh mục', roles: ['admin'] },
     { id: 'orders', path: '/admin/orders', icon: FiShoppingBag, label: 'Đơn hàng', roles: ['admin', 'staff'] },
     { id: 'users', path: '/admin/users', icon: FiUsers, label: 'Người dùng', roles: ['admin'] },
     { id: 'coupons', path: '/admin/coupons', icon: FiTag, label: 'Mã giảm giá', roles: ['admin', 'staff'] },
@@ -90,10 +50,6 @@ const AdminLayout = () => {
     return location.pathname.startsWith(path);
   };
 
-  const isDropdownActive = (children) => {
-    return children?.some(child => location.pathname === child.path || location.pathname.startsWith(child.path + '/'));
-  };
-
   if (!isAdmin() && !isStaff()) {
     return null;
   }
@@ -106,40 +62,6 @@ const AdminLayout = () => {
   });
 
   const renderMenuItem = (item) => {
-    // Item with dropdown
-    if (item.children) {
-      const isOpen = openDropdowns[item.id];
-      const hasActiveChild = isDropdownActive(item.children);
-      
-      return (
-        <div key={item.id} className="nav-item-dropdown">
-          <button 
-            className={`nav-item-header ${hasActiveChild ? 'active' : ''}`}
-            onClick={() => toggleDropdown(item.id)}
-          >
-            <div className="nav-item-left">
-              <item.icon className="nav-icon" />
-              <span className="nav-label">{item.label}</span>
-            </div>
-            <FiChevronDown className={`dropdown-arrow ${isOpen ? 'open' : ''}`} />
-          </button>
-          <div className={`dropdown-menu ${isOpen ? 'open' : ''}`}>
-            {item.children.map((child) => (
-              <Link
-                key={child.path}
-                to={child.path}
-                className={`dropdown-item ${isActive(child.path, true) ? 'active' : ''}`}
-              >
-                <child.icon className="dropdown-item-icon" />
-                <span>{child.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // Regular item without dropdown
     return (
       <Link
         key={item.path}

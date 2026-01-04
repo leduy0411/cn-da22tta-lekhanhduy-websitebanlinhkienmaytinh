@@ -267,6 +267,7 @@
   font-size: 1rem;
 }
 
+.category-filter,
 .stock-filter {
   padding: 0.6rem 1rem;
   border: 2px solid #e0e0e0;
@@ -280,10 +281,12 @@
   font-weight: 500;
 }
 
+.category-filter:hover,
 .stock-filter:hover {
   border-color: #667eea;
 }
 
+.category-filter:focus,
 .stock-filter:focus {
   outline: none;
   border-color: #667eea;
