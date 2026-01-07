@@ -1,14 +1,12 @@
-/* Header Styles - Neon Blue Theme */
+/* Header Styles - TechStore Theme */
 .header {
-  background: #d7262b !important;
+  background: #d32f2f !important;
   color: white;
-  padding: 1rem 0;
-  box-shadow: 0 4px 25px rgba(79, 70, 229, 0.5);
+  padding: 0.75rem 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   position: sticky;
   top: 0;
   z-index: 1000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
 }
 
 .container {
@@ -29,39 +27,47 @@
   color: white;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
   transition: transform 0.3s;
   flex-shrink: 0;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .logo:hover {
-  transform: scale(1.05);
+  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .logo-icon {
-  font-size: 2.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  font-size: 2rem;
+  background: white;
+  color: #d32f2f;
+  padding: 0.4rem;
+  border-radius: 6px;
 }
 
 .logo-text {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0;
 }
 
 .logo-title {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
   letter-spacing: -0.5px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   color: white;
+  line-height: 1.2;
 }
 
 .logo-subtitle {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 400;
   opacity: 0.9;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .logo h1 {
@@ -74,10 +80,10 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 25px;
+  padding: 0.7rem 1.25rem;
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+  border: none;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   transition: all 0.3s;
@@ -85,18 +91,18 @@
   font-size: 0.95rem;
   flex-shrink: 0;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
 }
 
 .categories-button:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);
 }
 
 .search-form {
   flex: 1;
-  max-width: 500px;
+  max-width: 450px;
   position: relative;
   display: flex;
   align-items: center;
@@ -105,20 +111,30 @@
 .search-icon {
   position: absolute;
   left: 1rem;
-  color: #999;
-  font-size: 1.2rem;
+  color: #9ca3af;
+  font-size: 1.1rem;
   pointer-events: none;
   z-index: 1;
 }
 
 .search-input {
   flex: 1;
-  padding: 0.75rem 1rem 0.75rem 3rem;
+  padding: 0.7rem 1rem 0.7rem 2.8rem;
   border: none;
-  border-radius: 25px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
   outline: none;
   width: 100%;
+  background: white;
+  color: #333;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
 }
 
 .nav {
@@ -145,22 +161,20 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+  padding: 0.7rem 1.25rem;
+  background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 25px;
+  border-radius: 8px;
   color: white;
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .hotline-link:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
 }
 
 .hotline-link svg {
@@ -197,21 +211,22 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.15) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 25px;
+  padding: 0.7rem 1.25rem;
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+  border: none;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   transition: all 0.3s;
   font-weight: 600;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
 }
 
 .user-button:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.25) 100%);
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);
 }
 
 .user-dropdown {
@@ -284,23 +299,23 @@
   background: #fff0f0;
 }
 
-/* Login Button - Neon Blue Design */
+/* Login Button - Purple Design */
 .login-button {
   position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.5rem;
-  background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%);
+  padding: 0.7rem 1.25rem;
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
   color: white;
   text-decoration: none;
-  border-radius: 25px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.95rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.5);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: none;
 }
 
 .login-button::before {
@@ -310,7 +325,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: left 0.5s;
 }
 
@@ -320,31 +335,17 @@
 
 .login-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(79, 70, 229, 0.6);
-  background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
 }
 
 .login-button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
 }
 
 .login-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 0;
-  height: 0;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 50%;
-  transition: width 0.6s, height 0.6s;
-}
-
-.login-button:hover .login-glow {
-  width: 300px;
-  height: 300px;
-  opacity: 0;
+  display: none;
 }
 
 .cart-link {
@@ -353,26 +354,32 @@
   position: relative;
   display: flex;
   align-items: center;
-  transition: transform 0.3s;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  transition: all 0.3s;
 }
 
 .cart-link:hover {
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
 }
 
 .cart-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #a5b4fc;
-  color: #1e1b4b;
-  font-size: 0.75rem;
+  top: -4px;
+  right: -4px;
+  background: #fbbf24;
+  color: #1f2937;
+  font-size: 0.7rem;
   font-weight: bold;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  min-width: 20px;
+  padding: 0.15rem 0.4rem;
+  border-radius: 10px;
+  min-width: 18px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 @media (max-width: 768px) {
