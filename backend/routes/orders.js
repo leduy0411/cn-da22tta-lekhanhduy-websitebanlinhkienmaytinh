@@ -345,8 +345,8 @@ router.put('/:id/customer-cancel', optionalAuth, async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
     }
 
-    // Chỉ cho phép hủy nếu đơn hàng đang pending
-    if (order.status !== 'pending') {
+    // Chỉ cho phép hủy nếu đơn hàng đang pending hoặc processing
+    if (order.status !== 'pending' && order.status !== 'processing') {
       return res.status(400).json({ message: 'Không thể hủy đơn hàng này' });
     }
 
