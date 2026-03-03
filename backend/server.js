@@ -58,6 +58,7 @@ const filterRoutes = require('./routes/filters');
 const zalopayRoutes = require('./routes/zalopay');
 const reviewRoutes = require('./routes/reviews');
 const couponRoutes = require('./routes/coupons');
+const aiRoutes = require('./routes/ai');
 
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -71,6 +72,7 @@ app.use('/api/filters', filterRoutes);
 app.use('/api/zalopay', zalopayRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Home route
 app.get('/', (req, res) => {

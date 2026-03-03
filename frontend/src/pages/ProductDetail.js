@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
-import { productAPI } from '../services/api';
+import { productAPI, aiAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
@@ -43,13 +43,28 @@ const ProductDetail = () => {
 
   const fetchRelatedProducts = async () => {
     try {
-      const response = await productAPI.getAll({ limit: 8 });
-      // Lọc bỏ sản phẩm hiện tại và lấy ngẫu nhiên 4 sản phẩm
-      const filtered = response.data.products.filter(p => p._id !== id);
-      const shuffled = filtered.sort(() => 0.5 - Math.random());
-      setRelatedProducts(shuffled.slice(0, 4));
+      // Sử dụng AI recommendations API
+      const response = await aiAPI.getProductRecommendations(id, 'hybrid', 4);
+      if (response.data.success && response.data.recommendations) {
+        setRelatedProducts(response.data.recommendations);
+      } else {
+        // Fallback: lấy sản phẩm ngẫu nhiên nếu AI không khả dụng
+        const fallbackResponse = await productAPI.getAll({ limit: 8 });
+        const filtered = fallbackResponse.data.products.filter(p => p._id !== id);
+        const shuffled = filtered.sort(() => 0.5 - Math.random());
+        setRelatedProducts(shuffled.slice(0, 4));
+      }
     } catch (error) {
-      console.error('Lỗi khi lấy sản phẩm gợi ý:', error);
+      console.error('Lỗi khi lấy sản phẩm gợi ý AI:', error);
+      // Fallback khi gặp lỗi
+      try {
+        const fallbackResponse = await productAPI.getAll({ limit: 8 });
+        const filtered = fallbackResponse.data.products.filter(p => p._id !== id);
+        const shuffled = filtered.sort(() => 0.5 - Math.random());
+        setRelatedProducts(shuffled.slice(0, 4));
+      } catch (fallbackError) {
+        console.error('Lỗi fallback:', fallbackError);
+      }
     }
   };
 
@@ -237,10 +252,12 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* Sản phẩm gợi ý */}
+        {/* Sản phẩm gợi ý AI */}
         {relatedProducts.length > 0 && (
           <div className="related-products-section">
-            <h2 className="related-products-title">Sản phẩm gợi ý</h2>
+            <h2 className="related-products-title">
+              <span role="img" aria-label="AI">🤖</span> Gợi ý bởi AI
+            </h2>
             <div className="related-products-grid">
               {relatedProducts.map(relatedProduct => (
                 <ProductCard key={relatedProduct._id} product={relatedProduct} />

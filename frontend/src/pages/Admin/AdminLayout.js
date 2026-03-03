@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiMessageCircle, FiStar, FiTag, FiCpu } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiStar, FiTag, FiCpu } from 'react-icons/fi';
+import { RiRobot2Line } from 'react-icons/ri';
 import { useAuth } from '../../context/AuthContext';
 import Swal from 'sweetalert2';
 import './AdminLayout.css';
@@ -40,7 +41,7 @@ const AdminLayout = () => {
     { id: 'users', path: '/admin/users', icon: FiUsers, label: 'Người dùng', roles: ['admin'] },
     { id: 'coupons', path: '/admin/coupons', icon: FiTag, label: 'Mã giảm giá', roles: ['admin', 'staff'] },
     { id: 'reviews', path: '/admin/reviews', icon: FiStar, label: 'Đánh giá', roles: ['admin', 'staff'] },
-    { id: 'chat', path: '/admin/chat', icon: FiMessageCircle, label: 'Chat', roles: ['admin', 'staff'] },
+    { id: 'ai', path: '/admin/ai', icon: RiRobot2Line, label: 'Quản lý AI', roles: ['admin'] },
   ];
 
   const isActive = (path, exact = false) => {

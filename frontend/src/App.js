@@ -4,7 +4,7 @@ import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import ChatBox from './components/ChatBox';
+import AIChatBox from './components/AIChatBox';
 import GiftBox from './components/GiftBox';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
@@ -27,7 +27,7 @@ import AdminProducts from './pages/Admin/AdminProducts';
 import AdminCategories from './pages/Admin/AdminCategories';
 import AdminOrders from './pages/Admin/AdminOrders';
 import AdminUsers from './pages/Admin/AdminUsers';
-import AdminChat from './pages/Admin/AdminChat';
+import AdminAI from './pages/Admin/AdminAI';
 import AdminReviews from './pages/Admin/AdminReviews';
 import AdminCoupons from './pages/Admin/AdminCoupons';
 import AdminSubcategories from './pages/Admin/AdminSubcategories';
@@ -60,7 +60,7 @@ const CustomerLayout = ({ children, onSearch }) => {
       <Header onSearch={handleSearchWithRedirect} />
       {children}
       <GiftBox />
-      <ChatBox />
+      <AIChatBox />
       <Footer />
     </>
   );
@@ -98,7 +98,7 @@ function AppContent() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="coupons" element={<AdminCoupons />} />
           <Route path="reviews" element={<AdminReviews />} />
-          <Route path="chat" element={<AdminChat />} />
+          <Route path="ai" element={<AdminAI />} />
         </Route>
 
         {/* Customer Routes */}

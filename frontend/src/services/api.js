@@ -137,4 +137,29 @@ export const couponAPI = {
   use: (code) => api.post('/coupons/use', { code }),
 };
 
+// AI API
+export const aiAPI = {
+  // Chatbot
+  sendMessage: (sessionId, message, context = {}) => 
+    api.post('/ai/chatbot/message', { sessionId, message, context }),
+  getChatHistory: (sessionId, limit = 50) => 
+    api.get(`/ai/chatbot/history/${sessionId}`, { params: { limit } }),
+  endConversation: (sessionId, satisfaction) => 
+    api.post(`/ai/chatbot/end/${sessionId}`, { satisfaction }),
+  
+  // Recommendations
+  getProductRecommendations: (productId, type = 'hybrid', limit = 10) =>
+    api.get(`/ai/recommendations/product/${productId}`, { params: { type, limit } }),
+  getUserRecommendations: (limit = 10) =>
+    api.get('/ai/recommendations/user', { params: { limit } }),
+  getPopularProducts: (limit = 10, category = null) =>
+    api.get('/ai/recommendations/popular', { params: { limit, category } }),
+  getCartRecommendations: (cartItems, limit = 5) =>
+    api.post('/ai/recommendations/cart', { cartItems }, { params: { limit } }),
+  
+  // Semantic Search
+  search: (query, options = {}) =>
+    api.get('/ai/search', { params: { q: query, ...options } }),
+};
+
 export default api;
