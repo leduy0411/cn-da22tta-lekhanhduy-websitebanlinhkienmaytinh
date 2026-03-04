@@ -19,12 +19,20 @@
       "dest": "/static/$1"
     },
     {
+      "src": "/img/(.*)",
+      "dest": "/img/$1"
+    },
+    {
       "src": "/favicon.ico",
       "dest": "/favicon.ico"
     },
     {
       "src": "/manifest.json",
       "dest": "/manifest.json"
+    },
+    {
+      "src": "/(.*\\.(js|css|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))",
+      "dest": "/$1"
     },
     {
       "src": "/(.*)",
