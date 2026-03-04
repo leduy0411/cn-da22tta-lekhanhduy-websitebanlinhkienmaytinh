@@ -18,12 +18,16 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // Google Strategy
+const callbackURL = process.env.NODE_ENV === 'production' 
+  ? 'https://cn-da22tta-lekhanhduy.onrender.com/api/auth/google/callback'
+  : 'http://localhost:5000/api/auth/google/callback';
+
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID || 'your-google-client-id',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'your-google-client-secret',
-      callbackURL: 'http://localhost:5000/api/auth/google/callback',
+      callbackURL: callbackURL,
       proxy: true
     },
     async (accessToken, refreshToken, profile, done) => {
