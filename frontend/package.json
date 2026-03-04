@@ -3,7 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@lottiefiles/react-lottie-player": "^3.6.0",
     "axios": "^1.6.2",
+    "framer-motion": "^12.34.5",
+    "gsap": "^3.14.2",
+    "postcss": "^8.5.8",
     "quill-table-ui": "^1.0.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

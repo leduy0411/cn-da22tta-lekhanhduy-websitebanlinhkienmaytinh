@@ -11,6 +11,8 @@ const ReviewAnalysisService = require('./ReviewAnalysisService');
 const SalesForecastingService = require('./SalesForecastingService');
 const ChatbotService = require('./ChatbotService');
 const ModelEvaluationService = require('./ModelEvaluationService');
+const GeminiService = require('./GeminiService');
+const AIServiceClient = require('./AIServiceClient');
 
 module.exports = {
   RecommendationService,
@@ -18,5 +20,7 @@ module.exports = {
   ReviewAnalysisService,
   SalesForecastingService,
   ChatbotService,
-  ModelEvaluationService
+  ModelEvaluationService,
+  GeminiService,
+  AIServiceClient
 };

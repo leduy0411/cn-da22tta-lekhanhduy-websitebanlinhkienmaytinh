@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
-import { productAPI, aiAPI } from '../services/api';
+import { productAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useProductRecommendations, useInteractionTracker } from '../hooks/useRecommendations';
 import ProductCard from '../components/ProductCard';
 import ProductReviews from '../components/ProductReviews';
 import Swal from 'sweetalert2';
@@ -19,14 +20,18 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [relatedProducts, setRelatedProducts] = useState([]);
 
-  useEffect(() => {
-    fetchProduct();
-    fetchRelatedProducts();
-  }, [id]);
+  // V2 AI Recommendations with automatic V1 fallback
+  const { 
+    recommendations: relatedProducts, 
+    source: recsSource,
+    trackClick: trackRecClick 
+  } = useProductRecommendations(id, 4);
+  
+  // Interaction tracking
+  const { trackView } = useInteractionTracker();
 
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
       const response = await productAPI.getById(id);
@@ -39,34 +44,13 @@ const ProductDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
 
-  const fetchRelatedProducts = async () => {
-    try {
-      // Sử dụng AI recommendations API
-      const response = await aiAPI.getProductRecommendations(id, 'hybrid', 4);
-      if (response.data.success && response.data.recommendations) {
-        setRelatedProducts(response.data.recommendations);
-      } else {
-        // Fallback: lấy sản phẩm ngẫu nhiên nếu AI không khả dụng
-        const fallbackResponse = await productAPI.getAll({ limit: 8 });
-        const filtered = fallbackResponse.data.products.filter(p => p._id !== id);
-        const shuffled = filtered.sort(() => 0.5 - Math.random());
-        setRelatedProducts(shuffled.slice(0, 4));
-      }
-    } catch (error) {
-      console.error('Lỗi khi lấy sản phẩm gợi ý AI:', error);
-      // Fallback khi gặp lỗi
-      try {
-        const fallbackResponse = await productAPI.getAll({ limit: 8 });
-        const filtered = fallbackResponse.data.products.filter(p => p._id !== id);
-        const shuffled = filtered.sort(() => 0.5 - Math.random());
-        setRelatedProducts(shuffled.slice(0, 4));
-      } catch (fallbackError) {
-        console.error('Lỗi fallback:', fallbackError);
-      }
-    }
-  };
+  useEffect(() => {
+    fetchProduct();
+    // Track product view for recommendation training
+    if (id) trackView(id);
+  }, [id, fetchProduct, trackView]);
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -257,10 +241,17 @@ const ProductDetail = () => {
           <div className="related-products-section">
             <h2 className="related-products-title">
               <span role="img" aria-label="AI">🤖</span> Gợi ý bởi AI
+              {recsSource && (
+                <span className="ai-source-badge" title={`Nguồn: ${recsSource}`}>
+                  {recsSource === 'python-ai' ? '⚡ Deep Learning' : recsSource === 'v2' ? '⚡ Advanced' : '📊 Classic'}
+                </span>
+              )}
             </h2>
             <div className="related-products-grid">
               {relatedProducts.map(relatedProduct => (
-                <ProductCard key={relatedProduct._id} product={relatedProduct} />
+                <div key={relatedProduct._id} onClick={() => trackRecClick(relatedProduct._id)}>
+                  <ProductCard product={relatedProduct} />
+                </div>
               ))}
             </div>
           </div>

@@ -16,8 +16,111 @@ const {
   ReviewAnalysisService,
   SalesForecastingService,
   ChatbotService,
-  ModelEvaluationService
+  ModelEvaluationService,
+  GeminiService
 } = require('../services/ai');
+
+// ==================== GEMINI AI STATUS ====================
+
+/**
+ * @route GET /api/ai/gemini/status
+ * @desc Check Gemini AI status
+ * @access Admin
+ */
+router.get('/gemini/status', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    res.json({
+      success: true,
+      gemini: {
+        initialized: GeminiService.isReady(),
+        model: 'gemini-2.0-flash',
+        features: [
+          'Chat conversations',
+          'Intent analysis', 
+          'Product comparison',
+          'Review analysis',
+          'Product recommendations'
+        ]
+      }
+    });
+  } catch (error) {
+    console.error('Gemini status error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @route POST /api/ai/gemini/chat
+ * @desc Direct chat with Gemini (admin testing)
+ * @access Admin
+ */
+router.post('/gemini/chat', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    const { message, context = {} } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ success: false, message: 'Message is required' });
+    }
+
+    if (!GeminiService.isReady()) {
+      return res.status(503).json({ 
+        success: false, 
+        message: 'Gemini AI chưa được khởi tạo. Vui lòng kiểm tra GEMINI_API_KEY' 
+      });
+    }
+
+    const response = await GeminiService.chat(message, [], context);
+
+    res.json({
+      success: true,
+      response
+    });
+  } catch (error) {
+    console.error('Gemini chat error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @route POST /api/ai/gemini/analyze-intent
+ * @desc Analyze intent using Gemini
+ * @access Admin
+ */
+router.post('/gemini/analyze-intent', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ success: false, message: 'Message is required' });
+    }
+
+    if (!GeminiService.isReady()) {
+      return res.status(503).json({ success: false, message: 'Gemini AI not initialized' });
+    }
+
+    const analysis = await GeminiService.analyzeIntent(message);
+
+    res.json({
+      success: true,
+      analysis
+    });
+  } catch (error) {
+    console.error('Gemini analyze error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // ==================== RECOMMENDATION ROUTES ====================
 

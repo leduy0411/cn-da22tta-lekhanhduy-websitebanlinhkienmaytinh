@@ -147,7 +147,7 @@ export const aiAPI = {
   endConversation: (sessionId, satisfaction) => 
     api.post(`/ai/chatbot/end/${sessionId}`, { satisfaction }),
   
-  // Recommendations
+  // Recommendations (v1 - legacy fallback)
   getProductRecommendations: (productId, type = 'hybrid', limit = 10) =>
     api.get(`/ai/recommendations/product/${productId}`, { params: { type, limit } }),
   getUserRecommendations: (limit = 10) =>
@@ -157,9 +157,41 @@ export const aiAPI = {
   getCartRecommendations: (cartItems, limit = 5) =>
     api.post('/ai/recommendations/cart', { cartItems }, { params: { limit } }),
   
+  // Recommendations V2 - Advanced AI (SVD, NCF, FAISS, Association Rules)
+  v2: {
+    getProductRecommendations: (productId, limit = 10) =>
+      api.get(`/ai/v2/recommend/product/${productId}`, { params: { limit } }),
+    getUserRecommendations: (userId, limit = 10) =>
+      api.get(`/ai/v2/recommend/user/${userId}`, { params: { limit } }),
+    getTrending: (limit = 20, category = null) =>
+      api.get('/ai/v2/recommend/trending', { params: { limit, category } }),
+    getCartRecommendations: (cartItems, limit = 5) =>
+      api.post('/ai/v2/recommend/cart', { cartItems }, { params: { limit } }),
+    trackInteraction: (data) =>
+      api.post('/ai/v2/track', data),
+    trackClick: (recommendationLogId, productId) =>
+      api.post('/ai/v2/track-click', { recommendationLogId, productId }),
+    getStatus: () =>
+      api.get('/ai/v2/status'),
+    triggerTraining: () =>
+      api.post('/ai/v2/train'),
+    getTrainingReport: () =>
+      api.get('/ai/v2/training/report'),
+    getABTestResults: () =>
+      api.get('/ai/v2/ab-test/results'),
+  },
+
   // Semantic Search
   search: (query, options = {}) =>
     api.get('/ai/search', { params: { q: query, ...options } }),
+
+  // Gemini AI (Admin)
+  getGeminiStatus: () =>
+    api.get('/ai/gemini/status'),
+  geminiChat: (message, context = {}) =>
+    api.post('/ai/gemini/chat', { message, context }),
+  geminiAnalyzeIntent: (message) =>
+    api.post('/ai/gemini/analyze-intent', { message }),
 };
 
 export default api;

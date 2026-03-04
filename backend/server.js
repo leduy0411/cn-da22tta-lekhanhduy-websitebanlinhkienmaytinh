@@ -11,9 +11,31 @@ const passport = require('./config/passport');
 
 const app = express();
 
-// CORS Configuration
+// CORS Configuration - Allow multiple origins for mobile testing
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+// Also allow any origin in development for mobile device testing
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // In development, allow all origins for mobile testing
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // In production, check against allowed origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -59,6 +81,7 @@ const zalopayRoutes = require('./routes/zalopay');
 const reviewRoutes = require('./routes/reviews');
 const couponRoutes = require('./routes/coupons');
 const aiRoutes = require('./routes/ai');
+const recommendationV2Routes = require('./routes/v2/recommendations');
 
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -73,6 +96,7 @@ app.use('/api/zalopay', zalopayRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/ai/v2', recommendationV2Routes);
 
 // Home route
 app.get('/', (req, res) => {

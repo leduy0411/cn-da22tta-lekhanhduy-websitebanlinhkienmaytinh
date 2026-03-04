@@ -12,9 +12,17 @@ const Order = require('../../models/Order');
 const Category = require('../../models/Category');
 const ChatbotConversation = require('../../models/ChatbotConversation');
 const RecommendationService = require('./RecommendationService');
+const SemanticSearchService = require('./SemanticSearchService');
+const GeminiService = require('./GeminiService');
 
 class ChatbotService {
   constructor() {
+    // Gemini configuration - ALWAYS use Gemini for smarter responses
+    this.useGemini = true;
+    this.geminiForUnknown = true;
+    this.geminiForAll = true; // Use Gemini for ALL responses (smarter but uses more quota)
+    this.smartMode = true; // Enable smart AI features
+    
     // Intent patterns (regex-based intent classification)
     this.intentPatterns = {
       greeting: [
@@ -25,8 +33,10 @@ class ChatbotService {
         /^(tạm biệt|bye|goodbye|see you|cảm ơn|thanks|thank you|hẹn gặp)/i
       ],
       product_search: [
-        /(tìm|search|kiếm|có|bán|muốn mua|cần|tư vấn).*(laptop|pc|máy tính|cpu|vga|ram|mainboard|màn hình|monitor|chuột|mouse|bàn phím|keyboard|tai nghe|headphone|loa|speaker)/i,
-        /(laptop|pc|máy tính|cpu|vga|ram|mainboard|màn hình|chuột|bàn phím|tai nghe|loa).*(nào|gì|loại)/i
+        /(tìm|search|kiếm|có|bán|muốn mua|cần|tư vấn|muốn xem|cho xem|hiển thị|xem|muốn|show).*(laptop|pc|máy tính|cpu|vga|ram|mainboard|màn hình|monitor|chuột|mouse|bàn phím|keyboard|tai nghe|headphone|headset|loa|speaker|phụ kiện|case|nguồn|tản nhiệt|ổ cứng|ssd|hdd)/i,
+        /(laptop|pc|máy tính|cpu|vga|ram|mainboard|màn hình|chuột|bàn phím|tai nghe|headphone|loa|phụ kiện|case|nguồn|tản nhiệt|ổ cứng).*(nào|gì|loại|tất cả|all)/i,
+        /(tất cả|all|danh sách|list).*(sản phẩm|product).*(laptop|pc|máy tính|cpu|vga|ram|mainboard|màn hình|chuột|bàn phím|tai nghe|headphone|loa|phụ kiện)/i,
+        /^(laptop|pc|máy tính|cpu|vga|ram|mainboard|màn hình|chuột|bàn phím|tai nghe|headphone|loa)$/i
       ],
       product_inquiry: [
         /(thông tin|chi tiết|spec|cấu hình|mô tả).*(sản phẩm|product)/i,
@@ -77,46 +87,51 @@ class ChatbotService {
       ]
     };
 
-    // Quick reply suggestions
+    // Quick reply suggestions - Premium Version
     this.quickReplies = {
       greeting: [
-        'Tìm sản phẩm',
-        'Kiểm tra đơn hàng',
-        'Hỗ trợ kỹ thuật',
-        'Chính sách đổi trả'
+        '🎮 Laptop Gaming',
+        '💼 PC Văn phòng',
+        '📦 Kiểm tra đơn hàng',
+        '🎧 Phụ kiện Gaming'
       ],
       product_search: [
-        'Laptop gaming',
-        'PC văn phòng',
-        'Phụ kiện',
-        'Xem thêm danh mục'
+        '💻 So sánh sản phẩm',
+        '🔥 Sản phẩm HOT',
+        '💰 Dưới 15 triệu',
+        '🏷️ Đang khuyến mãi'
       ],
       order_status: [
-        'Nhập mã đơn hàng',
-        'Đơn hàng gần đây',
-        'Liên hệ hỗ trợ'
+        '📝 Nhập mã đơn hàng',
+        '📋 Đơn hàng gần đây',
+        '📞 Liên hệ hỗ trợ'
+      ],
+      after_search: [
+        '🔍 Tìm thêm sản phẩm',
+        '⚖️ So sánh',
+        '💡 Tư vấn thêm'
       ]
     };
 
-    // Response templates
+    // Response templates - Premium Version
     this.responseTemplates = {
       greeting: [
-        'Xin chào! 👋 Tôi là trợ lý ảo của TechStore. Tôi có thể giúp bạn tìm sản phẩm, kiểm tra đơn hàng, hoặc giải đáp thắc mắc. Bạn cần hỗ trợ gì?',
-        'Chào bạn! Rất vui được hỗ trợ bạn hôm nay. Bạn đang tìm kiếm sản phẩm gì hay cần giúp đỡ về đơn hàng?'
+        'Xin chào! 👋 Tôi là **TechBot AI** - trợ lý thông minh của TechStore. Tôi có thể giúp bạn tìm sản phẩm phù hợp, tư vấn cấu hình, và giải đáp mọi thắc mắc. Bạn cần hỗ trợ gì? 🚀',
+        'Chào bạn! 😊 Rất vui được hỗ trợ! Tôi có thể giúp bạn tìm kiếm, so sánh sản phẩm, hoặc kiểm tra đơn hàng. Bạn đang quan tâm đến gì?'
       ],
       farewell: [
-        'Cảm ơn bạn đã ghé thăm TechStore! Hẹn gặp lại bạn. Chúc bạn một ngày tốt lành! 👋',
-        'Tạm biệt! Nếu có thắc mắc gì, đừng ngại hỏi nhé. Chúc bạn mua sắm vui vẻ! 🎉'
+        'Cảm ơn bạn! 🙏 Rất vui được hỗ trợ. Nếu cần gì, cứ quay lại nhé! Chúc bạn mua sắm vui vẻ! 🎉',
+        'Tạm biệt bạn! 👋 Hy vọng đã giúp được bạn. Chúc bạn một ngày tuyệt vời!'
       ],
       order_not_found: [
-        'Xin lỗi, tôi không tìm thấy đơn hàng với mã này. Bạn có thể kiểm tra lại mã đơn hàng hoặc đăng nhập để xem đơn hàng của mình.'
+        'Hmm, tôi không tìm thấy đơn hàng này 🔍. Bạn có thể kiểm tra lại mã đơn hàng hoặc đăng nhập để xem danh sách đơn hàng của mình.'
       ],
       no_product_found: [
-        'Xin lỗi, tôi không tìm thấy sản phẩm phù hợp. Bạn có thể thử tìm với từ khóa khác hoặc duyệt theo danh mục.'
+        'Rất tiếc, tôi chưa tìm thấy sản phẩm phù hợp 😅. Bạn có thể thử từ khóa khác hoặc cho tôi biết thêm về nhu cầu của bạn!'
       ],
       fallback: [
-        'Xin lỗi, tôi chưa hiểu rõ yêu cầu của bạn. Bạn có thể nói rõ hơn hoặc chọn một trong các tùy chọn sau:',
-        'Tôi không chắc tôi hiểu đúng ý bạn. Bạn có thể thử hỏi theo cách khác hoặc liên hệ nhân viên hỗ trợ.'
+        'Tôi cần thêm thông tin để hỗ trợ tốt hơn 🤔. Bạn có thể cho tôi biết cụ thể hơn không?',
+        'Hmm, tôi chưa hiểu rõ lắm 💭. Bạn có thể mô tả chi tiết hơn hoặc chọn một gợi ý bên dưới!'
       ]
     };
   }
@@ -233,51 +248,180 @@ class ChatbotService {
   // ==================== DATABASE QUERIES ====================
 
   /**
-   * Tìm kiếm sản phẩm
+   * Smart Product Search - Sử dụng Semantic Search + Traditional Search
+   * Kết hợp TF-IDF, text search và regex để tìm sản phẩm chính xác nhất
    */
   async searchProducts(query, options = {}) {
-    const { limit = 5, category = null, brand = null, maxPrice = null, minPrice = null } = options;
+    const { limit = 5, category = null, brand = null, maxPrice = null, minPrice = null, useSemanticSearch = true } = options;
 
     const filter = { stock: { $gt: 0 } };
     
-    if (category) filter.category = category;
+    // Use regex for category matching to handle variations
+    if (category) filter.category = new RegExp(category, 'i');
     if (brand) filter.brand = new RegExp(brand, 'i');
     if (maxPrice) filter.price = { ...filter.price, $lte: maxPrice };
     if (minPrice) filter.price = { ...filter.price, $gte: minPrice };
 
     try {
-      // Try text search first
+      // 1. Try Semantic Search first for best relevance
+      if (useSemanticSearch && this.smartMode) {
+        try {
+          const semanticResults = await SemanticSearchService.search(query, {
+            limit: limit * 2,
+            category,
+            brand,
+            maxPrice,
+            minPrice
+          });
+          
+          if (semanticResults && semanticResults.length > 0) {
+            // Filter and enrich results
+            const enrichedResults = semanticResults
+              .filter(r => r.product.stock > 0)
+              .slice(0, limit)
+              .map(r => ({
+                ...r.product,
+                _id: r.product._id,
+                relevanceScore: r.score
+              }));
+            
+            if (enrichedResults.length > 0) {
+              return enrichedResults;
+            }
+          }
+        } catch (semanticError) {
+          console.log('Semantic search fallback to traditional:', semanticError.message);
+        }
+      }
+
+      // 2. If category is specified, search within that category first
+      if (category) {
+        const categoryProducts = await Product.find(filter)
+          .sort({ rating: -1, reviewCount: -1 })
+          .limit(limit)
+          .select('name price image images category brand rating stock salePrice description');
+        
+        if (categoryProducts.length > 0) {
+          return categoryProducts;
+        }
+      }
+
+      // 3. Try text search with MongoDB
       const textSearchResults = await Product.find(
         { ...filter, $text: { $search: query } },
         { score: { $meta: 'textScore' } }
       )
       .sort({ score: { $meta: 'textScore' } })
       .limit(limit)
-      .select('name price image category brand rating stock');
+      .select('name price image images category brand rating stock salePrice description');
 
       if (textSearchResults.length > 0) {
         return textSearchResults;
       }
 
-      // Fallback to regex search
+      // 4. Fallback to regex search with multiple patterns
+      const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+      const regexPatterns = queryWords.map(w => new RegExp(w, 'i'));
+      
       const regexFilter = {
         ...filter,
         $or: [
           { name: new RegExp(query, 'i') },
           { description: new RegExp(query, 'i') },
-          { brand: new RegExp(query, 'i') }
+          { brand: new RegExp(query, 'i') },
+          { category: new RegExp(query, 'i') },
+          // Match any word from query
+          ...regexPatterns.map(pattern => ({ name: pattern })),
+          ...regexPatterns.map(pattern => ({ brand: pattern }))
         ]
       };
 
       return Product.find(regexFilter)
-        .sort({ rating: -1 })
+        .sort({ rating: -1, reviewCount: -1 })
         .limit(limit)
-        .select('name price image category brand rating stock');
+        .select('name price image images category brand rating stock salePrice description');
 
     } catch (error) {
       console.error('Search error:', error);
       return [];
     }
+  }
+
+  /**
+   * Smart Search - Tìm kiếm thông minh với Gemini analysis
+   */
+  async smartSearch(message, userContext = {}) {
+    // Use Gemini to analyze the query and extract structured information
+    if (this.smartMode && GeminiService.isReady()) {
+      try {
+        const analysis = await GeminiService.analyzeIntent(message);
+        if (analysis) {
+          const searchOptions = {
+            limit: 5,
+            category: this.mapProductTypeToCategory(analysis.entities?.product_type),
+            brand: analysis.entities?.brand,
+            minPrice: analysis.entities?.price_range?.min,
+            maxPrice: analysis.entities?.price_range?.max
+          };
+          
+          // Clean up null values
+          Object.keys(searchOptions).forEach(key => {
+            if (searchOptions[key] === null || searchOptions[key] === undefined) {
+              delete searchOptions[key];
+            }
+          });
+          
+          return { products: await this.searchProducts(message, searchOptions), analysis };
+        }
+      } catch (error) {
+        console.log('Smart search fallback:', error.message);
+      }
+    }
+    
+    // Fallback to regular search with entity extraction
+    const entities = this.extractEntities(message);
+    const categoryEntity = entities.find(e => e.type === 'category');
+    const brandEntity = entities.find(e => e.type === 'brand');
+    const priceEntities = entities.filter(e => e.type === 'price');
+    
+    const searchOptions = { limit: 5 };
+    if (categoryEntity) searchOptions.category = categoryEntity.value;
+    if (brandEntity) searchOptions.brand = brandEntity.value;
+    if (priceEntities.length > 0) {
+      const prices = priceEntities.map(e => e.value).sort((a, b) => a - b);
+      searchOptions.minPrice = prices[0];
+      if (prices.length > 1) searchOptions.maxPrice = prices[prices.length - 1];
+    }
+    
+    return { products: await this.searchProducts(message, searchOptions), analysis: null };
+  }
+
+  /**
+   * Map product type from Gemini to database category
+   */
+  mapProductTypeToCategory(productType) {
+    if (!productType) return null;
+    
+    const mapping = {
+      'laptop': 'Laptop',
+      'pc': 'PC',
+      'cpu': 'CPU',
+      'vga': 'VGA',
+      'ram': 'RAM',
+      'keyboard': 'Bàn phím',
+      'mouse': 'Chuột',
+      'headphone': 'Tai nghe',
+      'speaker': 'Loa',
+      'monitor': 'Màn hình',
+      'ssd': 'Ổ cứng',
+      'hdd': 'Ổ cứng',
+      'mainboard': 'Mainboard',
+      'case': 'Case',
+      'psu': 'Nguồn',
+      'cooler': 'Tản nhiệt'
+    };
+    
+    return mapping[productType?.toLowerCase()] || null;
   }
 
   /**
@@ -441,7 +585,8 @@ class ChatbotService {
     if (products.length > 0) {
       const categoryText = categoryEntity ? ` ${categoryEntity.value}` : '';
       const brandText = brandEntity ? ` ${brandEntity.value}` : '';
-      return `Đây là một số sản phẩm${categoryText}${brandText} phù hợp với yêu cầu của bạn:\n\n${products.map((p, i) => `${i + 1}. **${p.name}** - ${p.price.toLocaleString()}đ ${p.stock > 0 ? '✅' : '❌ Hết hàng'}`).join('\n')}\n\nBạn muốn xem chi tiết sản phẩm nào?`;
+      // Only return concise text - products will be displayed as cards
+      return `Đây là một số sản phẩm${categoryText}${brandText} phù hợp với yêu cầu của bạn. Bạn có thể click vào sản phẩm để xem chi tiết!`;
     }
 
     return this.getRandomResponse('no_product_found');
@@ -449,10 +594,12 @@ class ChatbotService {
 
   async handleProductInquiry(userContext, response) {
     if (userContext.currentProduct) {
-      const product = await Product.findById(userContext.currentProduct);
+      const product = await Product.findById(userContext.currentProduct)
+        .select('name price image images category brand rating stock salePrice description');
       if (product) {
         response.products = [product];
-        return `**${product.name}**\n\n💰 Giá: ${product.price.toLocaleString()}đ\n⭐ Đánh giá: ${product.rating}/5\n📦 Tình trạng: ${product.stock > 0 ? `Còn ${product.stock} sản phẩm` : 'Hết hàng'}\n\n${product.description?.substring(0, 200)}...\n\nBạn muốn biết thêm thông tin gì về sản phẩm này?`;
+        // Concise text - product details shown in card
+        return `Đây là thông tin sản phẩm bạn quan tâm. Bạn có thể click vào để xem chi tiết hoặc hỏi thêm!`;
       }
     }
     return 'Bạn đang muốn hỏi về sản phẩm nào? Hãy cho tôi biết tên hoặc danh mục sản phẩm.';
@@ -555,8 +702,30 @@ class ChatbotService {
 
       if (products.length >= 2) {
         response.products = products;
-        return `**So sánh sản phẩm**\n\n${products.map(p => `📱 **${p.name}**\n• Giá: ${p.price.toLocaleString()}đ\n• Đánh giá: ${p.rating}/5`).join('\n\n')}\n\nBạn muốn biết thêm chi tiết gì?`;
+        
+        // Use Gemini for intelligent comparison
+        if (this.useGemini && GeminiService.isReady()) {
+          try {
+            const geminiComparison = await GeminiService.compareProducts(products);
+            if (geminiComparison) {
+              return `**So sánh sản phẩm**\n\n${geminiComparison}`;
+            }
+          } catch (error) {
+            console.error('Gemini comparison error:', error);
+          }
+        }
+        
+        // Concise text - products displayed as cards below
+        return `Đây là ${products.length} sản phẩm để so sánh. Click vào để xem chi tiết từng sản phẩm!`;
       }
+    }
+
+    // Try to search for products to compare
+    const searchQuery = categoryEntity ? categoryEntity.value : message.replace(/so sánh|compare|vs|versus/gi, '').trim();
+    const searchProducts = await this.searchProducts(searchQuery, { limit: 3 });
+    if (searchProducts.length > 0) {
+      response.products = searchProducts;
+      return `Đây là một số sản phẩm liên quan. Bạn muốn so sánh những sản phẩm nào?`;
     }
 
     return 'Bạn muốn so sánh những sản phẩm nào? Hãy cho tôi biết tên hoặc thương hiệu cụ thể.';
@@ -567,24 +736,125 @@ class ChatbotService {
   }
 
   async handleUnknownIntent(message, userContext, response) {
-    // Try to find products matching the message
-    const products = await this.searchProducts(message, { limit: 3 });
-    
-    if (products.length > 0) {
-      response.products = products;
-      return `Có phải bạn đang tìm những sản phẩm này?\n\n${products.map((p, i) => `${i + 1}. **${p.name}** - ${p.price.toLocaleString()}đ`).join('\n')}\n\nHoặc bạn có thể cho tôi biết rõ hơn bạn cần gì?`;
-    }
-
-    // Get recommendations if user has browsing history
-    if (userContext.isAuthenticated) {
-      const recommendations = await RecommendationService.getPersonalizedRecommendations(userContext.userId, { limit: 3 });
-      if (recommendations.length > 0) {
-        response.products = recommendations;
-        return `${this.getRandomResponse('fallback')}\n\nDựa trên lịch sử của bạn, có thể bạn quan tâm đến:\n${recommendations.map((p, i) => `${i + 1}. **${p.name}** - ${p.price.toLocaleString()}đ`).join('\n')}`;
+    // SMART MODE: Use Gemini for intelligent understanding
+    if (this.smartMode && this.useGemini && GeminiService.isReady()) {
+      try {
+        // Step 1: Use smartSearch for better product matching
+        const { products, analysis } = await this.smartSearch(message, userContext);
+        
+        // Step 2: Get conversation history for context
+        const categories = await this.getCategories();
+        
+        // Step 3: Build rich context for Gemini
+        const richContext = {
+          products: products.slice(0, 5),
+          categories,
+          userInfo: userContext,
+          analysis, // Include Gemini's own analysis
+          conversationState: userContext.currentState || 'general',
+          hasProducts: products.length > 0
+        };
+        
+        // Step 4: Get intelligent response from Gemini
+        const geminiResponse = await GeminiService.chat(message, [], richContext);
+        
+        if (geminiResponse && geminiResponse.text) {
+          // Add found products to response
+          if (products.length > 0) {
+            response.products = products.slice(0, 5);
+          }
+          
+          // Generate smart quick replies based on context
+          response.quickReplies = this.generateSmartQuickReplies(analysis, products);
+          
+          return geminiResponse.text;
+        }
+      } catch (error) {
+        console.error('Smart mode error:', error);
       }
     }
 
+    // FALLBACK: Traditional entity extraction
+    const entities = this.extractEntities(message);
+    const categoryEntity = entities.find(e => e.type === 'category');
+    const brandEntity = entities.find(e => e.type === 'brand');
+    const priceEntities = entities.filter(e => e.type === 'price');
+
+    let searchOptions = { limit: 5 };
+    if (categoryEntity) searchOptions.category = categoryEntity.value;
+    if (brandEntity) searchOptions.brand = brandEntity.value;
+    if (priceEntities.length > 0) {
+      const prices = priceEntities.map(e => e.value).sort((a, b) => a - b);
+      searchOptions.minPrice = prices[0];
+      if (prices.length > 1) searchOptions.maxPrice = prices[prices.length - 1];
+    }
+
+    const searchQuery = categoryEntity ? categoryEntity.value : message;
+    const products = await this.searchProducts(searchQuery, { ...searchOptions, limit: 5 });
+    
+    if (products.length > 0) {
+      response.products = products;
+      return `Đây là một số sản phẩm phù hợp với yêu cầu của bạn! Click vào để xem chi tiết.`;
+    }
+
+    // Get personalized recommendations
+    if (userContext.isAuthenticated) {
+      const recommendations = await RecommendationService.getPersonalizedRecommendations(userContext.userId, { limit: 5 });
+      if (recommendations.length > 0) {
+        response.products = recommendations;
+        return `Dựa trên lịch sử của bạn, đây là một số gợi ý:`;
+      }
+    }
+
+    // Get popular products as last resort
+    const popularProducts = await Product.find({ stock: { $gt: 0 } })
+      .sort({ rating: -1, reviewCount: -1 })
+      .limit(5)
+      .select('name price image images category brand rating stock salePrice');
+    
+    if (popularProducts.length > 0) {
+      response.products = popularProducts;
+      return `Tôi chưa hiểu rõ yêu cầu của bạn. Đây là một số sản phẩm phổ biến tại TechStore:`;
+    }
+
     return this.getRandomResponse('fallback');
+  }
+
+  /**
+   * Generate smart quick replies based on context
+   */
+  generateSmartQuickReplies(analysis, products) {
+    const quickReplies = [];
+    
+    if (analysis) {
+      // Based on intent
+      if (analysis.intent === 'product_search') {
+        quickReplies.push('So sánh sản phẩm');
+        quickReplies.push('Xem thêm sản phẩm');
+      }
+      
+      // Based on product type
+      if (analysis.entities?.product_type) {
+        const productType = analysis.entities.product_type;
+        if (productType === 'laptop') {
+          quickReplies.push('Laptop gaming', 'Laptop văn phòng');
+        } else if (productType === 'pc') {
+          quickReplies.push('PC gaming', 'PC đồ họa');
+        }
+      }
+      
+      // Price inquiry
+      if (!analysis.entities?.price_range?.max) {
+        quickReplies.push('Dưới 10 triệu', 'Dưới 20 triệu', 'Trên 30 triệu');
+      }
+    }
+    
+    // Default quick replies if none generated
+    if (quickReplies.length === 0) {
+      quickReplies.push('Tư vấn thêm', 'Xem sản phẩm khác', 'Liên hệ hỗ trợ');
+    }
+    
+    return quickReplies.slice(0, 4);
   }
 
   // ==================== MAIN CHAT METHOD ====================

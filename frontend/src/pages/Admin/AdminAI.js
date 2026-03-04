@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { RiRobot2Line, RiSearchLine, RiBarChartLine, RiSettings4Line, RiRefreshLine, RiPlayCircleLine, RiFileChartLine } from 'react-icons/ri';
-import { FiMessageCircle, FiTrendingUp, FiDatabase, FiCpu, FiActivity, FiCheckCircle } from 'react-icons/fi';
+import { RiRobot2Line, RiSearchLine, RiBarChartLine, RiSettings4Line, RiRefreshLine, RiPlayCircleLine, RiFileChartLine, RiSendPlaneFill } from 'react-icons/ri';
+import { FiMessageCircle, FiTrendingUp, FiDatabase, FiCpu, FiActivity, FiCheckCircle, FiAlertCircle, FiZap } from 'react-icons/fi';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import './AdminAI.css';
@@ -14,6 +14,10 @@ const AdminAI = () => {
   const [aiStats, setAiStats] = useState(null);
   const [evaluationReport, setEvaluationReport] = useState(null);
   const [forecast, setForecast] = useState(null);
+  const [geminiStatus, setGeminiStatus] = useState(null);
+  const [geminiTestMessage, setGeminiTestMessage] = useState('');
+  const [geminiTestResponse, setGeminiTestResponse] = useState(null);
+  const [geminiTesting, setGeminiTesting] = useState(false);
 
   const getAuthHeader = useCallback(() => {
     const token = localStorage.getItem('token');
@@ -77,17 +81,29 @@ const AdminAI = () => {
     }
   }, [getAuthHeader]);
 
+  const loadGeminiStatus = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/ai/gemini/status`, getAuthHeader()).catch(() => null);
+      setGeminiStatus(response?.data?.gemini || null);
+    } catch (error) {
+      console.error('Error loading Gemini status:', error);
+    }
+  }, [getAuthHeader]);
+
   useEffect(() => {
     if (activeTab === 'overview') {
       loadAIStats();
+      loadGeminiStatus();
     } else if (activeTab === 'conversations') {
       loadConversations();
     } else if (activeTab === 'evaluation') {
       loadEvaluationReport();
     } else if (activeTab === 'forecast') {
       loadForecast();
+    } else if (activeTab === 'settings') {
+      loadGeminiStatus();
     }
-  }, [activeTab, loadAIStats, loadConversations, loadEvaluationReport, loadForecast]);
+  }, [activeTab, loadAIStats, loadConversations, loadEvaluationReport, loadForecast, loadGeminiStatus]);
 
   const handleRunEvaluation = async (modelType) => {
     try {
@@ -164,6 +180,26 @@ const AdminAI = () => {
     }
   };
 
+  const handleGeminiTest = async (e) => {
+    e.preventDefault();
+    if (!geminiTestMessage.trim()) return;
+
+    try {
+      setGeminiTesting(true);
+      setGeminiTestResponse(null);
+      
+      const response = await axios.post(`${API_URL}/ai/gemini/chat`, {
+        message: geminiTestMessage
+      }, getAuthHeader());
+
+      setGeminiTestResponse(response.data.response);
+    } catch (error) {
+      Swal.fire('Lỗi', error.response?.data?.message || 'Không thể kết nối với Gemini AI', 'error');
+    } finally {
+      setGeminiTesting(false);
+    }
+  };
+
   const tabs = [
     { id: 'overview', label: 'Tổng quan', icon: RiBarChartLine },
     { id: 'conversations', label: 'Hội thoại AI', icon: FiMessageCircle },
@@ -194,6 +230,19 @@ const AdminAI = () => {
             <h4>Tìm kiếm ngữ nghĩa</h4>
             <p className="stat-value status-active"><FiCheckCircle /> Hoạt động</p>
             <span className="stat-label">Hybrid Search</span>
+          </div>
+        </div>
+
+        <div className="ai-stat-card">
+          <div className="stat-icon gemini">
+            <FiZap />
+          </div>
+          <div className="stat-info">
+            <h4>Google Gemini AI</h4>
+            <p className={`stat-value ${geminiStatus?.initialized ? 'status-active' : 'status-inactive'}`}>
+              {geminiStatus?.initialized ? <><FiCheckCircle /> Hoạt động</> : <><FiAlertCircle /> Chưa cấu hình</>}
+            </p>
+            <span className="stat-label">{geminiStatus?.model || 'gemini-2.0-flash'}</span>
           </div>
         </div>
 
@@ -488,6 +537,57 @@ const AdminAI = () => {
           <button className="settings-btn" onClick={handleInitializeTFIDF}>
             <RiRefreshLine /> Khởi tạo TF-IDF
           </button>
+        </div>
+
+        <div className="settings-card gemini-card">
+          <div className="settings-header">
+            <FiZap className="settings-icon gemini" />
+            <h4>Google Gemini AI</h4>
+            <span className={`status-badge ${geminiStatus?.initialized ? 'active' : 'inactive'}`}>
+              {geminiStatus?.initialized ? 'Active' : 'Inactive'}
+            </span>
+          </div>
+          <p>AI đàm thoại thông minh sử dụng Google Gemini để xử lý ngôn ngữ tự nhiên.</p>
+          
+          {geminiStatus?.initialized ? (
+            <div className="gemini-test-section">
+              <form onSubmit={handleGeminiTest} className="gemini-test-form">
+                <input
+                  type="text"
+                  placeholder="Nhập tin nhắn test..."
+                  value={geminiTestMessage}
+                  onChange={(e) => setGeminiTestMessage(e.target.value)}
+                  className="gemini-test-input"
+                  disabled={geminiTesting}
+                />
+                <button type="submit" className="gemini-test-btn" disabled={geminiTesting || !geminiTestMessage.trim()}>
+                  <RiSendPlaneFill />
+                </button>
+              </form>
+              {geminiTestResponse && (
+                <div className="gemini-test-response">
+                  <strong>Phản hồi:</strong>
+                  <p>{geminiTestResponse.text}</p>
+                  {geminiTestResponse.model && (
+                    <span className="response-meta">Model: {geminiTestResponse.model}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="gemini-setup-info">
+              <p>Để sử dụng Gemini AI, thêm <code>GEMINI_API_KEY</code> vào file <code>.env</code></p>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">
+                Lấy API Key tại Google AI Studio →
+              </a>
+            </div>
+          )}
+          
+          <div className="settings-info" style={{marginTop: '1rem'}}>
+            <span><FiCheckCircle /> Natural Language Understanding</span>
+            <span><FiCheckCircle /> Context-aware Responses</span>
+            <span><FiCheckCircle /> Product Recommendations</span>
+          </div>
         </div>
 
         <div className="settings-card">

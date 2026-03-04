@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+*.pyo
+.env
+.git
+.gitignore
+*.md
+.vscode
+model_data/*.pkl
+model_data/*.pt
+model_data/*.faiss
+logs/

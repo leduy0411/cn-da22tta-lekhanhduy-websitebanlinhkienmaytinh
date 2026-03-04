@@ -3,6 +3,9 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { productAPI } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import MegaMenu from '../components/MegaMenu';
+import RecommendationSection from '../components/RecommendationSection';
+import { useTrendingProducts, useUserRecommendations } from '../hooks/useRecommendations';
+import { useAuth } from '../context/AuthContext';
 import './Home.css';
 
 const Home = ({ searchQuery }) => {
@@ -32,6 +35,11 @@ const Home = ({ searchQuery }) => {
   const [urlKey, setUrlKey] = useState(Date.now());
   const [expandedCategories, setExpandedCategories] = useState([]); // Track expanded category descriptions
   const [expandedColumns, setExpandedColumns] = useState([]); // Track expanded filter columns
+
+  // === AI Recommendation Hooks ===
+  const { user } = useAuth();
+  const { products: trendingProducts, loading: trendingLoading, source: trendingSource } = useTrendingProducts(12);
+  const { recommendations: personalRecs, loading: personalLoading, source: personalSource, trackClick } = useUserRecommendations(user?._id, 12);
 
   const bannerImages = [
     `${process.env.PUBLIC_URL}/img/img-banner-dai/gearvn-laptop-gaming-t8-header-banner.png`,
@@ -578,6 +586,29 @@ const Home = ({ searchQuery }) => {
           </div>
         )
       }
+
+      {/* === AI Recommendation Sections === */}
+      {!searchQuery && !filters.category && (
+        <>
+          <RecommendationSection
+            title="Sản phẩm thịnh hành"
+            icon="🔥"
+            products={trendingProducts}
+            loading={trendingLoading}
+            source={trendingSource}
+          />
+          {user && (
+            <RecommendationSection
+              title="Gợi ý cho bạn"
+              icon="🤖"
+              products={personalRecs}
+              loading={personalLoading}
+              source={personalSource}
+              onProductClick={trackClick}
+            />
+          )}
+        </>
+      )}
 
       <div className="container">
         {searchQuery && (

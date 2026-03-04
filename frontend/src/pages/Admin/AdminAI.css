@@ -645,6 +645,148 @@
   color: #38a169;
 }
 
+/* Gemini AI Styles */
+.stat-icon.gemini {
+  background: linear-gradient(135deg, #4285f4 0%, #34a853 50%, #fbbc05 100%);
+  color: white;
+}
+
+.settings-icon.gemini {
+  background: linear-gradient(135deg, #4285f4 0%, #34a853 50%, #fbbc05 100%);
+}
+
+.status-badge {
+  margin-left: auto;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+.status-badge.inactive {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.stat-value.status-inactive {
+  color: #e53e3e;
+  font-size: 0.95rem;
+}
+
+.gemini-card {
+  grid-column: span 2;
+}
+
+.gemini-test-section {
+  margin-top: 1rem;
+}
+
+.gemini-test-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.gemini-test-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.gemini-test-input:focus {
+  outline: none;
+  border-color: #4285f4;
+}
+
+.gemini-test-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.gemini-test-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+}
+
+.gemini-test-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gemini-test-response {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.gemini-test-response strong {
+  color: #4285f4;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.gemini-test-response p {
+  margin: 0;
+  color: #4a5568;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.response-meta {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #a0aec0;
+}
+
+.gemini-setup-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff5f5;
+  border-radius: 10px;
+  border: 1px solid #feb2b2;
+}
+
+.gemini-setup-info p {
+  margin: 0 0 0.5rem 0;
+  color: #c53030;
+  font-size: 0.9rem;
+}
+
+.gemini-setup-info code {
+  background: #fed7d7;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.gemini-setup-info a {
+  color: #4285f4;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.gemini-setup-info a:hover {
+  text-decoration: underline;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .admin-ai {
@@ -677,5 +819,9 @@
   .header-actions button {
     flex: 1;
     justify-content: center;
+  }
+
+  .gemini-card {
+    grid-column: span 1;
   }
 }

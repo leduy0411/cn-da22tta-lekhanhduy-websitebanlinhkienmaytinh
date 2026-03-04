@@ -1,12 +1,60 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { FiShoppingCart, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
 import './ProductCard.css';
 
-const ProductCard = ({ product }) => {
+// Framer Motion variants cho animations
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" }
+  },
+  hover: {
+    y: -8,
+    boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+    transition: { duration: 0.3, ease: "easeOut" }
+  },
+  tap: {
+    scale: 0.98,
+    transition: { duration: 0.1 }
+  }
+};
+
+const imageVariants = {
+  hover: {
+    scale: 1.08,
+    transition: { duration: 0.4, ease: "easeOut" }
+  }
+};
+
+const buttonVariants = {
+  hover: {
+    scale: 1.05,
+    boxShadow: "0 5px 15px rgba(59, 130, 246, 0.4)",
+    transition: { duration: 0.2 }
+  },
+  tap: {
+    scale: 0.95,
+    transition: { duration: 0.1 }
+  }
+};
+
+const badgeVariants = {
+  initial: { scale: 0, rotate: -15 },
+  animate: { 
+    scale: 1, 
+    rotate: 0,
+    transition: { type: "spring", stiffness: 500, damping: 25 }
+  }
+};
+
+const ProductCard = ({ product, index = 0 }) => {
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -79,25 +127,46 @@ const ProductCard = ({ product }) => {
   const specs = getSpecs();
 
   return (
-    <Link to={`/product/${product._id}`} className="product-card">
-      {discount > 0 && (
-        <div className="discount-badge">-{discount}%</div>
-      )}
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover="hover"
+      whileTap="tap"
+      transition={{ delay: index * 0.05 }}
+      className="product-card-wrapper"
+    >
+      <Link to={`/product/${product._id}`} className="product-card">
+        {discount > 0 && (
+          <motion.div 
+            className="discount-badge"
+            variants={badgeVariants}
+            initial="initial"
+            animate="animate"
+          >
+            -{discount}%
+          </motion.div>
+        )}
 
-      <div className="product-image">
-        <img src={product.images?.[0] || product.image} alt={product.name} />
-        {product.stock === 0 && <div className="out-of-stock">Hết hàng</div>}
-      </div>
+        <div className="product-image">
+          <motion.img 
+            src={product.images?.[0] || product.image} 
+            alt={product.name}
+            variants={imageVariants}
+            whileHover="hover"
+          />
+          {product.stock === 0 && <div className="out-of-stock">Hết hàng</div>}
+        </div>
 
-      <div className="product-info">
-        <h3 className="product-name">{product.name}</h3>
+        <div className="product-info">
+          <h3 className="product-name">{product.name}</h3>
 
-        {specs.length > 0 && (
-          <div className="product-specs">
-            {specs.map(([key, value]) => (
-              <div key={key} className="spec-item">
-                <span className="spec-icon">●</span>
-                <span>{value}</span>
+          {specs.length > 0 && (
+            <div className="product-specs">
+              {specs.map(([key, value]) => (
+                <div key={key} className="spec-item">
+                  <span className="spec-icon">●</span>
+                  <span>{value}</span>
               </div>
             ))}
           </div>
@@ -112,25 +181,31 @@ const ProductCard = ({ product }) => {
           </div>
 
           <div className="action-buttons">
-            <button
+            <motion.button
               className="add-to-cart-btn"
               onClick={handleAddToCart}
               disabled={adding || product.stock === 0}
               title="Thêm vào giỏ hàng"
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
             >
               <FiShoppingCart />
               {adding ? 'Đang thêm...' : 'Thêm'}
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               className="buy-now-btn"
               onClick={handleBuyNow}
               disabled={adding || product.stock === 0}
               title="Mua ngay"
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
             >
               <FiShoppingBag />
               Mua
-            </button>
+            </motion.button>
           </div>
         </div>
 
@@ -149,6 +224,7 @@ const ProductCard = ({ product }) => {
         )}
       </div>
     </Link>
+    </motion.div>
   );
 };
 

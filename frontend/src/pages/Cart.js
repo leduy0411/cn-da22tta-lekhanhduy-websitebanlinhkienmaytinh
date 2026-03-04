@@ -1,13 +1,22 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiTrash2, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
+import { useCartRecommendations } from '../hooks/useRecommendations';
+import RecommendationSection from '../components/RecommendationSection';
 import Swal from 'sweetalert2';
 import './Cart.css';
 
 const Cart = () => {
   const navigate = useNavigate();
   const { cart, updateCartItem, removeFromCart, clearCart } = useCart();
+
+  // AI: Lấy ID sản phẩm trong giỏ để gợi ý mua kèm
+  const cartProductIds = useMemo(() => {
+    if (!cart?.items?.length) return [];
+    return cart.items.map(item => item.product?._id).filter(Boolean);
+  }, [cart?.items]);
+  const { recommendations: cartRecs, loading: cartRecsLoading, source: cartRecsSource } = useCartRecommendations(cartProductIds, 8);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -172,6 +181,17 @@ const Cart = () => {
             </button>
           </div>
         </div>
+
+        {/* AI Recommendation: Sản phẩm mua kèm */}
+        {cartRecs.length > 0 && (
+          <RecommendationSection
+            title="Có thể bạn cũng thích"
+            icon="🛒"
+            products={cartRecs}
+            loading={cartRecsLoading}
+            source={cartRecsSource}
+          />
+        )}
       </div>
     </div>
   );

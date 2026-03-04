@@ -7,7 +7,8 @@
   }
   
   .container {
-    padding: 0 0.75rem !important;
+    padding: 0 0.5rem !important;
+    overflow-x: hidden !important;
   }
   
   h1 {
@@ -25,6 +26,11 @@
   button, .btn {
     padding: 0.625rem 1rem !important;
     font-size: 0.9rem !important;
+  }
+  
+  /* Fix home page layout */
+  .home {
+    overflow-x: hidden !important;
   }
 }
 
@@ -100,12 +106,25 @@
     flex-direction: column !important;
   }
   
+  /* Fix content-wrapper layout on mobile */
+  .content-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: unset !important;
+    gap: 0.75rem !important;
+  }
+  
   /* Sidebar Categories - Show as horizontal scroll on mobile */
   .sidebar {
     width: 100% !important;
+    max-width: 100% !important;
     margin-right: 0 !important;
     margin-bottom: 0.75rem !important;
     padding: 0 !important;
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex-shrink: 0 !important;
   }
   
   .sidebar-categories-section {
@@ -119,6 +138,7 @@
   
   .sidebar-categories-grid {
     display: flex !important;
+    flex-wrap: nowrap !important;
     overflow-x: auto !important;
     gap: 0.5rem !important;
     padding-bottom: 0.5rem !important;
@@ -223,6 +243,14 @@
   .main-content {
     width: 100% !important;
     padding: 0 !important;
+    flex: 1 !important;
+    min-height: 200px !important;
+  }
+  
+  /* Ensure no-products message displays correctly */
+  .no-products {
+    padding: 2rem 1rem !important;
+    text-align: center !important;
   }
   
   .subcategories-horizontal-section {
@@ -234,10 +262,58 @@
     padding: 0.35rem 0.65rem !important;
   }
   
+  /* Subcategories filter panel on mobile */
+  .subcategories-filter-panel {
+    padding: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .subcategories-columns {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  
+  .filter-column {
+    width: 100% !important;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.4rem !important;
     padding: 0.4rem !important;
+  }
+  
+  /* Categories Grid Section on mobile */
+  .categories-grid-section {
+    padding: 0.75rem !important;
+    margin: 0.5rem 0 !important;
+    border-radius: 12px !important;
+  }
+  
+  .categories-grid-title {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .categories-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 0.3rem !important;
+  }
+  
+  .category-card {
+    min-height: 90px !important;
+    padding: 0.25rem !important;
+  }
+  
+  .category-image {
+    height: 50px !important;
+    margin-bottom: 0.2rem !important;
+  }
+  
+  .category-card h3 {
+    font-size: 0.6rem !important;
+    line-height: 1.1 !important;
   }
 }
 
@@ -673,10 +749,18 @@
 
 /* === TABLET RESPONSIVE (576px - 768px) === */
 @media (min-width: 577px) and (max-width: 768px) {
+  .content-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: unset !important;
+  }
+  
   .sidebar {
     width: 100% !important;
     margin-right: 0 !important;
     margin-bottom: 1.5rem !important;
+    position: static !important;
+    max-height: none !important;
   }
   
   .sidebar-categories-grid {
