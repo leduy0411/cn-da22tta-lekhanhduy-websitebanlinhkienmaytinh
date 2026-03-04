@@ -341,44 +341,130 @@
   }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 768px) {
   .register-page {
-    padding: 1rem;
+    padding: 0;
+    min-height: 100vh;
+    height: auto;
+  }
+
+  .register-container {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    border-radius: 0;
+    min-height: 100vh;
   }
 
   .register-branding {
-    padding: 1.5rem;
+    padding: 1.2rem;
+    min-height: 130px;
   }
 
   .brand-icon {
-    width: 70px;
-    height: 70px;
+    width: 50px;
+    height: 50px;
+    margin-bottom: 0.5rem;
   }
 
   .brand-icon svg {
-    width: 35px;
-    height: 35px;
+    width: 25px;
+    height: 25px;
   }
 
   .register-branding h1 {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .register-branding > .branding-content > p {
+    font-size: 0.85rem;
   }
 
   .register-form-section {
-    padding: 1.5rem;
+    padding: 1.5rem 1rem;
   }
 
   .form-header h2 {
-    font-size: 1.5rem;
-  }
-
-  .password-row {
-    grid-template-columns: 1fr;
+    font-size: 1.3rem;
   }
 
   .input-group input,
   .input-group textarea {
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    font-size: 0.95rem;
+    padding: 0.9rem 1rem 0.9rem 2.5rem;
+    font-size: 16px !important; /* Prevent iOS zoom */
+    min-height: 48px;
+    -webkit-appearance: none;
+  }
+
+  .password-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .submit-btn {
+    padding: 1rem;
+    font-size: 1rem;
+    min-height: 50px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .social-btn {
+    padding: 0.9rem;
+    min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .register-footer {
+    padding-top: 1rem;
+  }
+
+  .register-footer p {
+    font-size: 0.9rem;
+  }
+
+  .register-footer a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-branding {
+    padding: 1rem 0.75rem;
+    min-height: 110px;
+  }
+
+  .brand-icon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .register-branding h1 {
+    font-size: 1.2rem;
+  }
+
+  .register-form-section {
+    padding: 1.2rem 0.75rem;
+  }
+
+  .form-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .input-group input,
+  .input-group textarea {
+    padding: 0.85rem 0.9rem 0.85rem 2.3rem;
+  }
+}
+
+/* iOS Safe Area for Register */
+@supports (padding: max(0px)) {
+  @media (max-width: 768px) {
+    .register-page {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+      padding-top: max(0px, env(safe-area-inset-top));
+    }
   }
 }

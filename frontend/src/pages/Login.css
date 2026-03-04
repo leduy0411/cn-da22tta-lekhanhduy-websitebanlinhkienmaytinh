@@ -543,17 +543,179 @@
   }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 768px) {
+  .auth-page {
+    padding: 0;
+    min-height: 100vh;
+    height: auto;
+  }
+
   .auth-split-container {
     width: 100%;
+    max-width: 100%;
+    max-height: none;
     border-radius: 0;
+    min-height: 100vh;
+  }
+
+  .auth-branding {
+    padding: 1.5rem 1rem;
+    min-height: 180px;
+  }
+
+  .brand-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .brand-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .brand-slogan {
+    font-size: 0.85rem;
+    margin-bottom: 0;
   }
 
   .auth-form-container {
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1rem;
+    max-height: none;
   }
 
-  .social-login {
-    grid-template-columns: 1fr;
+  .auth-form-wrapper {
+    max-width: 100%;
+  }
+
+  .auth-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-input {
+    font-size: 16px !important; /* Prevent iOS zoom on focus */
+    padding: 0.9rem 1rem;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+
+  .submit-btn {
+    padding: 1rem;
+    font-size: 1rem;
+    min-height: 50px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .social-btn {
+    padding: 0.9rem;
+    font-size: 0.95rem;
+    min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .form-options {
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: flex-start;
+  }
+
+  .forgot-link {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-branding {
+    padding: 1.2rem 0.8rem;
+    min-height: 150px;
+  }
+
+  .brand-icon {
+    font-size: 2rem;
+  }
+
+  .brand-title {
+    font-size: 1.3rem;
+  }
+
+  .brand-slogan {
+    font-size: 0.8rem;
+  }
+
+  .auth-form-container {
+    padding: 1.2rem 0.8rem;
+  }
+
+  .auth-header {
+    margin-bottom: 1rem;
+  }
+
+  .auth-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .form-input {
+    padding: 0.85rem;
+  }
+
+  .submit-btn {
+    padding: 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .divider {
+    margin: 1rem 0;
+  }
+
+  .auth-footer {
+    padding-top: 1rem;
+  }
+
+  .auth-footer p {
+    font-size: 0.85rem;
+  }
+}
+
+/* iOS Safari Safe Area */
+@supports (padding: max(0px)) {
+  .auth-page {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
+/* Fix for mobile input focus */
+@media (max-width: 768px) {
+  .auth-page {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  input:focus,
+  button:focus {
+    outline: none;
+  }
+
+  /* Ensure form elements are easily tappable */
+  .form-group label,
+  .remember-me,
+  .forgot-link,
+  .register-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .password-toggle {
+    min-width: 44px;
+    min-height: 44px;
   }
 }

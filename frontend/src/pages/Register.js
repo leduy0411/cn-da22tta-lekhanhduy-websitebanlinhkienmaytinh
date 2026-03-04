@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiEye, FiEyeOff, FiUserPlus } from 'react-icons/fi';
@@ -20,6 +20,19 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Prevent iOS zoom on input focus
+  useEffect(() => {
+    const viewport = document.querySelector('meta[name=viewport]');
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    }
+    return () => {
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1');
+      }
+    };
+  }, []);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -30,6 +43,10 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (loading) return;
+    
     setLoading(true);
     setError('');
 
@@ -46,16 +63,21 @@ const Register = () => {
       return;
     }
 
-    const { confirmPassword, ...userData } = formData;
-    const result = await register(userData);
+    try {
+      const { confirmPassword, ...userData } = formData;
+      const result = await register(userData);
 
-    if (result.success) {
-      navigate('/');
-    } else {
-      setError(result.message);
+      if (result.success) {
+        navigate('/');
+      } else {
+        setError(result.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      }
+    } catch (err) {
+      console.error('Register error:', err);
+      setError('Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

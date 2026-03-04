@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaGoogle } from 'react-icons/fa';
@@ -17,6 +17,19 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  // Prevent iOS zoom on input focus
+  useEffect(() => {
+    const viewport = document.querySelector('meta[name=viewport]');
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    }
+    return () => {
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1');
+      }
+    };
+  }, []);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -27,26 +40,35 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (loading) return;
+    
     setLoading(true);
     setError('');
 
-    console.log('Đang đăng nhập với:', formData.email);
-    const result = await login(formData.email, formData.password);
-    console.log('Kết quả đăng nhập:', result);
+    try {
+      console.log('Đang đăng nhập với:', formData.email);
+      const result = await login(formData.email, formData.password);
+      console.log('Kết quả đăng nhập:', result);
 
-    if (result.success) {
-      // Chuyển hướng dựa vào role
-      if (result.user.role === 'admin' || result.user.role === 'staff') {
-        navigate('/admin');
+      if (result.success) {
+        // Chuyển hướng dựa vào role
+        if (result.user.role === 'admin' || result.user.role === 'staff') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
-        navigate('/');
+        setError(result.message);
+        console.error('Lỗi đăng nhập:', result.message);
       }
-    } else {
-      setError(result.message);
-      console.error('Lỗi đăng nhập:', result.message);
+    } catch (err) {
+      setError('Có lỗi xảy ra, vui lòng thử lại!');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleGoogleLogin = () => {
