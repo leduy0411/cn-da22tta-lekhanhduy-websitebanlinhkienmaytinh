@@ -42,9 +42,9 @@ const Home = ({ searchQuery }) => {
   const { recommendations: personalRecs, loading: personalLoading, source: personalSource, trackClick } = useUserRecommendations(user?._id, 12);
 
   const bannerImages = [
-    `${process.env.PUBLIC_URL}/img/img-banner-dai/gearvn-laptop-gaming-t8-header-banner.png`,
-    `${process.env.PUBLIC_URL}/img/img-banner-dai/gearvn-pc-gvn-rtx-5060-t9-header-banner.png`,
-    `${process.env.PUBLIC_URL}/img/img-banner-dai/thang_04_pc_banner_web_collection_1920x420.jpg`,
+    '/img/img-banner-dai/gearvn-laptop-gaming-t8-header-banner.png',
+    '/img/img-banner-dai/gearvn-pc-gvn-rtx-5060-t9-header-banner.png',
+    '/img/img-banner-dai/thang_04_pc_banner_web_collection_1920x420.jpg',
   ];
 
   const totalSlides = bannerImages.length;
@@ -415,7 +415,7 @@ const Home = ({ searchQuery }) => {
     // Tìm key phù hợp
     for (const [key, image] of Object.entries(imageMap)) {
       if (name.includes(key) || key.includes(name)) {
-        return process.env.PUBLIC_URL + image;
+        return image;
       }
     }
 
@@ -497,35 +497,35 @@ const Home = ({ searchQuery }) => {
         <div className="promo-cards-section">
           <div className="promo-cards-grid">
             <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Laptop&subcategory=Gaming')}>
-              <img src={`${process.env.PUBLIC_URL}/img/gearvn-laptop-gaming-slider-bot-t8.png`} alt="Laptop Gaming" />
+              <img src="/img/gearvn-laptop-gaming-slider-bot-t8.png" alt="Laptop Gaming" />
             </div>
 
             <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Laptop&subcategory=H%E1%BB%8Dc%20sinh%20-%20Sinh%20vi%C3%AAn')}>
-              <img src={`${process.env.PUBLIC_URL}/img/gearvn-laptop-van-phong-slider-bot-t8.png`} alt="Laptop Văn Phòng" />
+              <img src="/img/gearvn-laptop-van-phong-slider-bot-t8.png" alt="Laptop Văn Phòng" />
             </div>
 
             <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=PC')}>
-              <img src={`${process.env.PUBLIC_URL}/img/gearvn-pc-amd-sub-t8.png`} alt="PC AMD" />
+              <img src="/img/gearvn-pc-amd-sub-t8.png" alt="PC AMD" />
             </div>
 
             <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Chuột')}>
-              <img src={`${process.env.PUBLIC_URL}/img/gearvn-gaming-gear-sub-t8.png`} alt="Gaming Gear" />
+              <img src="/img/gearvn-gaming-gear-sub-t8.png" alt="Gaming Gear" />
             </div>
 
             <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Bàn%20phím')}>
-              <img src={`${process.env.PUBLIC_URL}/img/gearvn-ban-phim-slider-right-t8.png`} alt="Bàn Phím" />
+              <img src="/img/gearvn-ban-phim-slider-right-t8.png" alt="Bàn Phím" />
             </div>
 
             <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=PC')}>
-              <img src={`${process.env.PUBLIC_URL}/img/gearvn-build-pc-slider-right-t8.png`} alt="Build PC" />
+              <img src="/img/gearvn-build-pc-slider-right-t8.png" alt="Build PC" />
             </div>
 
             <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Phụ%20kiện')}>
-              <img src={`${process.env.PUBLIC_URL}/img/gearvn-gaming-gear-deal-hoi-sub-banner-t8.png`} alt="Gaming Gear Deal" />
+              <img src="/img/gearvn-gaming-gear-deal-hoi-sub-banner-t8.png" alt="Gaming Gear Deal" />
             </div>
 
             <div className="promo-card banner-image" onClick={() => handleBannerClick('/?category=Màn%20hình')}>
-              <img src={`${process.env.PUBLIC_URL}/img/gearvn-man-hinh-sub-t8.png`} alt="Màn Hình Gaming" />
+              <img src="/img/gearvn-man-hinh-sub-t8.png" alt="Màn Hình Gaming" />
             </div>
           </div>
         </div>
