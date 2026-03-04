@@ -5,11 +5,13 @@
   "framework": "create-react-app",
   "installCommand": "npm install",
   "env": {
-    "CI": "false"
+    "CI": "false",
+    "REACT_APP_API_URL": "https://cn-da22tta-lekhanhduy.onrender.com/api"
   },
   "build": {
     "env": {
-      "CI": "false"
+      "CI": "false",
+      "REACT_APP_API_URL": "https://cn-da22tta-lekhanhduy.onrender.com/api"
     }
   },
   "routes": [
