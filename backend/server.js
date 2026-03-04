@@ -11,48 +11,9 @@ const passport = require('./config/passport');
 
 const app = express();
 
-// CORS Configuration - Allow multiple origins for mobile testing
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  // Vercel domains
-  'https://cn-da22tta-lekhanhduy-websitebanlinhkienmaytinh-8wze9kbv0.vercel.app',
-  'https://cn-da22tta-lekhanhduy-websitebanlinhki-leduys-projects-27868174.vercel.app',
-  'https://cn-da22tta-lekhanhduy-websi-git-6d6510-leduys-projects-27868174.vercel.app',
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
-// Also allow Vercel preview deployments
-const isVercelDomain = (origin) => {
-  return origin && (
-    origin.endsWith('.vercel.app') || 
-    origin.includes('vercel.app')
-  );
-};
-
-// Also allow any origin in development for mobile device testing
+// CORS Configuration - Allow all origins for public API
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    
-    // Allow all Vercel preview deployments
-    if (isVercelDomain(origin)) {
-      return callback(null, true);
-    }
-    
-    // In development, allow all origins for mobile testing
-    if (process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    
-    // In production, check against allowed origins
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    callback(new Error('Not allowed by CORS'));
-  },
+  origin: true, // Allow all origins
   credentials: true,
   optionsSuccessStatus: 200
 };
