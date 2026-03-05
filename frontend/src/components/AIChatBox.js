@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FiX, FiSend, FiRefreshCw, FiZap } from 'react-icons/fi';
-import { RiRobot2Line, RiSparklingLine } from 'react-icons/ri';
+import { RiSparklingLine, RiSparklingFill } from 'react-icons/ri';
+import { BsStars } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 import { aiAPI } from '../services/api';
 import './AIChatBox.css';
@@ -16,7 +17,7 @@ const AIChatBox = () => {
   // Premium welcome message
   const getWelcomeMessage = () => ({
     role: 'assistant',
-    text: 'Xin chào! 👋 Tôi là **TechBot AI** - trợ lý thông minh của TechStore. Tôi có thể:\n\n🔍 Tìm kiếm sản phẩm phù hợp\n💡 Tư vấn cấu hình theo ngân sách\n⚡ So sánh sản phẩm\n📦 Kiểm tra đơn hàng\n\nBạn cần hỗ trợ gì?',
+    text: 'Xin chào! 👋 Tôi là **Gemini AI** - trợ lý thông minh của TechStore, được hỗ trợ bởi Google AI. Tôi có thể:\n\n🔍 Tìm kiếm sản phẩm phù hợp\n💡 Tư vấn cấu hình theo ngân sách\n⚡ So sánh sản phẩm\n📦 Kiểm tra đơn hàng\n\nBạn cần hỗ trợ gì?',
     products: [],
     quickReplies: ['🎮 Laptop Gaming', '💼 PC Văn phòng', '🎧 Tai nghe', '🔥 Sản phẩm HOT'],
     time: new Date(),
@@ -142,6 +143,9 @@ const AIChatBox = () => {
   };
 
   const formatPrice = (price) => {
+    if (price === undefined || price === null || isNaN(price)) {
+      return 'Liên hệ';
+    }
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
@@ -151,12 +155,12 @@ const AIChatBox = () => {
       <button 
         className={`ai-chat-button ${isOpen ? 'hidden' : ''}`}
         onClick={() => setIsOpen(true)}
-        title="TechBot AI - Trợ lý thông minh"
+        title="Gemini AI - Trợ lý thông minh"
       >
         <div className="ai-chat-button-inner">
           <div className="ai-chat-button-icon">
-            <RiRobot2Line size={28} />
-            <RiSparklingLine className="ai-sparkle" size={14} />
+            <BsStars size={26} />
+            <RiSparklingFill className="ai-sparkle" size={14} />
           </div>
           <span className="ai-chat-badge">AI</span>
         </div>
@@ -170,12 +174,12 @@ const AIChatBox = () => {
           <div className="ai-chat-header">
             <div className="ai-chat-header-info">
               <div className="ai-avatar premium">
-                <RiRobot2Line size={22} />
+                <BsStars size={20} />
                 <span className="ai-avatar-status"></span>
               </div>
               <div>
-                <h4>TechBot AI <FiZap className="ai-premium-icon" size={12} /></h4>
-                <span className="ai-status">● Trợ lý thông minh</span>
+                <h4>Gemini AI <FiZap className="ai-premium-icon" size={12} /></h4>
+                <span className="ai-status">● Powered by Google</span>
               </div>
             </div>
             <div className="ai-header-actions">

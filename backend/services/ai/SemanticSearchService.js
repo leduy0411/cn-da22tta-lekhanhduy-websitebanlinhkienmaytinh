@@ -226,7 +226,7 @@ class SemanticSearchService {
     
     // Lấy products
     const products = await Product.find(filter)
-      .select('name description brand category price image rating stock specifications');
+      .select('name description brand category price salePrice image images rating stock specifications');
     
     // Tính similarity cho mỗi product
     const results = products.map(product => {
@@ -298,7 +298,7 @@ class SemanticSearchService {
     // Fetch product details
     const productIds = topResults.map(r => r.productId);
     const products = await Product.find({ _id: { $in: productIds } })
-      .select('name description brand category price image rating stock');
+      .select('name description brand category price salePrice image images rating stock');
     
     return topResults.map(r => {
       const product = products.find(p => p._id.toString() === r.productId.toString());
@@ -320,8 +320,19 @@ class SemanticSearchService {
       semanticWeight = 0.6,
       category = null,
       brand = null,
-      priceRange = null
+      priceRange = null,
+      minPrice = null,
+      maxPrice = null
     } = options;
+
+    // Build priceRange from minPrice/maxPrice if provided
+    let effectivePriceRange = priceRange;
+    if (minPrice !== null || maxPrice !== null) {
+      effectivePriceRange = {
+        min: minPrice || 0,
+        max: maxPrice || Number.MAX_VALUE
+      };
+    }
 
     const results = new Map();
 
@@ -331,7 +342,7 @@ class SemanticSearchService {
         limit: limit * 2,
         category,
         brand,
-        priceRange
+        priceRange: effectivePriceRange
       });
       
       keywordResults.forEach((result, index) => {
@@ -375,7 +386,7 @@ class SemanticSearchService {
     }
 
     // Combine scores
-    const combinedResults = Array.from(results.values()).map(r => ({
+    let combinedResults = Array.from(results.values()).map(r => ({
       product: r.product,
       score: r.keywordScore * keywordWeight + r.semanticScore * semanticWeight,
       keywordScore: r.keywordScore,
@@ -383,10 +394,26 @@ class SemanticSearchService {
       matchType: 'hybrid'
     }));
 
+    // Filter by price if specified
+    if (effectivePriceRange) {
+      combinedResults = combinedResults.filter(r => {
+        const price = r.product.salePrice || r.product.price;
+        return price >= effectivePriceRange.min && price <= effectivePriceRange.max;
+      });
+    }
+
     // Sort và return
     return combinedResults
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
+  }
+
+  /**
+   * Main search method - alias for hybridSearch
+   * Used by ChatbotService
+   */
+  async search(query, options = {}) {
+    return this.hybridSearch(query, options);
   }
 
   /**
@@ -415,7 +442,7 @@ class SemanticSearchService {
     )
     .sort({ score: { $meta: 'textScore' } })
     .limit(limit)
-    .select('name description brand category price image rating stock');
+    .select('name description brand category price salePrice image images rating stock');
     
     return products.map(p => ({
       product: p.toObject(),

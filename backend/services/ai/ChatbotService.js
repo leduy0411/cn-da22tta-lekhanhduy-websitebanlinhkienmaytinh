@@ -44,7 +44,9 @@ class ChatbotService {
       ],
       price_inquiry: [
         /(giá|price|bao nhiêu|cost|tiền)/i,
-        /(tầm giá|budget|khoảng|từ|đến).*(triệu|tr|k|nghìn)/i
+        /(tầm giá|budget|khoảng|từ|đến).*(triệu|tr|k|nghìn)/i,
+        /(dưới|trên|khoảng|tầm)\s*\d+\s*(triệu|tr|m|k)/i,
+        /\d+\s*(triệu|tr|m|k)\s*(trở lên|trở xuống|đổ lại|đổ xuống)/i
       ],
       stock_check: [
         /(còn hàng|in stock|available|có sẵn|tồn kho)/i,
@@ -163,6 +165,106 @@ class ChatbotService {
     };
   }
 
+  /**
+   * Kiểm tra xem câu hỏi có phải là câu hỏi chung (không liên quan đến sản phẩm/TechStore) không
+   */
+  isGeneralQuestion(message) {
+    const normalizedMessage = message.toLowerCase().trim();
+    
+    // FIRST: Check for obvious general patterns (math, etc.) BEFORE checking store keywords
+    const obviousGeneralPatterns = [
+      // Math expressions: 1+1, 2*3, 5/2, 10-3, etc.
+      /^\d+\s*[\+\-\*\/\^]\s*\d+/i,
+      /\d+\s*[\+\-\*\/]\s*\d+\s*(=|bằng|là)/i,
+      // Direct math questions
+      /^(bao nhiêu|mấy)\s*(là|bằng)?\s*\d+/i,
+      /\d+\s*(cộng|trừ|nhân|chia|mũ)\s*\d+/i,
+      // "X bằng bao nhiêu" where X is a math expression
+      /\d+.*\d+.*(bằng|=|là)\s*(bao nhiêu|mấy|gì)/i,
+      // General knowledge starters that override store context
+      /^(tại sao|vì sao|why)\s+(?!.*mua|.*giá|.*sản phẩm)/i,
+      /^(ai là|who is|là ai)\s+/i,
+      /^(what is|là gì)\s+/i,
+    ];
+    
+    for (const pattern of obviousGeneralPatterns) {
+      if (pattern.test(normalizedMessage)) {
+        return true; // Definitely a general question
+      }
+    }
+    
+    // Keywords indicating product/store-related questions
+    const storeKeywords = [
+      /laptop|pc|máy tính|desktop|cpu|vga|card|ram|mainboard|màn hình|monitor|chuột|mouse|bàn phím|keyboard|tai nghe|headphone|loa|speaker|ổ cứng|ssd|hdd|case|nguồn|tản nhiệt|phụ kiện/i,
+      /asus|acer|dell|hp|lenovo|msi|gigabyte|intel|amd|nvidia|corsair|logitech|razer|apple|samsung/i,
+      /giá|price|bán|mua|đặt hàng|order|giao hàng|ship|thanh toán|payment|bảo hành|warranty|đổi trả|khuyến mãi|giảm giá|sale/i,
+      /đơn hàng|order|tracking|kiểm tra đơn/i,
+      /sản phẩm|product|hàng|tồn kho|stock/i,
+      /techstore|cửa hàng|shop/i,
+      /gaming|văn phòng|đồ họa|render|stream/i,
+      /triệu|tr|nghìn|k|vnđ|đồng/i
+    ];
+    
+    // Check if message contains any store-related keywords
+    for (const pattern of storeKeywords) {
+      if (pattern.test(normalizedMessage)) {
+        return false; // This is a store-related question
+      }
+    }
+    
+    // Patterns indicating general questions
+    const generalPatterns = [
+      /^(tại sao|vì sao|why|how|như thế nào|làm sao|cách nào)/i,
+      /^(ai là|what is|who is|là gì|là ai|nghĩa là)/i,
+      /^(giải thích|explain|định nghĩa|define)/i,
+      /^(kể về|tell me about|nói về)/i,
+      /^(dịch|translate|chuyển ngữ)/i,
+      /^(viết|write|soạn|tạo văn bản)/i,
+      /^(tính|calculate|solve|giải)/i,
+      /^(so sánh|compare).*(với|và|and)(?!.*sản phẩm)/i,
+      /(lịch sử|history|khoa học|science|toán|math|văn học|literature|địa lý|geography)/i,
+      /(thời tiết|weather|tin tức|news)/i,
+      /(code|lập trình|programming|algorithm|thuật toán|debug|fix bug)/i,
+      /(python|javascript|java|c\+\+|html|css|react|node)/i,
+      /^(bạn có thể|can you|could you).*(giúp|help|explain|dịch|write|code)/i,
+      /(thơ|poem|truyện|story|bài hát|song|nhạc|music)/i,
+      /(ý nghĩa|meaning of|nghĩa của)/i,
+      /(công thức|formula|equation|phương trình)/i,
+      /(động vật|animal|thực vật|plant|sinh học|biology|hóa học|chemistry|vật lý|physics)/i,
+      /(châu á|châu âu|châu mỹ|asia|europe|america|việt Nam|vietnam|thế giới|world)/i,
+      /(triết học|philosophy|tâm lý|psychology|xã hội|society)/i,
+      /(email|cv|resume|thư|letter)/i,
+      /(nấu ăn|recipe|món ăn|cooking)/i,
+      /(sức khỏe|health|tập gym|exercise|thể thao|sport)/i,
+      // Math/calculation patterns
+      /bằng bao nhiêu(?!.*giá|.*tiền|.*triệu)/i,
+      /là bao nhiêu(?!.*giá|.*tiền|.*triệu)/i,
+      /kết quả là/i,
+      /tổng là/i,
+      /căn bậc|lũy thừa|logarit|sin|cos|tan/i
+    ];
+    
+    // Check if message matches any general question pattern
+    for (const pattern of generalPatterns) {
+      if (pattern.test(normalizedMessage)) {
+        return true; // This is a general question
+      }
+    }
+    
+    // If message is short and doesn't match store keywords, might be general
+    const words = normalizedMessage.split(/\s+/);
+    if (words.length <= 2) {
+      return false; // Short messages, let normal flow handle
+    }
+    
+    // Check for question words without store context
+    if (/\?$/.test(normalizedMessage) || /^(hỏi|câu hỏi)/.test(normalizedMessage)) {
+      return true; // Questions without store keywords are likely general
+    }
+    
+    return false;
+  }
+
   // ==================== ENTITY EXTRACTION ====================
 
   /**
@@ -211,10 +313,45 @@ class ChatbotService {
       });
     }
 
-    // Price range
-    const pricePattern = /(\d+)\s*(triệu|tr|m|k|nghìn)/gi;
+    // Price range with context (dưới/trên/khoảng X triệu)
+    const budgetPattern = /(dưới|trên|khoảng|tầm|từ|đến)\s*(\d+)\s*(triệu|tr|m|k|nghìn)?/gi;
+    let budgetMatch;
+    while ((budgetMatch = budgetPattern.exec(normalizedMessage)) !== null) {
+      const modifier = budgetMatch[1].toLowerCase();
+      let value = parseInt(budgetMatch[2]);
+      const unit = (budgetMatch[3] || 'triệu').toLowerCase();
+      
+      if (unit === 'triệu' || unit === 'tr' || unit === 'm') {
+        value *= 1000000;
+      } else if (unit === 'k' || unit === 'nghìn') {
+        value *= 1000;
+      }
+
+      let priceType = 'price';
+      if (modifier === 'dưới' || modifier === 'đến') {
+        priceType = 'maxPrice';
+      } else if (modifier === 'trên' || modifier === 'từ') {
+        priceType = 'minPrice';
+      }
+
+      entities.push({
+        type: priceType,
+        value,
+        confidence: 0.9
+      });
+    }
+
+    // Basic price pattern (X triệu without modifier)
+    const pricePattern = /(?<![dưới|trên|khoảng|tầm|từ|đến]\s*)(\d+)\s*(triệu|tr|m|k|nghìn)/gi;
     let priceMatch;
     while ((priceMatch = pricePattern.exec(normalizedMessage)) !== null) {
+      // Skip if already matched by budget pattern
+      const alreadyMatched = entities.some(e => 
+        (e.type === 'price' || e.type === 'maxPrice' || e.type === 'minPrice') && 
+        Math.abs(e.value / 1000000 - parseInt(priceMatch[1])) < 1
+      );
+      if (alreadyMatched) continue;
+
       let value = parseInt(priceMatch[1]);
       const unit = priceMatch[2].toLowerCase();
       
@@ -469,6 +606,25 @@ class ChatbotService {
       actions: []
     };
 
+    // FIRST: Check if this is a general question - let Gemini handle it freely
+    const isGeneralQuestion = this.isGeneralQuestion(message);
+    if (isGeneralQuestion && this.smartMode && this.useGemini && GeminiService.isReady()) {
+      try {
+        const geminiResponse = await GeminiService.chat(message, [], {
+          isGeneralQuestion: true,
+          hasProducts: false
+        });
+        
+        if (geminiResponse && geminiResponse.text) {
+          response.text = geminiResponse.text;
+          response.quickReplies = ['🎮 Laptop Gaming', '💼 PC Văn phòng', '🛒 Xem sản phẩm', '❓ Hỗ trợ'];
+          return response;
+        }
+      } catch (error) {
+        console.error('Gemini general question error:', error);
+      }
+    }
+
     switch (intent) {
       case 'greeting':
         response.text = this.getRandomResponse('greeting');
@@ -558,12 +714,24 @@ class ChatbotService {
     const categoryEntity = entities.find(e => e.type === 'category');
     const brandEntity = entities.find(e => e.type === 'brand');
     const priceEntities = entities.filter(e => e.type === 'price');
+    const minPriceEntity = entities.find(e => e.type === 'minPrice');
+    const maxPriceEntity = entities.find(e => e.type === 'maxPrice');
 
     let searchOptions = { limit: 5 };
     
     if (categoryEntity) searchOptions.category = categoryEntity.value;
     if (brandEntity) searchOptions.brand = brandEntity.value;
-    if (priceEntities.length > 0) {
+    
+    // Handle specific minPrice/maxPrice entities first
+    if (minPriceEntity) {
+      searchOptions.minPrice = minPriceEntity.value;
+    }
+    if (maxPriceEntity) {
+      searchOptions.maxPrice = maxPriceEntity.value;
+    }
+    
+    // Fallback to generic price entities
+    if (!minPriceEntity && !maxPriceEntity && priceEntities.length > 0) {
       const prices = priceEntities.map(e => e.value).sort((a, b) => a - b);
       searchOptions.minPrice = prices[0];
       if (prices.length > 1) searchOptions.maxPrice = prices[prices.length - 1];
@@ -573,11 +741,11 @@ class ChatbotService {
     // Extract search query
     let searchQuery = message;
     entities.forEach(e => {
-      if (e.type !== 'price') {
+      if (e.type !== 'price' && e.type !== 'minPrice' && e.type !== 'maxPrice') {
         searchQuery = searchQuery.replace(new RegExp(e.value, 'gi'), '');
       }
     });
-    searchQuery = searchQuery.replace(/tìm|search|kiếm|có|bán|muốn mua|cần|tư vấn/gi, '').trim();
+    searchQuery = searchQuery.replace(/tìm|search|kiếm|có|bán|muốn mua|cần|tư vấn|dưới|trên|khoảng|tầm/gi, '').trim();
 
     const products = await this.searchProducts(searchQuery || categoryEntity?.value || '', searchOptions);
     response.products = products;
@@ -606,7 +774,7 @@ class ChatbotService {
   }
 
   async handlePriceInquiry(entities, message, response) {
-    const priceEntities = entities.filter(e => e.type === 'price');
+    const priceEntities = entities.filter(e => e.type === 'price' || e.type === 'minPrice' || e.type === 'maxPrice');
     const categoryEntity = entities.find(e => e.type === 'category');
 
     if (priceEntities.length > 0 || categoryEntity) {
@@ -736,9 +904,25 @@ class ChatbotService {
   }
 
   async handleUnknownIntent(message, userContext, response) {
+    // Check if this is a general question (not about products/TechStore)
+    const isGeneralQuestion = this.isGeneralQuestion(message);
+    
     // SMART MODE: Use Gemini for intelligent understanding
     if (this.smartMode && this.useGemini && GeminiService.isReady()) {
       try {
+        // If it's a general question, let Gemini answer freely
+        if (isGeneralQuestion) {
+          const geminiResponse = await GeminiService.chat(message, [], {
+            isGeneralQuestion: true,
+            hasProducts: false
+          });
+          
+          if (geminiResponse && geminiResponse.text) {
+            response.quickReplies = ['🎮 Laptop Gaming', '💼 PC Văn phòng', '🛒 Xem sản phẩm', '❓ Hỗ trợ'];
+            return geminiResponse.text;
+          }
+        }
+        
         // Step 1: Use smartSearch for better product matching
         const { products, analysis } = await this.smartSearch(message, userContext);
         
@@ -752,7 +936,8 @@ class ChatbotService {
           userInfo: userContext,
           analysis, // Include Gemini's own analysis
           conversationState: userContext.currentState || 'general',
-          hasProducts: products.length > 0
+          hasProducts: products.length > 0,
+          isGeneralQuestion: false
         };
         
         // Step 4: Get intelligent response from Gemini

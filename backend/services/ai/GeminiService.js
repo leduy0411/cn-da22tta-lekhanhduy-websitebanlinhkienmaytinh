@@ -27,9 +27,9 @@ class GeminiService {
       {
         patterns: [/^(xin chào|chào|hello|hi|hey|alo)/i],
         responses: [
-          'Xin chào! 👋 Tôi là trợ lý AI của TechStore. Tôi có thể giúp bạn tìm kiếm sản phẩm, kiểm tra đơn hàng, hoặc giải đáp thắc mắc. Bạn cần hỗ trợ gì?',
-          'Chào bạn! 😊 Rất vui được hỗ trợ bạn. Bạn đang tìm sản phẩm gì hoặc cần giúp đỡ gì?',
-          'Hello! 👋 Chào mừng bạn đến TechStore. Tôi có thể giúp gì cho bạn hôm nay?'
+          'Xin chào! 👋 Tôi là Gemini AI - trợ lý thông minh của TechStore được hỗ trợ bởi Google AI. Tôi có thể giúp bạn tìm kiếm sản phẩm, kiểm tra đơn hàng, hoặc giải đáp thắc mắc. Bạn cần hỗ trợ gì?',
+          'Chào bạn! 😊 Tôi là Gemini AI, rất vui được hỗ trợ bạn. Bạn đang tìm sản phẩm gì hoặc cần giúp đỡ gì?',
+          'Hello! 👋 Chào mừng bạn đến TechStore. Tôi là Gemini AI - có thể giúp gì cho bạn hôm nay?'
         ]
       },
       // Tạm biệt
@@ -37,7 +37,7 @@ class GeminiService {
         patterns: [/^(tạm biệt|bye|goodbye|cảm ơn|thanks|thank you|hẹn gặp)/i],
         responses: [
           'Cảm ơn bạn đã ghé TechStore! 🙏 Hẹn gặp lại bạn!',
-          'Chúc bạn một ngày tốt lành! 😊 Nếu cần hỗ trợ, đừng ngại liên hệ lại nhé!',
+          'Chúc bạn một ngày tốt lành! 😊 Nếu cần hỗ trợ, đừng ngại liên hệ Gemini AI nhé!',
           'Tạm biệt bạn! 👋 Cảm ơn đã sử dụng dịch vụ của TechStore!'
         ]
       },
@@ -187,11 +187,43 @@ class GeminiService {
       }
     ];
 
+    // General knowledge fallback patterns (for when Gemini API is unavailable)
+    this.generalFallbackPatterns = [
+      {
+        patterns: [/^(tại sao|vì sao|why)/i],
+        responses: [
+          'Đây là câu hỏi hay! 🤔 Hiện tại tôi đang gặp sự cố kết nối với hệ thống AI. Bạn có thể thử lại sau hoặc hỏi tôi về sản phẩm công nghệ tại TechStore.',
+          'Câu hỏi thú vị! 💡 Tôi cần kết nối với Gemini AI để trả lời câu hỏi này. Vui lòng thử lại sau nhé!'
+        ]
+      },
+      {
+        patterns: [/(code|lập trình|programming|python|javascript|java)/i],
+        responses: [
+          'Bạn đang hỏi về lập trình! 💻 Tôi có thể hỗ trợ code khi kết nối ổn định. Trong khi chờ, bạn có muốn xem laptop/PC phù hợp cho lập trình không?',
+          'Câu hỏi về coding! 🖥️ Tôi cần kết nối với AI để hỗ trợ chi tiết. Thử lại sau hoặc hỏi về thiết bị lập trình nhé!'
+        ]
+      },
+      {
+        patterns: [/(dịch|translate|tiếng anh|english)/i],
+        responses: [
+          'Bạn cần dịch thuật! 🌐 Tôi có thể hỗ trợ khi kết nối ổn định. Vui lòng thử lại sau!',
+          'Dịch thuật cần AI hỗ trợ! 📝 Hiện tôi đang gặp sự cố kết nối. Thử lại sau nhé!'
+        ]
+      },
+      {
+        patterns: [/(tính|calculate|toán|math)/i],
+        responses: [
+          'Bạn cần tính toán! 🔢 Với phép tính phức tạp, tôi cần kết nối AI. Thử lại sau hoặc dùng máy tính nhé!',
+          'Câu hỏi toán học! 📊 Tôi có thể giải khi kết nối ổn định. Vui lòng thử lại!'
+        ]
+      }
+    ];
+
     // Default fallback khi không match được pattern nào
     this.defaultFallbacks = [
-      'Xin lỗi, tôi chưa hiểu rõ câu hỏi của bạn. 🤔 Bạn có thể:\n• Hỏi về sản phẩm (laptop, PC, linh kiện...)\n• Kiểm tra đơn hàng\n• Tìm hiểu chính sách (bảo hành, đổi trả...)\n\nHoặc thử diễn đạt lại nhé!',
-      'Tôi cần thêm thông tin để hỗ trợ bạn tốt hơn. 😊 Bạn đang tìm sản phẩm gì hoặc cần giúp đỡ vấn đề gì?',
-      'Hmm, tôi chưa hiểu rõ lắm. 🤔 Bạn có thể cho tôi biết cụ thể hơn:\n• Loại sản phẩm bạn quan tâm?\n• Vấn đề bạn đang gặp phải?\n• Hoặc bất kỳ câu hỏi nào!'
+      'Tôi là Gemini AI - trợ lý thông minh của TechStore! 🤖 Tôi có thể:\n• Hỏi đáp kiến thức tổng quát\n• Tư vấn sản phẩm công nghệ\n• Kiểm tra đơn hàng\n• Và nhiều hơn nữa!\n\nBạn cần hỗ trợ gì?',
+      'Xin chào! 😊 Tôi là Gemini AI có thể trả lời nhiều loại câu hỏi. Bạn có thể hỏi về:\n• Kiến thức chung\n• Sản phẩm công nghệ\n• Lập trình, code\n• Hoặc bất kỳ điều gì!\n\nBạn muốn hỏi gì?',
+      'Tôi sẵn sàng hỗ trợ bạn! 🚀 Hãy cho tôi biết bạn cần gì:\n• Tư vấn sản phẩm?\n• Câu hỏi kiến thức?\n• Kiểm tra đơn hàng?\n• Hoặc trò chuyện thôi! 😄'
     ];
   }
 
@@ -199,6 +231,7 @@ class GeminiService {
    * Tìm fallback response phù hợp với message
    */
   getFallbackResponse(message) {
+    // First check store-related patterns
     for (const fallback of this.fallbackPatterns) {
       for (const pattern of fallback.patterns) {
         if (pattern.test(message)) {
@@ -208,8 +241,145 @@ class GeminiService {
         }
       }
     }
+    
+    // Then check general knowledge patterns
+    for (const fallback of this.generalFallbackPatterns) {
+      for (const pattern of fallback.patterns) {
+        if (pattern.test(message)) {
+          const responses = fallback.responses;
+          return responses[Math.floor(Math.random() * responses.length)];
+        }
+      }
+    }
+    
     // Không match được, trả về default
     return this.defaultFallbacks[Math.floor(Math.random() * this.defaultFallbacks.length)];
+  }
+
+  /**
+   * Thử trả lời câu hỏi chung locally (không cần API)
+   * Hỗ trợ tính toán đơn giản, câu hỏi cơ bản
+   */
+  tryAnswerLocally(message) {
+    const normalizedMessage = message.toLowerCase().trim();
+    
+    // 1. Xử lý phép tính đơn giản
+    const mathResult = this.calculateMath(message);
+    if (mathResult !== null) {
+      return `Kết quả: **${mathResult}** 🧮`;
+    }
+    
+    // 2. Các câu hỏi có thể trả lời không cần AI
+    const simpleAnswers = [
+      {
+        patterns: [/^(1\s*\+\s*1|một cộng một)/i],
+        answer: '1 + 1 = **2** 🧮'
+      },
+      {
+        patterns: [/bạn là ai|you are|ai đang nói/i],
+        answer: 'Tôi là **Gemini AI** - trợ lý thông minh được hỗ trợ bởi Google AI, hoạt động trên TechStore! 🤖 Tôi có thể giúp bạn tìm sản phẩm, trả lời câu hỏi, và nhiều hơn nữa!'
+      },
+      {
+        patterns: [/bạn tên (là )?gì|tên của bạn/i],
+        answer: 'Tôi là **Gemini AI** 🤖 - trợ lý AI thông minh của TechStore!'
+      },
+      {
+        patterns: [/mấy giờ|what time|giờ hiện tại/i],
+        answer: `Bây giờ là **${new Date().toLocaleTimeString('vi-VN')}** ⏰`
+      },
+      {
+        patterns: [/hôm nay (là )?ngày (mấy|bao nhiêu)|today.*date|ngày hôm nay/i],
+        answer: `Hôm nay là **${new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}** 📅`
+      },
+      {
+        patterns: [/hello|hi|xin chào/i],
+        answer: 'Xin chào! 👋 Tôi là Gemini AI - rất vui được trò chuyện với bạn! Bạn cần giúp gì?'
+      },
+      {
+        patterns: [/cảm ơn|thank you|thanks/i],
+        answer: 'Không có gì! 😊 Rất vui được giúp bạn. Bạn còn cần hỗ trợ gì nữa không?'
+      },
+      {
+        patterns: [/khỏe không|how are you|bạn có khỏe/i],
+        answer: 'Tôi luôn sẵn sàng phục vụ bạn! 😊 Cảm ơn bạn đã hỏi thăm. Bạn cần giúp gì hôm nay?'
+      }
+    ];
+    
+    for (const qa of simpleAnswers) {
+      for (const pattern of qa.patterns) {
+        if (pattern.test(normalizedMessage)) {
+          return qa.answer;
+        }
+      }
+    }
+    
+    return null; // Không thể trả lời locally
+  }
+
+  /**
+   * Tính toán phép tính đơn giản
+   */
+  calculateMath(message) {
+    try {
+      // Extract math expression from message
+      // Support: 1+1, 2*3, 10/2, 5-3, 2^3
+      const patterns = [
+        /(\d+(?:\.\d+)?)\s*([\+\-\*\/\^])\s*(\d+(?:\.\d+)?)/,
+        /(\d+(?:\.\d+)?)\s*(cộng|trừ|nhân|chia|mũ)\s*(\d+(?:\.\d+)?)/i
+      ];
+      
+      for (const pattern of patterns) {
+        const match = message.match(pattern);
+        if (match) {
+          const num1 = parseFloat(match[1]);
+          let operator = match[2].toLowerCase();
+          const num2 = parseFloat(match[3]);
+          
+          // Convert Vietnamese operators
+          const opMap = {
+            'cộng': '+', 'trừ': '-', 'nhân': '*', 'chia': '/', 'mũ': '^'
+          };
+          if (opMap[operator]) operator = opMap[operator];
+          
+          let result;
+          switch (operator) {
+            case '+': result = num1 + num2; break;
+            case '-': result = num1 - num2; break;
+            case '*': result = num1 * num2; break;
+            case '/': 
+              if (num2 === 0) return 'Không thể chia cho 0! ❌';
+              result = num1 / num2; 
+              break;
+            case '^': result = Math.pow(num1, num2); break;
+            default: return null;
+          }
+          
+          // Format result nicely
+          if (Number.isInteger(result)) {
+            return `${num1} ${operator} ${num2} = ${result}`;
+          } else {
+            return `${num1} ${operator} ${num2} = ${result.toFixed(4).replace(/\.?0+$/, '')}`;
+          }
+        }
+      }
+      
+      return null; // Not a math expression
+    } catch (error) {
+      console.error('Math calculation error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Fallback response cho câu hỏi chung khi Gemini không available
+   */
+  getGeneralQuestionFallback(message) {
+    // Try local answer first
+    const localAnswer = this.tryAnswerLocally(message);
+    if (localAnswer) return localAnswer;
+    
+    // Generic response for general questions
+    return `Xin lỗi, tôi đang gặp sự cố kết nối với hệ thống AI nên chưa thể trả lời câu hỏi này. 😅\n\nTuy nhiên, tôi vẫn có thể giúp bạn:\n• 🛒 Tìm kiếm sản phẩm công nghệ\n• 📦 Kiểm tra đơn hàng\n• 💬 Tư vấn mua sắm\n\nBạn thử hỏi về sản phẩm hoặc quay lại sau nhé!`;
   }
 
   /**
@@ -252,41 +422,50 @@ class GeminiService {
    * Tạo system prompt cho chatbot TechStore - PREMIUM VERSION
    */
   getSystemPrompt(context = {}) {
-    const { products = [], categories = [], userInfo = null, analysis = null, hasProducts = false } = context;
+    const { products = [], categories = [], userInfo = null, analysis = null, hasProducts = false, isGeneralQuestion = false } = context;
 
-    let systemPrompt = `Bạn là TechBot AI - trợ lý AI cao cấp của TechStore, một cửa hàng công nghệ hàng đầu Việt Nam.
+    let systemPrompt = `Bạn là Gemini AI - trợ lý AI cao cấp được hỗ trợ bởi Google AI, hoạt động trên nền tảng TechStore - cửa hàng công nghệ hàng đầu Việt Nam.
 
 🎯 VAI TRÒ CỦA BẠN:
+- Trợ lý AI THÔNG MINH có khả năng trả lời MỌI CÂU HỎI như Gemini gốc
 - Tư vấn viên chuyên nghiệp về công nghệ với kiến thức sâu rộng
-- Hiểu rõ nhu cầu khách hàng và đưa ra gợi ý phù hợp nhất
-- Trả lời thông minh, tự nhiên như chuyên gia thực sự
-- Có khả năng phân tích và so sánh sản phẩm
+- Có thể trả lời câu hỏi chung, giải toán, dịch thuật, viết văn, hỏi đáp kiến thức...
+- Hiểu biết rộng về nhiều lĩnh vực: khoa học, lịch sử, văn hóa, lập trình, v.v.
 
-📦 SẢN PHẨM TECHSTORE:
+🧠 KHẢ NĂNG CỦA BẠN:
+- Trả lời câu hỏi TỔNG QUÁT về bất kỳ chủ đề nào
+- Giải thích khái niệm, định nghĩa, kiến thức
+- Hỗ trợ viết code, debug, giải thuật
+- Dịch ngôn ngữ, sửa lỗi ngữ pháp
+- Giải toán, tính toán, logic
+- Tư vấn công nghệ chuyên sâu
+- Trò chuyện tự nhiên, thân thiện
+
+📦 VỀ TECHSTORE (khi được hỏi về sản phẩm):
 - Laptop (Gaming, Văn phòng, Đồ họa sáng tạo, Ultrabook)
 - PC Desktop (Gaming PC, Workstation, PC văn phòng, Mini PC)
 - Linh kiện (CPU Intel/AMD, VGA NVIDIA/AMD, RAM, Mainboard, SSD/HDD, PSU, Case, Tản nhiệt)
-- Màn hình (Gaming 144Hz+, Đồ họa 4K, Văn phòng, Ultrawide)
-- Phụ kiện Gaming (Chuột, Bàn phím cơ, Tai nghe, Loa, Ghế gaming)
-- Console & Gaming (PS5, Xbox, Nintendo Switch, Phụ kiện)
-- Thiết bị văn phòng, Thiết bị mạng
+- Màn hình, Phụ kiện Gaming, Console & Gaming
+- Thương hiệu: ASUS, Acer, Dell, HP, Lenovo, MSI, Apple, Intel, AMD, NVIDIA...
 
-🏷️ THƯƠNG HIỆU: ASUS, Acer, Dell, HP, Lenovo, MSI, Gigabyte, Apple, Samsung, LG, Intel, AMD, NVIDIA, Corsair, Logitech, Razer, SteelSeries, HyperX, Kingston, Western Digital, Seagate, v.v.
-
-💎 PHONG CÁCH TRẢ LỜI PREMIUM:
-1. THÂN THIỆN & CHUYÊN NGHIỆP - Như một người bạn am hiểu công nghệ
-2. NGẮN GỌN & THÔNG MINH - Tối đa 2-3 câu, đi thẳng vào vấn đề
-3. CHỦ ĐỘNG TƯ VẤN - Đặt câu hỏi thông minh để hiểu nhu cầu
+💎 PHONG CÁCH TRẢ LỜI:
+1. THÂN THIỆN & THÔNG MINH - Trả lời như một AI thực sự thông minh
+2. LINH HOẠT - Nếu hỏi về TechStore → tư vấn sản phẩm. Nếu hỏi chung → trả lời như Gemini
+3. TỰ NHIÊN & HỮU ÍCH - Luôn cố gắng giúp đỡ người dùng tốt nhất có thể
 4. SỬ DỤNG EMOJI PHÙ HỢP - Tạo cảm giác thân thiện 😊💻🎮
-5. KHÔNG BAO GIỜ liệt kê sản phẩm - hệ thống sẽ hiển thị hình ảnh sản phẩm tự động
+5. KHÔNG GIỚI HẠN CHỦ ĐỀ - Trả lời bất kỳ câu hỏi hợp lệ nào
 
-⚠️ QUY TẮC VÀNG:
-- KHÔNG liệt kê tên sản phẩm, giá cả trong câu trả lời text
+⚠️ QUY TẮC:
+${isGeneralQuestion ? 
+`- Đây là CÂU HỎI CHUNG - hãy trả lời như Gemini AI thực sự
+- Không cần đề cập đến TechStore hay sản phẩm
+- Trả lời đầy đủ, chính xác, hữu ích` :
+`- KHÔNG liệt kê tên sản phẩm, giá cả trong câu trả lời text
 - Sản phẩm được hiển thị riêng dưới dạng card với hình ảnh
-- Nếu phát hiện ${hasProducts ? 'CÓ' : 'KHÔNG CÓ'} sản phẩm phù hợp, hãy trả lời phù hợp
-- Chủ động hỏi: ngân sách, mục đích sử dụng, thương hiệu yêu thích
+- Nếu ${hasProducts ? 'CÓ' : 'KHÔNG CÓ'} sản phẩm phù hợp, hãy trả lời phù hợp
+- Chủ động hỏi: ngân sách, mục đích sử dụng, thương hiệu yêu thích`}
 
-📋 CHÍNH SÁCH:
+📋 CHÍNH SÁCH TECHSTORE:
 - Thanh toán: COD, Chuyển khoản, ZaloPay, Momo
 - Giao hàng: Miễn phí từ 500k | Nội thành 1-2 ngày | Tỉnh 3-5 ngày
 - Bảo hành: 12-36 tháng chính hãng
@@ -335,9 +514,32 @@ class GeminiService {
    * @param {Object} context - Context bổ sung (sản phẩm, user info, etc.)
    */
   async chat(message, conversationHistory = [], context = {}) {
+    const { isGeneralQuestion = false } = context;
+    
+    // If this is a general question and Gemini is not available, try to answer locally
+    if (isGeneralQuestion) {
+      const localAnswer = this.tryAnswerLocally(message);
+      if (localAnswer) {
+        return {
+          text: localAnswer,
+          model: 'local',
+          fallback: false
+        };
+      }
+    }
+    
     // Nếu đã biết hết quota, dùng fallback luôn
     if (this.quotaExhausted) {
       console.log('📝 Sử dụng fallback response (quota đã hết)');
+      // For general questions, use special fallback
+      if (isGeneralQuestion) {
+        return {
+          text: this.getGeneralQuestionFallback(message),
+          model: 'fallback',
+          fallback: true,
+          reason: 'quota_exhausted_general'
+        };
+      }
       return {
         text: this.getFallbackResponse(message),
         model: 'fallback',
@@ -348,6 +550,15 @@ class GeminiService {
 
     if (!this.isReady()) {
       console.warn('⚠️ Gemini chưa khởi tạo - sử dụng fallback response');
+      // For general questions, use special fallback
+      if (isGeneralQuestion) {
+        return {
+          text: this.getGeneralQuestionFallback(message),
+          model: 'fallback',
+          fallback: true,
+          reason: 'not_initialized_general'
+        };
+      }
       return {
         text: this.getFallbackResponse(message),
         model: 'fallback',

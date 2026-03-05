@@ -6,11 +6,11 @@
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%);
+  background: linear-gradient(135deg, #4285f4 0%, #9b72cb 50%, #d96570 100%);
   border: none;
   color: white;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 201, 255, 0.4);
+  box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,7 +22,7 @@
 
 .ai-chat-button:hover {
   transform: scale(1.1);
-  box-shadow: 0 8px 30px rgba(0, 201, 255, 0.6);
+  box-shadow: 0 8px 30px rgba(155, 114, 203, 0.6);
 }
 
 .ai-chat-button:hover .ai-chat-button-inner {
@@ -41,7 +41,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%);
+  background: linear-gradient(135deg, #4285f4 0%, #9b72cb 50%, #d96570 100%);
   transition: transform 0.3s ease;
 }
 
@@ -65,13 +65,13 @@
   position: absolute;
   top: -8px;
   right: -8px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #ea4335 0%, #fbbc05 100%);
   color: white;
   font-size: 11px;
   padding: 4px 10px;
   border-radius: 12px;
   font-weight: bold;
-  box-shadow: 0 2px 8px rgba(240, 147, 251, 0.4);
+  box-shadow: 0 2px 8px rgba(234, 67, 53, 0.4);
   border: 2px solid white;
   animation: badgePulse 2s ease-in-out infinite;
 }
@@ -90,7 +90,7 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%);
+  background: linear-gradient(135deg, #4285f4 0%, #9b72cb 50%, #d96570 100%);
   opacity: 0;
   animation: pulse 2s ease-out infinite;
 }
@@ -141,7 +141,7 @@
 
 /* AI Chat Header */
 .ai-chat-header {
-  background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%);
+  background: linear-gradient(135deg, #4285f4 0%, #9b72cb 50%, #d96570 100%);
   color: white;
   padding: 1rem;
   display: flex;
@@ -239,7 +239,7 @@
 }
 
 .ai-chat-messages::-webkit-scrollbar-thumb {
-  background: #00c9ff;
+  background: linear-gradient(135deg, #4285f4 0%, #9b72cb 100%);
   border-radius: 10px;
 }
 
@@ -368,9 +368,9 @@
 }
 
 .ai-quick-reply-btn {
-  background: linear-gradient(135deg, #e8f4f8 0%, #f0f8ff 100%);
-  border: 1px solid #00c9ff;
-  color: #0088cc;
+  background: linear-gradient(135deg, #f0f4ff 0%, #f8f0ff 100%);
+  border: 1px solid #9b72cb;
+  color: #4285f4;
   padding: 0.4rem 0.75rem;
   border-radius: 20px;
   font-size: 0.8rem;
@@ -379,7 +379,7 @@
 }
 
 .ai-quick-reply-btn:hover {
-  background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%);
+  background: linear-gradient(135deg, #4285f4 0%, #9b72cb 50%, #d96570 100%);
   color: white;
   border-color: transparent;
 }
@@ -398,7 +398,7 @@
 .ai-typing-indicator span {
   width: 8px;
   height: 8px;
-  background: #00c9ff;
+  background: linear-gradient(135deg, #4285f4 0%, #9b72cb 100%);
   border-radius: 50%;
   animation: aiBounce 1.4s infinite ease-in-out both;
 }
@@ -441,7 +441,7 @@
 }
 
 .ai-chat-input:focus {
-  border-color: #00c9ff;
+  border-color: #9b72cb;
 }
 
 .ai-chat-input:disabled {
@@ -452,7 +452,7 @@
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%);
+  background: linear-gradient(135deg, #4285f4 0%, #9b72cb 50%, #d96570 100%);
   border: none;
   color: white;
   cursor: pointer;
@@ -464,7 +464,7 @@
 
 .ai-send-btn:hover:not(:disabled) {
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 201, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(155, 114, 203, 0.4);
 }
 
 .ai-send-btn:disabled {
@@ -540,8 +540,8 @@
 }
 
 .welcome-message .ai-message-bubble {
-  background: linear-gradient(135deg, #e8f4f8 0%, #f0f9ff 100%);
-  border-left: 3px solid #667eea;
+  background: linear-gradient(135deg, #f0f4ff 0%, #f8f0ff 100%);
+  border-left: 3px solid #9b72cb;
 }
 
 /* Premium Product Cards */

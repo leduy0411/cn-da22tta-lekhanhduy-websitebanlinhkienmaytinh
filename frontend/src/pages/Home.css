@@ -836,12 +836,10 @@
   height: auto;
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  transform: perspective(1000px) rotateY(-5deg);
-  transition: transform 0.3s;
 }
 
 .banner-image:hover {
-  transform: perspective(1000px) rotateY(0deg);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
 }
 
 .banner-right {
@@ -908,12 +906,10 @@
   object-fit: cover;
   border-radius: 8px;
   border: 3px solid rgba(255, 255, 255, 0.3);
-  transition: transform 0.3s;
   cursor: pointer;
 }
 
 .product-thumb:hover {
-  transform: translateY(-5px) scale(1.05);
   border-color: white;
 }
 
@@ -2032,7 +2028,8 @@
   }
 
   .banner-features {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 
   .banner-products {
@@ -2144,12 +2141,38 @@
     justify-content: center;
   }
 
+  .promo-cards-section {
+    overflow-x: visible;
+    padding: 0 0.5rem;
+  }
+
   .promo-cards-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
     gap: 0.8rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .promo-cards-grid::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .promo-cards-grid::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  .promo-cards-grid::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
   }
 
   .promo-card {
+    min-width: 45%;
+    flex-shrink: 0;
+    scroll-snap-align: start;
     min-height: 150px;
     padding: 1rem;
   }
@@ -2217,7 +2240,13 @@
   }
 
   .banner-features {
-    font-size: 0.9rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .feature-item {
+    font-size: 0.85rem;
   }
 
   .product-thumb {

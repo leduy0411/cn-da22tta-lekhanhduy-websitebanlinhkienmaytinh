@@ -48,7 +48,7 @@ const messageSchema = new mongoose.Schema({
   entities: [{
     type: {
       type: String,
-      enum: ['product', 'category', 'brand', 'price', 'order_number', 'date', 'quantity', 'feature']
+      enum: ['product', 'category', 'brand', 'price', 'minPrice', 'maxPrice', 'order_number', 'date', 'quantity', 'feature']
     },
     value: String,
     confidence: Number
