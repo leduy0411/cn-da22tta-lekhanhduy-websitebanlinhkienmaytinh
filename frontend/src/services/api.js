@@ -137,6 +137,14 @@ export const couponAPI = {
   use: (code) => api.post('/coupons/use', { code }),
 };
 
+export const videoReviewAPI = {
+  getAll: (limit = 8) => api.get('/video-reviews', { params: { limit } }),
+  adminGetAll: () => api.get('/video-reviews/admin/all'),
+  create: (data) => api.post('/video-reviews', data),
+  update: (id, data) => api.put(`/video-reviews/${id}`, data),
+  delete: (id) => api.delete(`/video-reviews/${id}`),
+};
+
 // AI API
 export const aiAPI = {
   // Chatbot
@@ -165,6 +173,8 @@ export const aiAPI = {
       api.get(`/ai/v2/recommend/user/${userId}`, { params: { limit } }),
     getTrending: (limit = 20, category = null) =>
       api.get('/ai/v2/recommend/trending', { params: { limit, category } }),
+    getBestSellers: (limit = 12, days = 30, category = null) =>
+      api.get('/ai/v2/recommend/best-sellers', { params: { limit, days, category } }),
     getCartRecommendations: (cartItems, limit = 5) =>
       api.post('/ai/v2/recommend/cart', { cartItems }, { params: { limit } }),
     trackInteraction: (data) =>
@@ -179,6 +189,8 @@ export const aiAPI = {
       api.get('/ai/v2/training/report'),
     getABTestResults: () =>
       api.get('/ai/v2/ab-test/results'),
+    getAIStats: (days = 30) =>
+      api.get('/ai/v2/stats', { params: { days } }),
   },
 
   // Semantic Search

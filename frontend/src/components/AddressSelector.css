@@ -39,8 +39,8 @@
 .form-group select:focus,
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #e63946;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
 }
 
 .form-group select:disabled,
@@ -55,13 +55,13 @@
   padding: 1rem;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #e63946;
 }
 
 .address-preview strong {
   display: block;
   margin-bottom: 0.5rem;
-  color: #667eea;
+  color: #e63946;
   font-size: 0.9rem;
 }
 

@@ -31,7 +31,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #e63946, #7c3aed);
   color: white;
   border: none;
   border-radius: 8px;
@@ -43,7 +43,7 @@
 
 .add-coupon-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
 }
 
 /* Stats Cards */
@@ -66,7 +66,7 @@
 
 .stat-card .stat-icon {
   font-size: 1.5rem;
-  color: #667eea !important;
+  color: #e63946 !important;
   width: 40px;
   height: 40px;
   display: flex !important;
@@ -146,7 +146,7 @@
   font-family: 'Courier New', monospace;
   font-weight: 700;
   font-size: 1rem;
-  color: #667eea;
+  color: #e63946;
   background: #f0f4ff;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
@@ -176,7 +176,7 @@
 }
 
 .usage.full {
-  color: #1e3a5f;
+  color: #e63946;
 }
 
 .expiry {
@@ -184,7 +184,7 @@
 }
 
 .expiry.expired {
-  color: #1e3a5f;
+  color: #e63946;
   text-decoration: line-through;
 }
 
@@ -205,7 +205,7 @@
 
 .status.inactive {
   background: #d6e0f0;
-  color: #1e3a5f;
+  color: #e63946;
 }
 
 .action-buttons {
@@ -237,11 +237,11 @@
 
 .delete-btn {
   background: #d6e0f0;
-  color: #1e3a5f;
+  color: #e63946;
 }
 
 .delete-btn:hover {
-  background: #1e3a5f;
+  background: #e63946;
   color: white;
 }
 
@@ -302,7 +302,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .form-row {
@@ -352,13 +352,13 @@
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #e63946, #7c3aed);
   color: white;
 }
 
 .submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
 }
 
 /* Responsive */

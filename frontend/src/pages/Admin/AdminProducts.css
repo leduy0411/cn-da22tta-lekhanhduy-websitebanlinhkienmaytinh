@@ -20,7 +20,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -31,7 +31,7 @@
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(230, 57, 70, 0.4);
 }
 
 .search-bar {
@@ -82,8 +82,8 @@
 
 .subcategory-search:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #e63946;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
 }
 
 .subcategory-buttons {
@@ -104,13 +104,13 @@
 }
 
 .btn-select-all {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
 }
 
 .btn-select-all:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 .btn-clear-all {
@@ -131,7 +131,7 @@
   padding: 0.75rem;
   background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
   scrollbar-width: thin;
-  scrollbar-color: #667eea #f0f0f0;
+  scrollbar-color: #e63946 #f0f0f0;
 }
 
 .subcategory-list::-webkit-scrollbar {
@@ -144,12 +144,12 @@
 }
 
 .subcategory-list::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   border-radius: 10px;
 }
 
 .subcategory-list::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #e63946 100%);
 }
 
 .subcategory-item {
@@ -174,8 +174,8 @@
 }
 
 .subcategory-checkbox:hover {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(230, 57, 70, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+  border-color: #e63946;
   transform: translateX(4px);
 }
 
@@ -200,12 +200,12 @@
 }
 
 .subcategory-checkbox:hover .checkmark {
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .subcategory-checkbox input:checked~.checkmark {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
+  border-color: #e63946;
 }
 
 .checkmark:after {
@@ -233,7 +233,7 @@
 }
 
 .subcategory-checkbox input:checked~.subcategory-text {
-  color: #667eea;
+  color: #e63946;
   font-weight: 600;
 }
 
@@ -248,10 +248,10 @@
 .selected-count {
   margin-top: 0.75rem;
   padding: 0.6rem 1rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(230, 57, 70, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
   border-radius: 8px;
   font-size: 0.9rem;
-  color: #667eea;
+  color: #e63946;
   text-align: center;
 }
 
@@ -283,14 +283,14 @@
 
 .category-filter:hover,
 .stock-filter:hover {
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .category-filter:focus,
 .stock-filter:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #e63946;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
 }
 
 .products-table-container {
@@ -348,7 +348,7 @@
 
 .price {
   font-weight: 600;
-  color: #2d5f8a;
+  color: #e63946;
   font-size: 0.95rem;
 }
 
@@ -364,7 +364,7 @@
 
 .stock.low {
   background: #ffe5e5;
-  color: #2d5f8a;
+  color: #e63946;
 }
 
 .actions {
@@ -396,11 +396,11 @@
 
 .btn-delete {
   background: #ffe5e5;
-  color: #2d5f8a;
+  color: #e63946;
 }
 
 .btn-delete:hover {
-  background: #2d5f8a;
+  background: #e63946;
   color: white;
 }
 
@@ -460,7 +460,7 @@
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 /* Style cho category select */
@@ -514,13 +514,13 @@
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
 }
 
 .btn-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 /* Styles cho Quill Editor */

@@ -20,7 +20,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -31,7 +31,7 @@
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(230, 57, 70, 0.4);
 }
 
 .filters-table-container {
@@ -48,7 +48,7 @@
 }
 
 .filters-table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
 }
 
@@ -90,7 +90,7 @@ code {
   border-radius: 4px;
   font-family: 'Courier New', monospace;
   font-size: 0.9rem;
-  color: #667eea;
+  color: #e63946;
 }
 
 .type-badge {
@@ -171,11 +171,11 @@ code {
 
 .btn-delete {
   background: #ffe5e5;
-  color: #2d5f8a;
+  color: #e63946;
 }
 
 .btn-delete:hover {
-  background: #2d5f8a;
+  background: #e63946;
   color: white;
 }
 
@@ -237,7 +237,7 @@ code {
 }
 
 .guide-table thead {
-  background: #667eea;
+  background: #e63946;
   color: white;
 }
 
@@ -301,7 +301,7 @@ code {
 
 .form-group input:focus,
 .form-group select:focus {
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .form-group small {
@@ -339,7 +339,7 @@ code {
 }
 
 .btn-remove {
-  background: #2d5f8a;
+  background: #e63946;
   color: white;
   border: none;
   border-radius: 50%;
@@ -374,7 +374,7 @@ code {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #667eea;
+  background: #e63946;
   color: white;
   border: none;
   border-radius: 6px;
@@ -415,20 +415,20 @@ code {
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
 }
 
 .btn-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 .loading {
   text-align: center;
   padding: 3rem;
   font-size: 1.2rem;
-  color: #667eea;
+  color: #e63946;
 }
 
 @media (max-width: 768px) {
@@ -526,8 +526,8 @@ code {
   width: 100%;
   padding: 0.75rem;
   background: white;
-  border: 2px solid #667eea;
-  color: #667eea;
+  border: 2px solid #e63946;
+  color: #e63946;
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
@@ -536,7 +536,7 @@ code {
 }
 
 .btn-toggle-bulk:hover {
-  background: #667eea;
+  background: #e63946;
   color: white;
 }
 

@@ -107,7 +107,7 @@
 
 .write-review-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -118,7 +118,7 @@
 
 .write-review-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 .sort-select {
@@ -132,7 +132,7 @@
 
 .sort-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .review-form {
@@ -171,7 +171,7 @@
 
 .review-form textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .form-actions {
@@ -195,7 +195,7 @@
 }
 
 .form-actions button[type="submit"] {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
 }
 
@@ -269,7 +269,7 @@
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -349,13 +349,13 @@
 }
 
 .helpful-btn:hover:not(:disabled) {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #e63946;
+  color: #e63946;
 }
 
 .helpful-btn.active {
-  background: #667eea;
-  border-color: #667eea;
+  background: #e63946;
+  border-color: #e63946;
   color: white;
 }
 
@@ -387,11 +387,11 @@
 
 .owner-actions .edit-btn {
   background: #eef2ff;
-  color: #667eea;
+  color: #e63946;
 }
 
 .owner-actions .edit-btn:hover {
-  background: #667eea;
+  background: #e63946;
   color: white;
 }
 
@@ -414,7 +414,7 @@
 .no-reviews button {
   margin-top: 1rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -425,7 +425,7 @@
 
 .no-reviews button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 .reviews-pagination {
@@ -449,8 +449,8 @@
 }
 
 .reviews-pagination button:hover:not(:disabled) {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #e63946;
+  color: #e63946;
 }
 
 .reviews-pagination button:disabled {
@@ -527,8 +527,8 @@
 }
 
 .add-image-btn:hover {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #e63946;
+  color: #e63946;
   background: #f0f0ff;
 }
 
@@ -545,7 +545,7 @@
   display: block;
   margin-top: 0.5rem;
   font-size: 0.85rem;
-  color: #667eea;
+  color: #e63946;
   font-style: italic;
 }
 
@@ -569,8 +569,8 @@
 
 .review-images-display img:hover {
   transform: scale(1.05);
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  border-color: #e63946;
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
 }
 
 /* Admin Reply Styles */

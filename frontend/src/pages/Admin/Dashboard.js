@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiUsers, FiPackage, FiShoppingBag, FiDollarSign, FiAlertCircle, FiTrendingUp, FiEye, FiX } from 'react-icons/fi';
+import { FiUsers, FiPackage, FiShoppingBag, FiDollarSign, FiAlertCircle, FiTrendingUp, FiEye, FiX, FiCalendar } from 'react-icons/fi';
 import { adminAPI, orderAPI, productAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -114,11 +114,11 @@ const Dashboard = () => {
     });
 
     const statusData = [
-      { name: 'Chờ xử lý', value: statusCount.pending, color: '#FFB74D' },
-      { name: 'Đang xử lý', value: statusCount.processing, color: '#64B5F6' },
-      { name: 'Đang giao', value: statusCount.shipped, color: '#9575CD' },
-      { name: 'Đã giao', value: statusCount.delivered, color: '#4CAF50' },
-      { name: 'Đã hủy', value: statusCount.cancelled, color: '#EF5350' }
+      { name: 'Chờ xử lý', value: statusCount.pending, color: '#f59e0b' },
+      { name: 'Đang xử lý', value: statusCount.processing, color: '#3b82f6' },
+      { name: 'Đang giao', value: statusCount.shipped, color: '#7c3aed' },
+      { name: 'Đã giao', value: statusCount.delivered, color: '#10b981' },
+      { name: 'Đã hủy', value: statusCount.cancelled, color: '#e63946' }
     ].filter(s => s.value > 0);
 
     setOrderStatusData(statusData);
@@ -230,32 +230,32 @@ const Dashboard = () => {
       icon: FiUsers,
       title: 'Tổng khách hàng',
       value: stats?.totalUsers || 0,
-      color1: '#667eea',
-      color2: '#764ba2',
+      color1: '#e63946',
+      color2: '#f97068',
       onClick: () => handleStatCardClick('users')
     },
     {
       icon: FiPackage,
       title: 'Tổng sản phẩm',
       value: stats?.totalProducts || 0,
-      color1: '#11998e',
-      color2: '#38ef7d',
+      color1: '#7c3aed',
+      color2: '#a78bfa',
       onClick: () => handleStatCardClick('products')
     },
     {
       icon: FiShoppingBag,
       title: 'Tổng đơn hàng',
       value: stats?.totalOrders || 0,
-      color1: '#eb3349',
-      color2: '#f45c43',
+      color1: '#3b82f6',
+      color2: '#60a5fa',
       onClick: () => handleStatCardClick('orders')
     },
     {
       icon: FiDollarSign,
       title: 'Tổng doanh thu',
       value: formatPrice(stats?.totalRevenue || 0),
-      color1: '#f2994a',
-      color2: '#f2c94c',
+      color1: '#10b981',
+      color2: '#34d399',
       onClick: () => handleStatCardClick('revenue')
     },
   ];
@@ -278,8 +278,18 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1>Thống kê và báo cáo</h1>
-        <p className="dashboard-subtitle">Tổng quan hệ thống</p>
+        <div className="dashboard-header-content">
+          <div className="dashboard-header-left">
+            <h1>Thống kê và báo cáo</h1>
+            <p className="dashboard-subtitle">Tổng quan hệ thống quản trị</p>
+          </div>
+          <div className="dashboard-header-right">
+            <div className="dashboard-date-badge">
+              <FiCalendar size={16} />
+              {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+            </div>
+          </div>
+        </div>
       </div>
 
       {isAdmin() && (
@@ -307,11 +317,13 @@ const Dashboard = () => {
           </div>
 
           <div className="alerts-section">
-            <h2>Cảnh báo</h2>
+            <h2>⚡ Cảnh báo</h2>
             <div className="alerts-grid">
               {alertCards.map((card, index) => (
-                <div key={index} className="alert-card">
-                  <card.icon size={32} color={card.color} />
+                <div key={index} className="alert-card" style={{ '--alert-color': card.color, '--alert-bg': card.color + '15' }}>
+                  <div className="alert-icon-wrapper" style={{ background: card.color + '12' }}>
+                    <card.icon size={26} color={card.color} />
+                  </div>
                   <div className="alert-content">
                     <h3>{card.title}</h3>
                     <p className="alert-value" style={{ color: card.color }}>
@@ -349,8 +361,8 @@ const Dashboard = () => {
                       <Bar dataKey="revenue" fill="url(#colorRevenue)" radius={[4, 4, 0, 0]} />
                       <defs>
                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#667eea" stopOpacity={1}/>
-                          <stop offset="100%" stopColor="#764ba2" stopOpacity={0.8}/>
+                          <stop offset="0%" stopColor="#e63946" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#7c3aed" stopOpacity={0.8}/>
                         </linearGradient>
                       </defs>
                     </BarChart>
@@ -377,10 +389,10 @@ const Dashboard = () => {
                       <Line 
                         type="monotone" 
                         dataKey="orders" 
-                        stroke="#10b981" 
+                        stroke="#7c3aed" 
                         strokeWidth={3}
-                        dot={{ fill: '#10b981', strokeWidth: 2, r: 5 }}
-                        activeDot={{ r: 7, fill: '#10b981' }}
+                        dot={{ fill: '#7c3aed', strokeWidth: 2, r: 5, stroke: '#fff' }}
+                        activeDot={{ r: 7, fill: '#7c3aed', stroke: '#fff', strokeWidth: 2 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -450,7 +462,7 @@ const Dashboard = () => {
       {/* Đơn hàng chờ xử lý */}
       <div className="pending-orders-section">
         <div className="section-header">
-          <h2>Đơn hàng chờ xử lý</h2>
+          <h2>🛒 Đơn hàng chờ xử lý</h2>
           <a href="/admin/orders" className="view-all-link">Xem tất cả →</a>
         </div>
         <div className="orders-list">
@@ -507,7 +519,7 @@ const Dashboard = () => {
       {/* Sản phẩm sắp hết hàng */}
       <div className="low-stock-section">
         <div className="section-header">
-          <h2>Sản phẩm sắp hết hàng</h2>
+          <h2>📦 Sản phẩm sắp hết hàng</h2>
           <a href="/admin/products" className="view-all-link">Xem tất cả →</a>
         </div>
         <div className="products-list">
@@ -562,7 +574,7 @@ const Dashboard = () => {
       </div>
 
       <div className="quick-actions">
-        <h2>Thao tác nhanh</h2>
+        <h2>🚀 Thao tác nhanh</h2>
         <div className="actions-grid">
           <a href="/admin/products" className="action-btn">
             <FiPackage size={20} />

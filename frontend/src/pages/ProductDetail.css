@@ -308,7 +308,7 @@
   text-align: center;
   padding: 3rem;
   font-size: 1.2rem;
-  color: #667eea;
+  color: #e63946;
 }
 
 /* Styles cho nội dung HTML trong mô tả sản phẩm */
@@ -370,7 +370,7 @@
 }
 
 .product-description-content a {
-  color: #667eea;
+  color: #e63946;
   text-decoration: none;
 }
 
@@ -420,7 +420,7 @@
 .related-products-section {
   margin-top: 3rem;
   padding-top: 2rem;
-  border-top: 2px solid #e0e0e0;
+  border-top: 2px solid #e2e8f0;
 }
 
 .related-products-title {

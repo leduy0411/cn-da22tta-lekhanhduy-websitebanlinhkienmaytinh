@@ -202,7 +202,7 @@ const styles = `
 .lottie-container.ai-thinking .lottie-text {
   color: #8b5cf6;
   font-weight: 600;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #e63946, #7c3aed);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

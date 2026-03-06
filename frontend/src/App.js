@@ -31,6 +31,7 @@ import AdminAI from './pages/Admin/AdminAI';
 import AdminReviews from './pages/Admin/AdminReviews';
 import AdminCoupons from './pages/Admin/AdminCoupons';
 import AdminSubcategories from './pages/Admin/AdminSubcategories';
+import AdminVideoReviews from './pages/Admin/AdminVideoReviews';
 import './App.css';
 
 // Protected Route cho Admin
@@ -98,6 +99,7 @@ function AppContent() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="coupons" element={<AdminCoupons />} />
           <Route path="reviews" element={<AdminReviews />} />
+          <Route path="video-reviews" element={<AdminVideoReviews />} />
           <Route path="ai" element={<AdminAI />} />
         </Route>
 

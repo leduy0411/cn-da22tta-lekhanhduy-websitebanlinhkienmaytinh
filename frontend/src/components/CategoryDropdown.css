@@ -18,11 +18,11 @@
 }
 
 .category-dropdown-header:hover {
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .category-dropdown-header.open {
-  border-color: #667eea;
+  border-color: #e63946;
   border-radius: 8px 8px 0 0;
 }
 
@@ -72,7 +72,7 @@
   left: 0;
   right: 0;
   background: white;
-  border: 2px solid #667eea;
+  border: 2px solid #e63946;
   border-top: none;
   border-radius: 0 0 8px 8px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
@@ -99,7 +99,7 @@
 }
 
 .category-dropdown-list::-webkit-scrollbar-thumb {
-  background: #667eea;
+  background: #e63946;
   border-radius: 3px;
 }
 
@@ -126,8 +126,8 @@
 }
 
 .category-dropdown-item.selected {
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  border-left: 3px solid #667eea;
+  background: linear-gradient(135deg, #e6394615 0%, #7c3aed15 100%);
+  border-left: 3px solid #e63946;
 }
 
 .category-dropdown-count {

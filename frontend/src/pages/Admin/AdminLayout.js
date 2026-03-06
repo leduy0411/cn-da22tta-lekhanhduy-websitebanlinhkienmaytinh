@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiStar, FiTag, FiCpu } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2, FiLogOut, FiGrid, FiStar, FiTag, FiCpu, FiVideo } from 'react-icons/fi';
 import { RiRobot2Line } from 'react-icons/ri';
 import { useAuth } from '../../context/AuthContext';
 import Swal from 'sweetalert2';
@@ -41,6 +41,7 @@ const AdminLayout = () => {
     { id: 'users', path: '/admin/users', icon: FiUsers, label: 'Người dùng', roles: ['admin'] },
     { id: 'coupons', path: '/admin/coupons', icon: FiTag, label: 'Mã giảm giá', roles: ['admin', 'staff'] },
     { id: 'reviews', path: '/admin/reviews', icon: FiStar, label: 'Đánh giá', roles: ['admin', 'staff'] },
+    { id: 'video-reviews', path: '/admin/video-reviews', icon: FiVideo, label: 'Video Review', roles: ['admin'] },
     { id: 'ai', path: '/admin/ai', icon: RiRobot2Line, label: 'Quản lý AI', roles: ['admin'] },
   ];
 

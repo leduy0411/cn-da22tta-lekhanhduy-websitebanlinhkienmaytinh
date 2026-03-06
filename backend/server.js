@@ -60,6 +60,7 @@ const reviewRoutes = require('./routes/reviews');
 const couponRoutes = require('./routes/coupons');
 const aiRoutes = require('./routes/ai');
 const recommendationV2Routes = require('./routes/v2/recommendations');
+const videoReviewRoutes = require('./routes/videoReviews');
 
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -75,6 +76,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai/v2', recommendationV2Routes);
+app.use('/api/video-reviews', videoReviewRoutes);
 
 // Home route
 app.get('/', (req, res) => {

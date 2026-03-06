@@ -61,13 +61,13 @@
 }
 
 .animated-button.danger {
-  background: linear-gradient(135deg, #2d5f8a 0%, #1e3a5f 100%);
+  background: linear-gradient(135deg, #e63946 0%, #c62828 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);
+  box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
 }
 
 .animated-button.danger:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
+  background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
 }
 
 .animated-button.success {

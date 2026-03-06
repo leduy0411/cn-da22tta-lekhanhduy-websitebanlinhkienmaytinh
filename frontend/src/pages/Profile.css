@@ -53,7 +53,7 @@
   right: 5px;
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -61,7 +61,7 @@
   color: #fff;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.4);
 }
 
 .avatar-upload-btn:hover {
@@ -105,11 +105,11 @@
 
 .profile-nav .nav-item:hover {
   background: #f5f7fa;
-  color: #667eea;
+  color: #e63946;
 }
 
 .profile-nav .nav-item.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: #fff;
 }
 
@@ -155,7 +155,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -166,7 +166,7 @@
 
 .edit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 /* Messages */
@@ -210,7 +210,7 @@
 }
 
 .form-group label svg {
-  color: #667eea;
+  color: #e63946;
 }
 
 .form-group input,
@@ -227,8 +227,8 @@
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  border-color: #e63946;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
 }
 
 .form-group input:disabled,
@@ -263,7 +263,7 @@
 
 .save-btn {
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -275,7 +275,7 @@
 
 .save-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
 }
 
 .save-btn:disabled {
@@ -331,7 +331,7 @@
 
 .shop-btn {
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -342,7 +342,7 @@
 
 .shop-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 .reviews-list {
@@ -397,7 +397,7 @@
 }
 
 .product-info h4:hover {
-  color: #667eea;
+  color: #e63946;
 }
 
 .review-rating {

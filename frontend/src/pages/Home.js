@@ -4,7 +4,8 @@ import { productAPI } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import MegaMenu from '../components/MegaMenu';
 import RecommendationSection from '../components/RecommendationSection';
-import { useTrendingProducts, useUserRecommendations } from '../hooks/useRecommendations';
+import VideoReviewSection from '../components/VideoReviewSection';
+import { useTrendingProducts, useUserRecommendations, useBestSellerProducts } from '../hooks/useRecommendations';
 import { useAuth } from '../context/AuthContext';
 import './Home.css';
 
@@ -39,6 +40,7 @@ const Home = ({ searchQuery }) => {
   // === AI Recommendation Hooks ===
   const { user } = useAuth();
   const { products: trendingProducts, loading: trendingLoading, source: trendingSource } = useTrendingProducts(12);
+  const { products: bestSellers, loading: bestSellersLoading, source: bestSellersSource } = useBestSellerProducts(12, 30);
   const { recommendations: personalRecs, loading: personalLoading, source: personalSource, trackClick } = useUserRecommendations(user?._id, 12);
 
   const bannerImages = [
@@ -597,6 +599,14 @@ const Home = ({ searchQuery }) => {
             loading={trendingLoading}
             source={trendingSource}
           />
+          <RecommendationSection
+            title="Bán chạy nhất"
+            icon="🏆"
+            products={bestSellers}
+            loading={bestSellersLoading}
+            source={bestSellersSource}
+          />
+          <VideoReviewSection />
           {user && (
             <RecommendationSection
               title="Gợi ý cho bạn"

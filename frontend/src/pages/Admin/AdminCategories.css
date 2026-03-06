@@ -19,7 +19,7 @@
 }
 
 .categories-header h1 svg {
-  color: #667eea;
+  color: #e63946;
 }
 
 .btn-add {
@@ -27,7 +27,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -38,7 +38,7 @@
 
 .btn-add:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 .alert {
@@ -67,7 +67,7 @@
 }
 
 .categories-table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
 }
 
@@ -145,7 +145,7 @@
 .category-order {
   text-align: center;
   font-weight: 600;
-  color: #667eea;
+  color: #e63946;
 }
 
 .btn-toggle {
@@ -306,7 +306,7 @@
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .form-group small {
@@ -375,7 +375,7 @@
 }
 
 .uploading-text {
-  color: #667eea;
+  color: #e63946;
   font-size: 0.9rem;
   margin-top: 0.5rem;
   font-style: italic;
@@ -432,19 +432,19 @@
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
 }
 
 .btn-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 .loading {
   text-align: center;
   padding: 3rem;
-  color: #667eea;
+  color: #e63946;
   font-size: 1.2rem;
 }
 

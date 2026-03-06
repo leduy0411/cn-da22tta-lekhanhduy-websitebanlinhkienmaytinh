@@ -260,6 +260,37 @@ export const useTrendingProducts = (limit = 12, category = null) => {
 };
 
 /**
+ * Hook for best-seller products based on actual purchase data
+ * Used on Home page
+ */
+export const useBestSellerProducts = (limit = 12, days = 30) => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState(null);
+
+  useEffect(() => {
+    const fetchBestSellers = async () => {
+      setLoading(true);
+      try {
+        const response = await aiAPI.v2.getBestSellers(limit, days);
+        const data = response.data;
+        if (data.success && data.recommendations?.length > 0) {
+          setProducts(data.recommendations);
+          setSource('order-aggregation');
+        }
+      } catch (err) {
+        console.warn('[BestSellers] Error:', err.message);
+      }
+      setLoading(false);
+    };
+
+    fetchBestSellers();
+  }, [limit, days]);
+
+  return { products, loading, source };
+};
+
+/**
  * Hook for tracking user interactions (view, click, add_to_cart, purchase)
  * Used across all pages
  */
@@ -297,6 +328,7 @@ const recommendationHooks = {
   useUserRecommendations,
   useCartRecommendations,
   useTrendingProducts,
+  useBestSellerProducts,
   useInteractionTracker
 };
 

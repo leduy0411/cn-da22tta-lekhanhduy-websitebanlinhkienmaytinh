@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
+m                                                                              mm
 class Settings:
     # MongoDB
     MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017/thietbidientu")

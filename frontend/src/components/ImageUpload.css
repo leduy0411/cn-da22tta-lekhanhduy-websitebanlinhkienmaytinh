@@ -28,12 +28,12 @@
 }
 
 .upload-area:hover {
-  border-color: #667eea;
+  border-color: #e63946;
   background: #f0f4ff;
 }
 
 .upload-area.drag-active {
-  border-color: #667eea;
+  border-color: #e63946;
   background: #e3f2fd;
   transform: scale(1.02);
 }
@@ -41,7 +41,7 @@
 .upload-icon {
   width: 48px;
   height: 48px;
-  color: #667eea;
+  color: #e63946;
   margin-bottom: 1rem;
 }
 
@@ -128,12 +128,12 @@
 }
 
 .upload-area-small:hover {
-  border-color: #667eea;
+  border-color: #e63946;
   background: #f0f4ff;
 }
 
 .upload-area-small.drag-active {
-  border-color: #667eea;
+  border-color: #e63946;
   background: #e3f2fd;
   transform: scale(1.05);
 }
@@ -141,7 +141,7 @@
 .upload-icon-small {
   width: 32px;
   height: 32px;
-  color: #667eea;
+  color: #e63946;
   margin-bottom: 0.5rem;
 }
 

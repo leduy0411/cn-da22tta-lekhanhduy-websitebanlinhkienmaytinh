@@ -14,7 +14,7 @@
 
 .admin-sidebar {
   width: 260px;
-  background: #d7262b;
+  background: linear-gradient(180deg, #e63946 0%, #c81e2b 100%);
   color: white;
   position: fixed;
   height: 100vh;
@@ -151,7 +151,7 @@
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2d5f8a 0%, #1e3a5f 100%);
+  background: linear-gradient(135deg, #e63946 0%, #e63946 100%);
   display: flex;
   align-items: center;
   justify-content: center;

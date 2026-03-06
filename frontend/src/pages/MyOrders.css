@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 2rem 1rem;
   min-height: calc(100vh - 200px);
+  background: linear-gradient(135deg, #fafbff 0%, #f0f2f8 50%, #faf0f1 100%);
 }
 
 .orders-header {
@@ -42,22 +43,22 @@
   padding: 0.75rem 1.5rem;
   border: 2px solid #e0e0e0;
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   font-weight: 600;
   color: #666;
 }
 
 .filter-btn:hover {
-  border-color: #1e3a5f;
-  color: #1e3a5f;
+  border-color: #e63946;
+  color: #e63946;
 }
 
 .filter-btn.active {
-  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
+  background: linear-gradient(135deg, #e63946 0%, #c62828 100%);
   color: white;
-  border-color: #1e3a5f;
+  border-color: #e63946;
 }
 
 /* Orders List */
@@ -69,15 +70,16 @@
 
 .order-card {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   overflow: hidden;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(0,0,0,0.04);
 }
 
 .order-card:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(230, 57, 70, 0.1);
+  transform: translateY(-4px);
 }
 
 .order-header {
@@ -244,18 +246,18 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
+  background: linear-gradient(135deg, #e63946 0%, #c62828 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .btn-view-detail:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(230, 57, 70, 0.35);
 }
 
 .btn-cancel-order {
@@ -311,17 +313,17 @@
 .btn-shop-now {
   display: inline-block;
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
+  background: linear-gradient(135deg, #e63946 0%, #c62828 100%);
   color: white;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 600;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .btn-shop-now:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(230, 57, 70, 0.35);
 }
 
 /* Auth Required */
@@ -351,17 +353,17 @@
 .btn-login {
   display: inline-block;
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
+  background: linear-gradient(135deg, #e63946 0%, #c62828 100%);
   color: white;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 600;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .btn-login:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(230, 57, 70, 0.35);
 }
 
 /* Modal Detail */
@@ -567,7 +569,7 @@
   text-align: center;
   padding: 3rem;
   font-size: 1.2rem;
-  color: #1e3a5f;
+  color: #e63946;
 }
 
 /* Responsive */

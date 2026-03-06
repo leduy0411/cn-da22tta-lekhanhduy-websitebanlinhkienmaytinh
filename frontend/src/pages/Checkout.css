@@ -1,7 +1,7 @@
 .checkout-page {
   padding: 0.5rem 0;
   min-height: calc(100vh - 80px);
-  background: #f8f9fa;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .checkout-empty {
@@ -10,12 +10,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .checkout-title {
   font-size: 1.2rem;
-  color: #333;
+  color: #1e293b;
   margin-bottom: 0.75rem;
   text-align: center;
 }
@@ -30,8 +30,9 @@
 .checkout-form {
   background: white;
   padding: 1rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .checkout-form h2 {
@@ -68,7 +69,8 @@
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
-  border-color: #667eea;
+  border-color: #e63946;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.06);
 }
 
 .form-row {
@@ -80,20 +82,20 @@
 .submit-order-btn {
   width: 100%;
   padding: 0.75rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #dc2626 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   margin-top: 0.75rem;
-  transition: all 0.3s;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .submit-order-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(230, 57, 70, 0.35);
 }
 
 .submit-order-btn:disabled {
@@ -109,8 +111,9 @@
 .order-summary {
   background: white;
   padding: 1.25rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .order-summary h2 {
@@ -216,18 +219,18 @@
 
 .back-to-shop {
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #dc2626 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .back-to-shop:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(230, 57, 70, 0.35);
 }
 
 @media (max-width: 968px) {
@@ -362,7 +365,7 @@
   margin-left: 1.5rem;
   background: #f9fafb;
   border-radius: 8px;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid #e63946;
 }
 
 .payment-sub-option {
@@ -379,12 +382,12 @@
 }
 
 .payment-sub-option:hover {
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .payment-sub-option.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-color: #e63946;
+  background: linear-gradient(135deg, rgba(230, 57, 70, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
 }
 
 .payment-sub-option input[type="radio"] {
@@ -634,7 +637,7 @@
 
 .check-payment-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -642,12 +645,12 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
 }
 
 .check-payment-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4);
 }
 
 .check-payment-btn:disabled {
@@ -957,7 +960,7 @@
 
 .modal-close-btn {
   padding: 1rem 3rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -965,12 +968,12 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
 }
 
 .modal-close-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4);
 }
 
 @media (max-width: 768px) {
@@ -1048,7 +1051,7 @@
 
 .coupon-input-wrapper input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #e63946;
 }
 
 .coupon-input-wrapper input.error {
@@ -1062,7 +1065,7 @@
   top: 4px;
   bottom: 4px;
   padding: 0 1rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #e63946, #7c3aed);
   color: white;
   border: none;
   border-radius: 6px;
@@ -1075,7 +1078,7 @@
 
 .apply-coupon-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
 }
 
 .apply-coupon-btn:disabled {

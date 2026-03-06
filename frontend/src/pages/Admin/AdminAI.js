@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { RiRobot2Line, RiSearchLine, RiBarChartLine, RiSettings4Line, RiRefreshLine, RiPlayCircleLine, RiFileChartLine, RiSendPlaneFill } from 'react-icons/ri';
-import { FiMessageCircle, FiTrendingUp, FiDatabase, FiCpu, FiActivity, FiCheckCircle, FiAlertCircle, FiZap } from 'react-icons/fi';
+import { RiRobot2Line, RiSearchLine, RiBarChartLine, RiSettings4Line, RiRefreshLine, RiPlayCircleLine, RiFileChartLine, RiSendPlaneFill, RiPieChartLine } from 'react-icons/ri';
+import { FiMessageCircle, FiTrendingUp, FiDatabase, FiCpu, FiActivity, FiCheckCircle, FiAlertCircle, FiZap, FiShoppingCart, FiUsers, FiTarget, FiEye, FiMousePointer, FiPackage } from 'react-icons/fi';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import './AdminAI.css';
@@ -18,6 +18,8 @@ const AdminAI = () => {
   const [geminiTestMessage, setGeminiTestMessage] = useState('');
   const [geminiTestResponse, setGeminiTestResponse] = useState(null);
   const [geminiTesting, setGeminiTesting] = useState(false);
+  const [aiUsageStats, setAiUsageStats] = useState(null);
+  const [statsDays, setStatsDays] = useState(30);
 
   const getAuthHeader = useCallback(() => {
     const token = localStorage.getItem('token');
@@ -90,6 +92,21 @@ const AdminAI = () => {
     }
   }, [getAuthHeader]);
 
+  const loadAIUsageStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/ai/v2/stats`, {
+        ...getAuthHeader(),
+        params: { days: statsDays }
+      }).catch(() => null);
+      setAiUsageStats(response?.data || null);
+    } catch (error) {
+      console.error('Error loading AI usage stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [getAuthHeader, statsDays]);
+
   useEffect(() => {
     if (activeTab === 'overview') {
       loadAIStats();
@@ -102,8 +119,10 @@ const AdminAI = () => {
       loadForecast();
     } else if (activeTab === 'settings') {
       loadGeminiStatus();
+    } else if (activeTab === 'stats') {
+      loadAIUsageStats();
     }
-  }, [activeTab, loadAIStats, loadConversations, loadEvaluationReport, loadForecast, loadGeminiStatus]);
+  }, [activeTab, loadAIStats, loadConversations, loadEvaluationReport, loadForecast, loadGeminiStatus, loadAIUsageStats]);
 
   const handleRunEvaluation = async (modelType) => {
     try {
@@ -202,6 +221,7 @@ const AdminAI = () => {
 
   const tabs = [
     { id: 'overview', label: 'Tổng quan', icon: RiBarChartLine },
+    { id: 'stats', label: 'Thống kê AI', icon: RiPieChartLine },
     { id: 'conversations', label: 'Hội thoại AI', icon: FiMessageCircle },
     { id: 'evaluation', label: 'Đánh giá Model', icon: RiFileChartLine },
     { id: 'forecast', label: 'Dự báo', icon: FiTrendingUp },
@@ -619,6 +639,227 @@ const AdminAI = () => {
     </div>
   );
 
+  const featureIcons = {
+    personalizedRecommendations: <FiUsers />,
+    similarProducts: <FiTarget />,
+    cartCrossSell: <FiShoppingCart />,
+    frequentlyBoughtTogether: <FiPackage />,
+    trending: <FiTrendingUp />,
+    semanticSearch: <RiSearchLine />,
+    abTesting: <FiActivity />
+  };
+
+  const featureColors = {
+    personalizedRecommendations: '#e63946',
+    similarProducts: '#7c3aed',
+    cartCrossSell: '#3b82f6',
+    frequentlyBoughtTogether: '#f59e0b',
+    trending: '#10b981',
+    semanticSearch: '#ec4899',
+    abTesting: '#6366f1'
+  };
+
+  const renderStats = () => {
+    const features = aiUsageStats?.features;
+    const interactions = aiUsageStats?.interactions;
+
+    return (
+      <div className="ai-stats-tab">
+        <div className="section-header">
+          <h3><RiPieChartLine /> Thống kê sử dụng AI</h3>
+          <div className="stats-controls">
+            <select
+              className="stats-period-select"
+              value={statsDays}
+              onChange={e => setStatsDays(Number(e.target.value))}
+            >
+              <option value={7}>7 ngày</option>
+              <option value={14}>14 ngày</option>
+              <option value={30}>30 ngày</option>
+              <option value={60}>60 ngày</option>
+              <option value={90}>90 ngày</option>
+            </select>
+            <button className="refresh-btn" onClick={loadAIUsageStats} disabled={loading}>
+              <RiRefreshLine className={loading ? 'spinning' : ''} /> Làm mới
+            </button>
+          </div>
+        </div>
+
+        {!aiUsageStats ? (
+          <div className="empty-state">
+            <RiBarChartLine size={60} />
+            <p>Đang tải dữ liệu thống kê...</p>
+          </div>
+        ) : (
+          <>
+            {/* Summary Cards */}
+            <div className="stats-summary-row">
+              <div className="stats-summary-card">
+                <div className="summary-icon" style={{ background: 'linear-gradient(135deg, #e63946, #c62828)' }}>
+                  <FiActivity />
+                </div>
+                <div className="summary-info">
+                  <span className="summary-value">{(aiUsageStats.totalRecommendationRequests || 0).toLocaleString()}</span>
+                  <span className="summary-label">Tổng lượt gợi ý</span>
+                </div>
+              </div>
+              <div className="stats-summary-card">
+                <div className="summary-icon" style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)' }}>
+                  <FiEye />
+                </div>
+                <div className="summary-info">
+                  <span className="summary-value">{(aiUsageStats.totalUserInteractions || 0).toLocaleString()}</span>
+                  <span className="summary-label">Tổng tương tác</span>
+                </div>
+              </div>
+              <div className="stats-summary-card">
+                <div className="summary-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
+                  <FiMousePointer />
+                </div>
+                <div className="summary-info">
+                  <span className="summary-value">
+                    {features ? Object.values(features).filter(f => f.clicks !== undefined).reduce((s, f) => s + (f.clicks || 0), 0).toLocaleString() : 0}
+                  </span>
+                  <span className="summary-label">Tổng lượt click</span>
+                </div>
+              </div>
+              <div className="stats-summary-card">
+                <div className="summary-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                  <FiCheckCircle />
+                </div>
+                <div className="summary-info">
+                  <span className="summary-value">
+                    {features ? Object.values(features).filter(f => f.conversions !== undefined).reduce((s, f) => s + (f.conversions || 0), 0).toLocaleString() : 0}
+                  </span>
+                  <span className="summary-label">Chuyển đổi</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature Cards */}
+            <h4 className="stats-section-title">Chi tiết từng tính năng AI</h4>
+            <div className="stats-features-grid">
+              {features && Object.entries(features).map(([key, feature]) => (
+                <div className="stats-feature-card" key={key}>
+                  <div className="feature-card-header">
+                    <div className="feature-card-icon" style={{ background: featureColors[key] || '#6b7280' }}>
+                      {featureIcons[key] || <FiActivity />}
+                    </div>
+                    <div className="feature-card-title">
+                      <h5>{feature.label}</h5>
+                      <p>{feature.description}</p>
+                    </div>
+                  </div>
+
+                  {key === 'abTesting' ? (
+                    <div className="feature-card-body">
+                      <div className="stat-row">
+                        <span className="stat-row-label">Tổng số test</span>
+                        <span className="stat-row-value">{(feature.totalTests || 0).toLocaleString()}</span>
+                      </div>
+                      {feature.variants && feature.variants.length > 0 ? (
+                        <div className="ab-variants-table">
+                          <div className="ab-row ab-header-row">
+                            <span>Variant</span>
+                            <span>Lượt dùng</span>
+                            <span>Clicks</span>
+                            <span>CTR</span>
+                          </div>
+                          {feature.variants.map(v => (
+                            <div className="ab-row" key={v.variant}>
+                              <span className="ab-variant-badge">Variant {v.variant}</span>
+                              <span>{v.count.toLocaleString()}</span>
+                              <span>{v.clicks.toLocaleString()}</span>
+                              <span className="ctr-value">{v.ctr}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="no-data-text">Chưa có dữ liệu A/B test</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="feature-card-body">
+                      <div className="stat-row main-stat">
+                        <span className="stat-row-label">Số lượt sử dụng</span>
+                        <span className="stat-row-value highlight" style={{ color: featureColors[key] }}>
+                          {(feature.count || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      {feature.clicks !== undefined && (
+                        <div className="stat-row">
+                          <span className="stat-row-label">Lượt click</span>
+                          <span className="stat-row-value">{(feature.clicks || 0).toLocaleString()}</span>
+                        </div>
+                      )}
+                      {feature.conversions !== undefined && (
+                        <div className="stat-row">
+                          <span className="stat-row-label">Chuyển đổi</span>
+                          <span className="stat-row-value">{(feature.conversions || 0).toLocaleString()}</span>
+                        </div>
+                      )}
+                      {feature.ctr !== undefined && feature.ctr !== '—' && (
+                        <div className="stat-row">
+                          <span className="stat-row-label">CTR</span>
+                          <span className="stat-row-value ctr-value">{feature.ctr}%</span>
+                        </div>
+                      )}
+                      {feature.avgLatency > 0 && (
+                        <div className="stat-row">
+                          <span className="stat-row-label">Avg Latency</span>
+                          <span className="stat-row-value">{feature.avgLatency}ms</span>
+                        </div>
+                      )}
+                      {feature.uniqueUsers !== undefined && (
+                        <div className="stat-row">
+                          <span className="stat-row-label">Users</span>
+                          <span className="stat-row-value">{(feature.uniqueUsers || 0).toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Interaction Breakdown */}
+            {interactions && (
+              <>
+                <h4 className="stats-section-title">Phân bổ tương tác người dùng</h4>
+                <div className="interactions-grid">
+                  {[
+                    { key: 'view', label: 'Xem sản phẩm', icon: <FiEye />, color: '#3b82f6' },
+                    { key: 'search_click', label: 'Click từ tìm kiếm', icon: <RiSearchLine />, color: '#ec4899' },
+                    { key: 'cart_add', label: 'Thêm giỏ hàng', icon: <FiShoppingCart />, color: '#f59e0b' },
+                    { key: 'wishlist', label: 'Yêu thích', icon: <FiCheckCircle />, color: '#ef4444' },
+                    { key: 'review', label: 'Đánh giá', icon: <FiMessageCircle />, color: '#8b5cf6' },
+                    { key: 'purchase', label: 'Mua hàng', icon: <FiPackage />, color: '#10b981' }
+                  ].map(item => (
+                    <div className="interaction-card" key={item.key}>
+                      <div className="interaction-icon" style={{ color: item.color, background: `${item.color}15` }}>
+                        {item.icon}
+                      </div>
+                      <div className="interaction-info">
+                        <span className="interaction-value" style={{ color: item.color }}>
+                          {(interactions[item.key] || 0).toLocaleString()}
+                        </span>
+                        <span className="interaction-label">{item.label}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <p className="stats-footer">
+              Dữ liệu {aiUsageStats.period} • Cập nhật lúc {new Date(aiUsageStats.generatedAt).toLocaleString('vi-VN')}
+            </p>
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="admin-ai">
       <div className="ai-header">
@@ -650,6 +891,7 @@ const AdminAI = () => {
         )}
         
         {activeTab === 'overview' && renderOverview()}
+        {activeTab === 'stats' && renderStats()}
         {activeTab === 'conversations' && renderConversations()}
         {activeTab === 'evaluation' && renderEvaluation()}
         {activeTab === 'forecast' && renderForecast()}

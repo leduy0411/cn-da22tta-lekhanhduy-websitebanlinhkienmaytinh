@@ -1,7 +1,7 @@
 .order-success-page {
   padding: 2rem 0;
   min-height: calc(100vh - 80px);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
 }
 
 .success-card {
@@ -74,12 +74,12 @@
   padding: 1.5rem 2rem;
   border-radius: 12px;
   margin-bottom: 2.5rem;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #e63946;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .order-number-card svg {
-  color: #667eea;
+  color: #e63946;
   flex-shrink: 0;
 }
 
@@ -102,7 +102,7 @@
 .order-value {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #667eea;
+  color: #e63946;
   margin-top: 0.25rem;
 }
 
@@ -226,7 +226,7 @@
 .item-price {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #667eea;
+  color: #e63946;
 }
 
 .order-note {
@@ -236,7 +236,7 @@
   color: #666;
   font-style: italic;
   margin: 0;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid #e63946;
 }
 
 .order-total {
@@ -244,7 +244,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   border-radius: 12px;
   margin-top: 2rem;
 }
@@ -284,14 +284,14 @@
 }
 
 .btn-view-orders {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
 }
 
 .btn-view-orders:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  box-shadow: 0 6px 20px rgba(230, 57, 70, 0.6);
 }
 
 .btn-cancel-order {

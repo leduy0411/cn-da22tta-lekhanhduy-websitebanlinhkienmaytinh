@@ -55,7 +55,7 @@
 }
 
 .stat-card.total .stat-icon { 
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%);
+  background: linear-gradient(135deg, #e63946 0%, #e63946 100%);
 }
 
 .stat-card.approved .stat-icon { 
@@ -311,7 +311,7 @@
 
 .status-badge.rejected {
   background: #d6e0f0;
-  color: #0f2744;
+  color: #c62828;
 }
 
 /* Action Buttons */
@@ -339,21 +339,21 @@
 }
 
 .btn-action.btn-view {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%);
+  background: linear-gradient(135deg, #e63946 0%, #e63946 100%);
   color: white;
 }
 
 .btn-action.btn-view:hover {
-  background: linear-gradient(135deg, #0f2744 0%, #1e3a5f 100%);
+  background: linear-gradient(135deg, #c62828 0%, #e63946 100%);
 }
 
 .btn-action.btn-delete {
-  background: linear-gradient(135deg, #2d5f8a 0%, #1e3a5f 100%);
+  background: linear-gradient(135deg, #e63946 0%, #e63946 100%);
   color: white;
 }
 
 .btn-action.btn-delete:hover {
-  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
+  background: linear-gradient(135deg, #e63946 0%, #c62828 100%);
 }
 
 /* Pagination */
@@ -494,7 +494,7 @@
 }
 
 .product-detail .product-price {
-  color: #2d5f8a;
+  color: #e63946;
   font-weight: 600;
   margin: 0;
   font-size: 0.95rem;
@@ -580,7 +580,7 @@
 }
 
 .modal-footer .btn-delete {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: linear-gradient(135deg, #e63946 0%, #7c3aed 100%) !important;
   color: white !important;
   border: none !important;
   outline: none !important;
@@ -589,7 +589,7 @@
 .modal-footer .btn-delete:hover {
   background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 .modal-footer .btn-delete:focus {

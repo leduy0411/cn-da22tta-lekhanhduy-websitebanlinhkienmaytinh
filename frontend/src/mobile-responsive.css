@@ -156,7 +156,7 @@
   }
   
   .sidebar-categories-grid::-webkit-scrollbar-thumb {
-    background: #1e3a5f;
+    background: linear-gradient(135deg, #e63946, #7c3aed);
     border-radius: 10px;
   }
   
