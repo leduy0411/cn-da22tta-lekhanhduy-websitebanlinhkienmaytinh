@@ -1,22 +1,22 @@
 """
-AI Recommendation Service v2.0 — FastAPI Application
+AI Recommendation Service v3.0 — FastAPI Application (Maximum Performance Edition)
 Main entry point cho Python AI microservice.
 
 Endpoints:
-  GET  /health                          - Health check
-  GET  /status                          - Model status
+  GET  /health                          - Health check  
+  GET  /status                          - Model status (v4.0 enhanced)
   POST /train                           - Trigger model training
-  GET  /recommend/user/{user_id}        - User recommendations
+  GET  /recommend/user/{user_id}        - User recommendations (5-stage pipeline)
   GET  /recommend/product/{product_id}  - Product recommendations
-  POST /recommend/cart                  - Cart recommendations
+  POST /recommend/cart                  - Cart recommendations  
   GET  /recommend/trending              - Trending products
   GET  /recommend/fbt/{product_id}      - Frequently Bought Together
-  POST /recommend/batch                 - Batch recommendations for multiple users
+  POST /recommend/batch                 - Batch recommendations (parallel)
   POST /track                           - Track interaction (online learning)
   POST /search                          - Semantic search via FAISS
   GET  /training/report                 - Latest training report
   GET  /training/history                - Training history
-  GET  /ab/variants                     - A/B test variants
+  GET  /ab/variants                     - A/B test variants (4 variants)
   GET  /metrics/models                  - Model performance metrics
 """
 import asyncio
@@ -72,6 +72,7 @@ class RecommendationResponse(BaseModel):
     model_sources: list[str] = []
     latency_ms: float = 0
     ab_variant: str | None = None
+    pipeline_version: str = "4.0"
 
 
 # ==================== Scheduler ====================
@@ -80,13 +81,23 @@ scheduler = AsyncIOScheduler()
 
 
 async def scheduled_training():
-    """Scheduled daily training."""
+    """Scheduled training — runs every RETRAIN_INTERVAL_HOURS."""
     logger.info("⏰ Scheduled training started")
     try:
         result = await recommender.train_all()
         logger.info(f"Scheduled training result: {result.get('status')}")
     except Exception as e:
         logger.error(f"Scheduled training failed: {e}")
+
+
+async def scheduled_micro_update():
+    """Micro-update: process pending online interactions between full retrains."""
+    try:
+        n = await recommender._process_pending_updates()
+        if n > 0:
+            logger.info(f"Micro-update processed {n} pending interactions")
+    except Exception as e:
+        logger.warning(f"Micro-update failed: {e}")
 
 
 # ==================== App Lifecycle ====================
@@ -107,9 +118,16 @@ async def lifespan(app: FastAPI):
         id="daily_training",
         next_run_time=None,
     )
+    scheduler.add_job(
+        scheduled_micro_update,
+        "interval",
+        minutes=settings.MICRO_UPDATE_INTERVAL_MINUTES,
+        id="micro_update",
+    )
     scheduler.start()
     logger.info(
-        f"Scheduler started: retrain every {settings.RETRAIN_INTERVAL_HOURS}h"
+        f"Scheduler started: retrain every {settings.RETRAIN_INTERVAL_HOURS}h, "
+        f"micro-update every {settings.MICRO_UPDATE_INTERVAL_MINUTES}min"
     )
 
     yield
@@ -124,10 +142,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="TechStore AI Recommendation Service",
     description=(
-        "Hệ thống gợi ý sản phẩm thông minh v2.0 — "
-        "SVD, ALS, NCF, FAISS, Association Rules, Hybrid"
+        "Hệ thống gợi ý sản phẩm thông minh v3.0 — Maximum Performance Edition. "
+        "5-stage pipeline: SVD + ALS + NCF + FAISS + Association Rules + Hybrid Re-ranking"
     ),
-    version="2.0.0",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
@@ -148,7 +166,8 @@ async def health_check():
     return {
         "status": "ok",
         "service": "ai-recommendation",
-        "version": "2.0.0",
+        "version": "3.0.0",
+        "engine": "v4.0",
         "timestamp": datetime.utcnow().isoformat(),
     }
 
@@ -330,13 +349,23 @@ async def frequently_bought_together(
 
 @app.post("/recommend/batch")
 async def batch_recommendations(req: BatchUserRequest):
-    """Batch recommendations for multiple users."""
+    """Batch recommendations for multiple users — parallel execution."""
     start = time.time()
+    
+    # Run all user recommendations in parallel via asyncio.gather
+    user_ids = req.user_ids[:50]  # Cap at 50 users
+    tasks = [
+        recommender.recommend_for_user(user_id=uid, top_k=req.limit)
+        for uid in user_ids
+    ]
+    results_list = await asyncio.gather(*tasks, return_exceptions=True)
+    
     results = {}
-
-    for uid in req.user_ids[:20]:  # Cap at 20 users
-        recs = await recommender.recommend_for_user(user_id=uid, top_k=req.limit)
-        results[uid] = recs
+    for uid, recs in zip(user_ids, results_list):
+        if isinstance(recs, Exception):
+            results[uid] = []
+        else:
+            results[uid] = recs
 
     latency = (time.time() - start) * 1000
     return {

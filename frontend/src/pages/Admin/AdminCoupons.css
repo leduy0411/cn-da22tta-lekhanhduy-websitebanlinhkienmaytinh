@@ -176,7 +176,7 @@
 }
 
 .usage.full {
-  color: #dc2626;
+  color: #1e3a5f;
 }
 
 .expiry {
@@ -184,7 +184,7 @@
 }
 
 .expiry.expired {
-  color: #dc2626;
+  color: #1e3a5f;
   text-decoration: line-through;
 }
 
@@ -204,8 +204,8 @@
 }
 
 .status.inactive {
-  background: #fee2e2;
-  color: #dc2626;
+  background: #d6e0f0;
+  color: #1e3a5f;
 }
 
 .action-buttons {
@@ -236,12 +236,12 @@
 }
 
 .delete-btn {
-  background: #fee2e2;
-  color: #dc2626;
+  background: #d6e0f0;
+  color: #1e3a5f;
 }
 
 .delete-btn:hover {
-  background: #dc2626;
+  background: #1e3a5f;
   color: white;
 }
 

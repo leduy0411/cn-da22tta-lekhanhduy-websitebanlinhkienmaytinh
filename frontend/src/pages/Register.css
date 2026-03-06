@@ -241,8 +241,8 @@
 }
 
 .error-message {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #dc2626;
+  background: linear-gradient(135deg, #d6e0f0 0%, #c7d6e8 100%);
+  color: #1e3a5f;
   padding: 0.5rem 0.7rem;
   border-radius: 6px;
   font-size: 0.85rem;

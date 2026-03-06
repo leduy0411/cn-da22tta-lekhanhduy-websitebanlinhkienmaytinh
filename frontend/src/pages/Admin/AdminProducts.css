@@ -348,7 +348,7 @@
 
 .price {
   font-weight: 600;
-  color: #ff6b6b;
+  color: #2d5f8a;
   font-size: 0.95rem;
 }
 
@@ -364,7 +364,7 @@
 
 .stock.low {
   background: #ffe5e5;
-  color: #ff6b6b;
+  color: #2d5f8a;
 }
 
 .actions {
@@ -396,11 +396,11 @@
 
 .btn-delete {
   background: #ffe5e5;
-  color: #ff6b6b;
+  color: #2d5f8a;
 }
 
 .btn-delete:hover {
-  background: #ff6b6b;
+  background: #2d5f8a;
   color: white;
 }
 

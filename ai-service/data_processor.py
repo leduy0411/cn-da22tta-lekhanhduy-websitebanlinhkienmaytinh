@@ -401,7 +401,7 @@ class DataProcessor:
     #  USER BEHAVIOR PROFILES (for cold-start mitigation)
     # =====================================================
 
-    async def build_user_profiles(
+    def build_user_profiles(
         self, interactions_df: pd.DataFrame, products_df: pd.DataFrame
     ) -> dict:
         """
@@ -442,6 +442,14 @@ class DataProcessor:
             profiles[user_id] = {
                 "preferred_categories": [c for c, _ in cat_counts.most_common(3)],
                 "preferred_brands": [b for b, _ in brand_counts.most_common(3)],
+                "category_affinity": {
+                    c: count / max(sum(cat_counts.values()), 1) 
+                    for c, count in cat_counts.most_common(5)
+                },
+                "brand_affinity": {
+                    b: count / max(sum(brand_counts.values()), 1)
+                    for b, count in brand_counts.most_common(5)
+                },
                 "avg_price": float(np.mean(prices)) if prices else 0,
                 "price_range": (float(min(prices)), float(max(prices))) if prices else (0, 0),
                 "n_interactions": len(group),

@@ -21,7 +21,7 @@
 }
 
 .orders-header h1 svg {
-  color: #dc2626;
+  color: #1e3a5f;
 }
 
 .orders-subtitle {
@@ -50,14 +50,14 @@
 }
 
 .filter-btn:hover {
-  border-color: #dc2626;
-  color: #dc2626;
+  border-color: #1e3a5f;
+  color: #1e3a5f;
 }
 
 .filter-btn.active {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
   color: white;
-  border-color: #dc2626;
+  border-color: #1e3a5f;
 }
 
 /* Orders List */
@@ -169,7 +169,7 @@
 }
 
 .order-product-item.clickable:hover h4 {
-  color: #dc2626;
+  color: #1e3a5f;
 }
 
 .order-product-item:last-child {
@@ -201,7 +201,7 @@
 }
 
 .product-price {
-  color: #dc2626;
+  color: #1e3a5f;
   font-weight: 600;
   font-size: 1rem;
   margin: 0;
@@ -244,7 +244,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -255,7 +255,7 @@
 
 .btn-view-detail:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.4);
 }
 
 .btn-cancel-order {
@@ -264,8 +264,8 @@
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   background: white;
-  color: #ef4444;
-  border: 2px solid #ef4444;
+  color: #2d5f8a;
+  border: 2px solid #2d5f8a;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
@@ -273,10 +273,10 @@
 }
 
 .btn-cancel-order:hover:not(:disabled) {
-  background: #ef4444;
+  background: #2d5f8a;
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.4);
 }
 
 .btn-cancel-order:disabled {
@@ -311,7 +311,7 @@
 .btn-shop-now {
   display: inline-block;
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
   color: white;
   text-decoration: none;
   border-radius: 8px;
@@ -321,7 +321,7 @@
 
 .btn-shop-now:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.4);
 }
 
 /* Auth Required */
@@ -334,7 +334,7 @@
 }
 
 .auth-required svg {
-  color: #dc2626;
+  color: #1e3a5f;
   margin-bottom: 1rem;
 }
 
@@ -351,7 +351,7 @@
 .btn-login {
   display: inline-block;
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
   color: white;
   text-decoration: none;
   border-radius: 8px;
@@ -361,7 +361,7 @@
 
 .btn-login:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.4);
 }
 
 /* Modal Detail */
@@ -497,7 +497,7 @@
 }
 
 .detail-product-item.clickable:hover h4 {
-  color: #dc2626;
+  color: #1e3a5f;
 }
 
 .detail-product-item img {
@@ -524,14 +524,14 @@
 }
 
 .item-price {
-  color: #dc2626;
+  color: #1e3a5f;
   font-weight: 600;
 }
 
 .item-total {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #dc2626;
+  color: #1e3a5f;
 }
 
 .order-summary {
@@ -567,7 +567,7 @@
   text-align: center;
   padding: 3rem;
   font-size: 1.2rem;
-  color: #dc2626;
+  color: #1e3a5f;
 }
 
 /* Responsive */

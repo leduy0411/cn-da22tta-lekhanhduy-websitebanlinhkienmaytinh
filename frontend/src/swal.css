@@ -36,16 +36,16 @@
 
 /* Success Icon */
 .swal2-icon.swal2-success {
-  border-color: #667eea !important;
-  color: #667eea !important;
+  border-color: #1e3a5f !important;
+  color: #1e3a5f !important;
 }
 
 .swal2-icon.swal2-success .swal2-success-ring {
-  border-color: rgba(102, 126, 234, 0.3) !important;
+  border-color: rgba(30, 58, 95, 0.3) !important;
 }
 
 .swal2-icon.swal2-success [class^='swal2-success-line'] {
-  background-color: #667eea !important;
+  background-color: #1e3a5f !important;
 }
 
 /* Error Icon */
@@ -65,35 +65,35 @@
 
 /* Info Icon */
 .swal2-icon.swal2-info {
-  border-color: #667eea !important;
-  color: #667eea !important;
+  border-color: #1e3a5f !important;
+  color: #1e3a5f !important;
 }
 
 /* Question Icon */
 .swal2-icon.swal2-question {
-  border-color: #805ad5 !important;
-  color: #805ad5 !important;
+  border-color: #d4a843 !important;
+  color: #d4a843 !important;
 }
 
 /* Confirm Button */
 .swal2-confirm {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%) !important;
   color: #ffffff !important;
   border: none !important;
   border-radius: 8px !important;
   padding: 12px 28px !important;
   font-weight: 600 !important;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3) !important;
   outline: none !important;
 }
 
 .swal2-confirm:hover {
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4) !important;
+  box-shadow: 0 6px 16px rgba(30, 58, 95, 0.4) !important;
 }
 
 .swal2-confirm:focus {
   outline: none !important;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3) !important;
 }
 
 /* Cancel Button */
@@ -151,8 +151,8 @@
 .swal2-input:focus,
 .swal2-textarea:focus,
 .swal2-select:focus {
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+  border-color: #1e3a5f !important;
+  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.2) !important;
   outline: none !important;
 }
 
@@ -167,7 +167,7 @@
 
 /* Timer Progress Bar */
 .swal2-timer-progress-bar {
-  background: linear-gradient(90deg, #667eea, #764ba2) !important;
+  background: linear-gradient(90deg, #1e3a5f, #d4a843) !important;
 }
 
 /* Toast */

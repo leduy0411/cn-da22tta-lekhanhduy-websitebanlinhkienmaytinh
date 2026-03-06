@@ -757,6 +757,31 @@ class ChatbotService {
       return `Đây là một số sản phẩm${categoryText}${brandText} phù hợp với yêu cầu của bạn. Bạn có thể click vào sản phẩm để xem chi tiết!`;
     }
 
+    // No exact match - try to find alternative suggestions
+    if (categoryEntity && (maxPriceEntity || minPriceEntity || priceEntities.length > 0)) {
+      // Get cheapest products in the requested category without price filter
+      const alternativeOptions = { limit: 5, category: categoryEntity.value };
+      if (brandEntity) alternativeOptions.brand = brandEntity.value;
+      
+      const alternativeProducts = await this.searchProducts(categoryEntity.value, alternativeOptions);
+      
+      if (alternativeProducts.length > 0) {
+        // Sort by price to find cheapest
+        alternativeProducts.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
+        response.products = alternativeProducts.slice(0, 5);
+        
+        const cheapestPrice = alternativeProducts[0].salePrice || alternativeProducts[0].price;
+        const priceFormatted = (cheapestPrice / 1000000).toFixed(1).replace('.0', '') + ' triệu';
+        const requestedPrice = maxPriceEntity?.value || (priceEntities[0]?.value);
+        const requestedPriceFormatted = requestedPrice ? (requestedPrice / 1000000).toFixed(0) + ' triệu' : '';
+        
+        const categoryText = categoryEntity.value;
+        const brandText = brandEntity ? ` ${brandEntity.value}` : '';
+        
+        return `Hiện tại không có ${categoryText}${brandText} nào dưới ${requestedPriceFormatted} 😅. ${categoryText} giá tốt nhất hiện tại là **${priceFormatted}**. Đây là một số gợi ý cho bạn:`;
+      }
+    }
+
     return this.getRandomResponse('no_product_found');
   }
 

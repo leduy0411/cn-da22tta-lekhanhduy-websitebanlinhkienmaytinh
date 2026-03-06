@@ -396,12 +396,12 @@
 }
 
 .owner-actions .delete-btn {
-  background: #fef2f2;
-  color: #dc2626;
+  background: #f0f4fa;
+  color: #1e3a5f;
 }
 
 .owner-actions .delete-btn:hover {
-  background: #dc2626;
+  background: #1e3a5f;
   color: white;
 }
 
@@ -493,7 +493,7 @@
   right: 4px;
   width: 22px;
   height: 22px;
-  background: rgba(239, 68, 68, 0.9);
+  background: rgba(30, 58, 95, 0.9);
   color: white;
   border: none;
   border-radius: 50%;
@@ -506,7 +506,7 @@
 }
 
 .remove-image-btn:hover {
-  background: #dc2626;
+  background: #1e3a5f;
   transform: scale(1.1);
 }
 

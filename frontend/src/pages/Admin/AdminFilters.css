@@ -171,11 +171,11 @@ code {
 
 .btn-delete {
   background: #ffe5e5;
-  color: #ff6b6b;
+  color: #2d5f8a;
 }
 
 .btn-delete:hover {
-  background: #ff6b6b;
+  background: #2d5f8a;
   color: white;
 }
 
@@ -339,7 +339,7 @@ code {
 }
 
 .btn-remove {
-  background: #ff6b6b;
+  background: #2d5f8a;
   color: white;
   border: none;
   border-radius: 50%;

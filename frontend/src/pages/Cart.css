@@ -55,7 +55,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: #ff6b6b;
+  background: #2d5f8a;
   color: white;
   border: none;
   border-radius: 8px;
@@ -130,7 +130,7 @@
 }
 
 .cart-item-price {
-  color: #ff6b6b;
+  color: #2d5f8a;
   font-weight: bold;
   font-size: 1.1rem;
   margin: 0;
@@ -190,9 +190,9 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: #fff5f5;
-  border: 2px solid #ff6b6b;
-  color: #ff6b6b;
+  background: #f0f4fa;
+  border: 2px solid #2d5f8a;
+  color: #2d5f8a;
   cursor: pointer;
   padding: 0.6rem 1.2rem;
   border-radius: 8px;
@@ -204,7 +204,7 @@
 }
 
 .remove-item-btn:hover {
-  background: #ff6b6b;
+  background: #2d5f8a;
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
@@ -214,9 +214,9 @@
   display: flex !important;
   align-items: center;
   gap: 0.5rem;
-  background: #fff5f5;
-  border: 2px solid #ff6b6b;
-  color: #ff6b6b;
+  background: #f0f4fa;
+  border: 2px solid #2d5f8a;
+  color: #2d5f8a;
   cursor: pointer;
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -233,7 +233,7 @@
 }
 
 .remove-btn:hover {
-  background: #ff6b6b;
+  background: #2d5f8a;
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);

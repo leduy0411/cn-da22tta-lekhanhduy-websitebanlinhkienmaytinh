@@ -24,7 +24,7 @@
 }
 
 .status-icon.cancelled {
-  color: #ef4444;
+  color: #2d5f8a;
 }
 
 @keyframes scaleIn {
@@ -47,7 +47,7 @@
 
 .cancelled-title {
   font-size: 2.5rem;
-  color: #ef4444;
+  color: #2d5f8a;
   margin: 0 0 1rem 0;
   font-weight: 800;
 }
@@ -296,15 +296,15 @@
 
 .btn-cancel-order {
   background: white;
-  color: #ef4444;
-  border: 2px solid #ef4444;
+  color: #2d5f8a;
+  border: 2px solid #2d5f8a;
 }
 
 .btn-cancel-order:hover:not(:disabled) {
-  background: #ef4444;
+  background: #2d5f8a;
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 6px 20px rgba(30, 58, 95, 0.4);
 }
 
 .btn-cancel-order:disabled {

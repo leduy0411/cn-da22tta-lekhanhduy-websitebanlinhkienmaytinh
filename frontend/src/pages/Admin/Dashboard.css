@@ -208,7 +208,7 @@
 }
 
 .price {
-  color: #ff6b6b;
+  color: #2d5f8a;
   font-weight: 600;
   font-size: 0.95rem;
 }
@@ -520,7 +520,7 @@
 }
 
 .revenue-summary {
-  background: linear-gradient(135deg, #ffa500 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #ffa500 0%, #2d5f8a 100%);
   color: white;
   padding: 1.5rem;
   border-radius: 12px;
