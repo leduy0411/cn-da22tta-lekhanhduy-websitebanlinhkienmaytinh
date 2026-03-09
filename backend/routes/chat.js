@@ -2,6 +2,37 @@ const express = require('express');
 const router = express.Router();
 const ChatMessage = require('../models/ChatMessage');
 const { auth, isStaffOrAdmin } = require('../middleware/auth');
+const { chatWithRAG } = require('../services/ai/AIServiceClient');
+
+// POST: RAG chatbot endpoint
+router.post('/', async (req, res) => {
+  try {
+    const { message, topK = 5 } = req.body;
+
+    if (!message || !String(message).trim()) {
+      return res.status(400).json({ success: false, message: 'message is required' });
+    }
+
+    const aiResponse = await chatWithRAG(String(message), { topK });
+
+    if (!aiResponse || !aiResponse.success) {
+      return res.status(502).json({
+        success: false,
+        message: 'AI service is unavailable'
+      });
+    }
+
+    return res.json({
+      success: true,
+      answer: aiResponse.answer,
+      retrievedProducts: aiResponse.retrieved_products || [],
+      source: aiResponse.source || 'rag'
+    });
+  } catch (error) {
+    console.error('RAG /api/chat error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // GET: Lấy tất cả chat sessions (cho admin/staff)
 router.get('/admin/sessions', auth, isStaffOrAdmin, async (req, res) => {

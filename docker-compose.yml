@@ -55,6 +55,8 @@ services:
       - SVD_N_FACTORS=50
       - INTERACTION_HALFLIFE_DAYS=30
       - TRAINING_INTERVAL_HOURS=24
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
     volumes:
       - ai_model_data:/app/model_data
       - ai_logs:/app/logs

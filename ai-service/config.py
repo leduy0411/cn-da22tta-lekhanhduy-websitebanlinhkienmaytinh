@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-m                                                                              mm
 class Settings:
     # MongoDB
     MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017/thietbidientu")
@@ -34,6 +33,11 @@ class Settings:
     EMBEDDING_MODEL: str = os.getenv(
         "EMBEDDING_MODEL", "paraphrase-multilingual-MiniLM-L12-v2"
     )
+
+    # RAG / LLM
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    RAG_DEFAULT_TOP_K: int = int(os.getenv("RAG_DEFAULT_TOP_K", 5))
 
     # Recommendation defaults
     DEFAULT_TOP_K: int = int(os.getenv("DEFAULT_TOP_K", 15))

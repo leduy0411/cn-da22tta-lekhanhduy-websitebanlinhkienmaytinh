@@ -33,6 +33,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from config import settings
 from database import connect_db, close_db, get_db
 from recommendation_engine import recommender
+from routes.chat import router as chat_router
 
 # ==================== Pydantic Models ====================
 
@@ -156,6 +157,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(chat_router)
 
 
 # ==================== Endpoints ====================

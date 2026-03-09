@@ -256,6 +256,24 @@ async function semanticSearch(query, topK = 10) {
   }
 }
 
+/**
+ * RAG chat request
+ */
+async function chatWithRAG(message, options = {}) {
+  const { topK = 5 } = options;
+
+  try {
+    const response = await aiClient.post('/chat', {
+      message,
+      top_k: topK
+    });
+    return response.data;
+  } catch (error) {
+    console.error('AI Service chatWithRAG error:', error.message);
+    return null;
+  }
+}
+
 module.exports = {
   isServiceAvailable,
   getUserRecommendations,
@@ -271,5 +289,6 @@ module.exports = {
   getTrainingHistory,
   getABVariants,
   getModelMetrics,
-  semanticSearch
+  semanticSearch,
+  chatWithRAG
 };
