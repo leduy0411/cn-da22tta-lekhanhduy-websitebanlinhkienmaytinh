@@ -184,7 +184,8 @@ class ChatbotService {
       // General knowledge starters that override store context
       /^(tại sao|vì sao|why)\s+(?!.*mua|.*giá|.*sản phẩm)/i,
       /^(ai là|who is|là ai)\s+/i,
-      /^(what is|là gì)\s+/i,
+      /^(what is|là gì)\s+(?!.*laptop|.*pc|.*vga|.*cpu)/i,
+      /^(how to|làm thế nào|làm sao)\s+(?!.*mua|.*chọn)/i,
     ];
     
     for (const pattern of obviousGeneralPatterns) {
@@ -195,14 +196,14 @@ class ChatbotService {
     
     // Keywords indicating product/store-related questions
     const storeKeywords = [
-      /laptop|pc|máy tính|desktop|cpu|vga|card|ram|mainboard|màn hình|monitor|chuột|mouse|bàn phím|keyboard|tai nghe|headphone|loa|speaker|ổ cứng|ssd|hdd|case|nguồn|tản nhiệt|phụ kiện/i,
+      /laptop|pc|máy tính|desktop|cpu|vga|card đồ họa|ram|mainboard|màn hình|monitor|chuột|mouse|bàn phím|keyboard|tai nghe|headphone|loa|speaker|ổ cứng|ssd|hdd|case|nguồn|tản nhiệt|phụ kiện/i,
       /asus|acer|dell|hp|lenovo|msi|gigabyte|intel|amd|nvidia|corsair|logitech|razer|apple|samsung/i,
-      /giá|price|bán|mua|đặt hàng|order|giao hàng|ship|thanh toán|payment|bảo hành|warranty|đổi trả|khuyến mãi|giảm giá|sale/i,
+      /giá|bao nhiêu tiền|price|bán|mua|đặt hàng|order|giao hàng|ship|thanh toán|payment|bảo hành|warranty|đổi trả|khuyến mãi|giảm giá|sale/i,
       /đơn hàng|order|tracking|kiểm tra đơn/i,
-      /sản phẩm|product|hàng|tồn kho|stock/i,
-      /techstore|cửa hàng|shop/i,
-      /gaming|văn phòng|đồ họa|render|stream/i,
-      /triệu|tr|nghìn|k|vnđ|đồng/i
+      /sản phẩm|product|hàng|tồn kho|stock|mua sắm/i,
+      /techstore|cửa hàng|shop|của hàng/i,
+      /gaming pc|gaming laptop|văn phòng|đồ họa|render|stream/i,
+      /\d+\s*(triệu|tr|m|nghìn|k)\s*(đ|vnđ|đồng)?/i,
     ];
     
     // Check if message contains any store-related keywords
@@ -212,36 +213,88 @@ class ChatbotService {
       }
     }
     
-    // Patterns indicating general questions
+    // Patterns indicating general questions - EXPANDED to catch more cases
     const generalPatterns = [
-      /^(tại sao|vì sao|why|how|như thế nào|làm sao|cách nào)/i,
-      /^(ai là|what is|who is|là gì|là ai|nghĩa là)/i,
-      /^(giải thích|explain|định nghĩa|define)/i,
-      /^(kể về|tell me about|nói về)/i,
-      /^(dịch|translate|chuyển ngữ)/i,
-      /^(viết|write|soạn|tạo văn bản)/i,
-      /^(tính|calculate|solve|giải)/i,
-      /^(so sánh|compare).*(với|và|and)(?!.*sản phẩm)/i,
-      /(lịch sử|history|khoa học|science|toán|math|văn học|literature|địa lý|geography)/i,
-      /(thời tiết|weather|tin tức|news)/i,
-      /(code|lập trình|programming|algorithm|thuật toán|debug|fix bug)/i,
-      /(python|javascript|java|c\+\+|html|css|react|node)/i,
-      /^(bạn có thể|can you|could you).*(giúp|help|explain|dịch|write|code)/i,
-      /(thơ|poem|truyện|story|bài hát|song|nhạc|music)/i,
-      /(ý nghĩa|meaning of|nghĩa của)/i,
-      /(công thức|formula|equation|phương trình)/i,
-      /(động vật|animal|thực vật|plant|sinh học|biology|hóa học|chemistry|vật lý|physics)/i,
-      /(châu á|châu âu|châu mỹ|asia|europe|america|việt Nam|vietnam|thế giới|world)/i,
-      /(triết học|philosophy|tâm lý|psychology|xã hội|society)/i,
-      /(email|cv|resume|thư|letter)/i,
-      /(nấu ăn|recipe|món ăn|cooking)/i,
-      /(sức khỏe|health|tập gym|exercise|thể thao|sport)/i,
-      // Math/calculation patterns
-      /bằng bao nhiêu(?!.*giá|.*tiền|.*triệu)/i,
-      /là bao nhiêu(?!.*giá|.*tiền|.*triệu)/i,
-      /kết quả là/i,
-      /tổng là/i,
-      /căn bậc|lũy thừa|logarit|sin|cos|tan/i
+      // Question starters
+      /^(tại sao|vì sao|why|how|như thế nào|làm sao|cách nào|thế nào)/i,
+      /^(ai là|what is|who is|là gì|là ai|nghĩa là|nghĩa của)/i,
+      /^(giải thích|explain|định nghĩa|define|cho biết)/i,
+      /^(kể về|tell me about|nói về|hãy nói|nói cho tôi)/i,
+      /^(dịch|translate|chuyển ngữ|tiếng anh|tiếng việt)/i,
+      /^(viết|write|soạn|tạo văn bản|làm cho tôi)/i,
+      /^(tính|calculate|solve|giải|tìm)/i,
+      /^(so sánh|compare).*(với|và|and)(?!.*sản phẩm|.*laptop|.*pc)/i,
+      /^(bạn có thể|can you|could you|hãy|please).*(giúp|help|explain|dịch|write|kể|nói)/i,
+      
+      // Subject areas - Science & Education
+      /(lịch sử|history|khoa học|science|toán học|math|toán|văn học|literature|địa lý|geography)/i,
+      /(sinh học|biology|hóa học|chemistry|vật lý|physics|thiên văn|astronomy)/i,
+      /(địa chất|geology|môi trường|environment|sinh thái|ecology)/i,
+      /(triết học|philosophy|tâm lý học|psychology|xã hội học|society|sociology)/i,
+      /(kinh tế|economy|chính trị|politics|pháp luật|law)/i,
+      /(y học|medicine|sức khỏe|health|dinh dưỡng|nutrition)/i,
+      /(nghệ thuật|art|âm nhạc|music|hội họa|painting|điêu khắc|sculpture)/i,
+      
+      // Programming & Tech (general, not products)
+      /(viết code|write code|debug|fix bug|optimize|refactor)/i,
+      /(thuật toán|algorithm|cấu trúc dữ liệu|data structure|complexity)/i,
+      /(python|javascript|java|c\+\+|c#|php|ruby|golang|rust|kotlin|swift)/i,
+      /(html|css|react|vue|angular|node\.?js|django|flask|spring)/i,
+      /(sql|database|mongodb|postgresql|mysql|redis|API|REST|GraphQL)/i,
+      /(machine learning|AI|neural network|deep learning|NLP)/i,
+      /(git|github|version control|docker|kubernetes|CI\/CD)/i,
+      
+      // Language & Communication
+      /(tiếng anh|english|tiếng việt|vietnamese|tiếng trung|chinese|tiếng nhật|japanese)/i,
+      /(ngữ pháp|grammar|từ vựng|vocabulary|phát âm|pronunciation)/i,
+      /(dịch sang|translate to|nghĩa tiếng)/i,
+      /(viết email|write email|viết thư|write letter|CV|resume|cover letter)/i,
+      
+      // General Knowledge
+      /(thời tiết|weather|tin tức|news|sự kiện|event)/i,
+      /(thế giới|world|quốc tế|international|toàn cầu|global)/i,
+      /(việt nam|vietnam|châu á|asia|châu âu|europe|châu mỹ|america)/i,
+      /(đất nước|country|thành phố|city|thủ đô|capital)/i,
+      /(con người|human|người nổi tiếng|famous people|nhân vật|character)/i,
+      
+      // Creative & Entertainment
+      /(thơ|poem|poetry|truyện|story|tiểu thuyết|novel)/i,
+      /(bài hát|song|ca khúc|lyric|lời bài hát|nhạc|music)/i,
+      /(phim|movie|film|series|TV show|anime|manga)/i,
+      /(trò chơi|game|video game)(?!.*gaming pc|.*gaming laptop)/i,
+      /(nấu ăn|cooking|recipe|công thức|món ăn|food|ẩm thực|cuisine)/i,
+      /(du lịch|travel|tourism|điểm đến|destination)/i,
+      
+      // Lifestyle & Wellness
+      /(tập gym|exercise|workout|fitness|yoga|thể dục|sport|thể thao)/i,
+      /(sức khỏe|health|bệnh|disease|thuốc|medicine|điều trị|treatment)/i,
+      /(làm đẹp|beauty|skincare|chăm sóc da|makeup)/i,
+      /(thời trang|fashion|phong cách|style|quần áo|clothing)/i,
+      
+      // Math & Calculation
+      /bằng bao nhiêu(?!.*giá|.*tiền|.*triệu|.*ngàn)/i,
+      /là bao nhiêu(?!.*giá|.*tiền|.*triệu|.*ngàn)/i,
+      /kết quả là|tổng là|hiệu là|tích là|thương là/i,
+      /căn bậc|lũy thừa|logarit|sin|cos|tan|cot|log|ln|sqrt|pow/i,
+      /(công thức|formula|equation|phương trình|bất phương trình|inequality)/i,
+      /(hình học|geometry|đại số|algebra|giải tích|calculus|thống kê|statistics)/i,
+      /(tích phân|integral|đạo hàm|derivative|giới hạn|limit)/i,
+      
+      // Science specific
+      /(nguyên tử|atom|phân tử|molecule|nguyên tố|element|hợp chất|compound)/i,
+      /(thiên hà|galaxy|hành tinh|planet|sao|star|vũ trụ|universe|cosmos)/i,
+      /(tiến hóa|evolution|DNA|gen|gene|tế bào|cell)/i,
+      /(năng lượng|energy|lực|force|vận tốc|velocity|gia tốc|acceleration)/i,
+      
+      // Abstract concepts
+      /(ý nghĩa|meaning of|nghĩa của|khái niệm|concept)/i,
+      /(sự khác biệt|difference|giống nhau|similarity|so sánh|comparison)(?!.*sản phẩm)/i,
+      /(lý do|reason|nguyên nhân|cause|hậu quả|effect|consequence)/i,
+      
+      // Common question patterns
+      /câu hỏi về|hỏi về|question about/i,
+      /cho tôi biết|tell me|hãy cho biết/i,
+      /giải đáp|answer|trả lời|explain to me/i,
     ];
     
     // Check if message matches any general question pattern
@@ -253,16 +306,17 @@ class ChatbotService {
     
     // If message is short and doesn't match store keywords, might be general
     const words = normalizedMessage.split(/\s+/);
-    if (words.length <= 2) {
-      return false; // Short messages, let normal flow handle
+    if (words.length <= 2 && !/(mua|bán|giá|sp|sản phẩm)/.test(normalizedMessage)) {
+      // Very short messages without store context could be anything
+      return false; // Let normal flow handle to be safe
     }
     
     // Check for question words without store context
-    if (/\?$/.test(normalizedMessage) || /^(hỏi|câu hỏi)/.test(normalizedMessage)) {
+    if (/\?$/.test(normalizedMessage) && words.length >= 3) {
       return true; // Questions without store keywords are likely general
     }
     
-    return false;
+    return false; // Default to store-related
   }
 
   // ==================== ENTITY EXTRACTION ====================
@@ -608,7 +662,8 @@ class ChatbotService {
 
     // FIRST: Check if this is a general question - let Gemini handle it freely
     const isGeneralQuestion = this.isGeneralQuestion(message);
-    if (isGeneralQuestion && this.smartMode && this.useGemini && GeminiService.isReady()) {
+    
+    if (isGeneralQuestion && this.smartMode && this.useGemini) {
       try {
         const geminiResponse = await GeminiService.chat(message, [], {
           isGeneralQuestion: true,
@@ -621,7 +676,8 @@ class ChatbotService {
           return response;
         }
       } catch (error) {
-        console.error('Gemini general question error:', error);
+        console.error('⚠️ Gemini unavailable for general question:', error.message);
+        // Fallback already handled in GeminiService.chat
       }
     }
 

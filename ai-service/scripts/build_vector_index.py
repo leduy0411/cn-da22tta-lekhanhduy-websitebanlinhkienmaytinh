@@ -20,15 +20,32 @@ from services.vector_store import VectorStore
 
 
 def product_to_text(product: dict) -> str:
-    """Convert product document to retrieval-friendly plain text."""
+    """Convert product document to retrieval-friendly plain text with category emphasis."""
     specs = product.get("specifications") or {}
     specs_text = ", ".join([f"{k}: {v}" for k, v in specs.items()])
+    
+    category = product.get('category', '')
+    name = product.get('name', '')
+    description = product.get('description', '')
+    brand = product.get('brand', '')
+    
+    # Emphasize category by repeating it and adding Vietnamese synonyms
+    category_emphasis = ""
+    if category:
+        category_lower = category.lower()
+        if category_lower in ['laptop', 'máy tính xách tay']:
+            category_emphasis = "CATEGORY: LAPTOP MÁY TÍNH XÁC TAY COMPUTER | "
+        elif category_lower in ['pc', 'máy tính để bàn']:
+            category_emphasis = "CATEGORY: PC MÁY TÍNH ĐỂ BÀN DESKTOP COMPUTER | "
+        elif category_lower in ['console', 'máy chơi game', 'gaming console']:
+            category_emphasis = "CATEGORY: CONSOLE MÁY CHƠI GAME GAMING CONSOLE | "
+        else:
+            category_emphasis = f"CATEGORY: {category} | "
 
     chunks = [
-        f"name: {product.get('name', '')}",
-        f"description: {product.get('description', '')}",
-        f"category: {product.get('category', '')}",
-        f"brand: {product.get('brand', '')}",
+        category_emphasis + f"name: {name}",
+        f"description: {description}",
+        f"brand: {brand}",
         f"price: {product.get('price', '')}",
         f"stock: {product.get('stock', '')}",
         f"rating: {product.get('rating', '')}",

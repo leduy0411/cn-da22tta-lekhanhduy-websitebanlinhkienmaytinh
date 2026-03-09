@@ -308,3 +308,230 @@ curl http://localhost:5000/api/ai/v2/recommend/trending?limit=5
 | Training time (full) | < 30 min | Depends on data size |
 | Memory (AI service) | < 2GB | ~1.5GB with FAISS+models |
 | CTR improvement | > 15% vs random | Measured via A/B test |
+
+---
+
+## 💬 RAG Chatbot System
+
+### Kiến trúc RAG Pipeline
+
+```
+User Question
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  EmbeddingService (paraphrase-multilingual-MiniLM-L12-v2)       │
+│  Input: "Laptop gaming nào tốt nhất dưới 30 triệu?"             │
+│  Output: Vector 768 chiều                                        │
+└─────────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  VectorStore (FAISS IndexFlatIP)                                 │
+│  - L2 normalization → cosine similarity                          │
+│  - Tìm top-5 sản phẩm tương tự                                   │
+│  Output: [product_ids, similarity_scores]                        │
+└─────────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  MongoDB Lookup                                                  │
+│  - Fetch product details (name, price, specs, stock, rating)    │
+│  - Build context string cho LLM                                  │
+└─────────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Google Gemini 1.5 Flash                                         │
+│  Prompt: System role + Context products + User question         │
+│  Response: Câu trả lời tự nhiên với tham chiếu sản phẩm        │
+└─────────────────────────────────────────────────────────────────┘
+    │
+    ▼
+Response JSON: { answer, retrieved_products, source: "gemini_rag" }
+```
+
+### API Endpoints - Chatbot
+
+| Method | Endpoint | Mô tả |
+|--------|----------|--------|
+| POST | `/api/chat` | Gửi tin nhắn đến RAG chatbot |
+| GET | `/api/chat/session/:id` | Lấy lịch sử chat session |
+| POST | `/api/chat/message` | Gửi tin nhắn (persisted) |
+| DELETE | `/api/chat/session/:id` | Xóa session |
+
+### Request Example
+
+```bash
+curl -X POST http://localhost:5000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Laptop gaming nào tốt nhất dưới 30 triệu?",
+    "sessionId": "ai-session-12345"
+  }'
+```
+
+### Response Example
+
+```json
+{
+  "success": true,
+  "response": {
+    "text": "Với ngân sách dưới 30 triệu, tôi gợi ý **ASUS ROG Strix G15** với cấu hình RTX 4060, Ryzen 7 7735HS...",
+    "products": [
+      {
+        "_id": "...",
+        "name": "ASUS ROG Strix G15",
+        "price": 28990000,
+        "rating": 4.8,
+        "image": "/uploads/products/rog-strix.jpg"
+      }
+    ],
+    "quickReplies": ["So sánh với MSI", "Xem thêm laptop gaming"],
+    "source": "gemini_rag"
+  }
+}
+```
+
+### Fallback Strategy
+
+1. **Gemini Available**: Full RAG với LLM response
+2. **Gemini Unavailable**: Retrieval-only (trả về sản phẩm tìm được, không có câu trả lời tự nhiên)
+3. **FAISS Index Empty**: Fallback sang MongoDB text search
+
+---
+
+## 🛠️ Scripts
+
+### Backend Scripts (Node.js)
+
+| Script | Mô tả | Chạy |
+|--------|-------|------|
+| `seedProducts.js` | Seed sản phẩm mẫu | `node scripts/seedProducts.js` |
+| `seedInteractions.js` | Đồng bộ Orders/Reviews → UserInteractions | `node scripts/seedInteractions.js` |
+| `createEmbeddings.js` | Trigger rebuild FAISS index | `node scripts/createEmbeddings.js` |
+| `syncRatings.js` | Sync rating từ reviews vào products | `node scripts/syncRatings.js` |
+
+### AI Service Scripts (Python)
+
+| Script | Mô tả | Chạy |
+|--------|-------|------|
+| `trainRecommender.py` | Train tất cả ML models | `python scripts/trainRecommender.py --force` |
+| `build_vector_index.py` | Build FAISS index từ MongoDB | `python scripts/build_vector_index.py` |
+
+---
+
+## 🔧 Model Configuration
+
+### Weights Distribution (v4.0)
+
+```python
+DEFAULT_WEIGHTS = {
+    "svd": 0.22,           # Explicit feedback CF
+    "als": 0.08,           # Implicit feedback CF
+    "ncf": 0.28,           # Deep learning CF (strongest)
+    "content_based": 0.22, # Semantic similarity
+    "association": 0.12,   # Cross-sell patterns
+    "popularity": 0.08     # Fallback baseline
+}
+```
+
+### Hyperparameters
+
+| Model | Parameter | Value |
+|-------|-----------|-------|
+| SVD | n_factors | 100 |
+| ALS | n_factors, iterations, λ | 100, 25, 0.1 |
+| NCF | architecture | GMF(64) + MLP([128,64,32,16]) |
+| NCF | epochs, batch, lr | 50, 512, 0.0005 |
+| Content | embedding_dim | 768 |
+| Association | min_support, min_confidence | 0.005, 0.05 |
+
+### Caching Strategy
+
+| Cache | TTL | Purpose |
+|-------|-----|---------|
+| Product metadata | 30 min | Reduce DB queries |
+| Recommendation scores | 3 min | Fresh recommendations |
+| Popular products | 5 min | Trending stability |
+| User history | 10 min | Profile consistency |
+
+---
+
+## 📊 Monitoring & Metrics
+
+### Training Metrics (logged per session)
+
+- **SVD/ALS**: RMSE, MAE, Explained Variance Ratio
+- **NCF**: HR@10, NDCG@10, Training Loss
+- **Association**: Rules count, Average Lift, Average Confidence
+- **Content-Based**: Index size, Embedding dimensions
+
+### Runtime Metrics
+
+- **Latency**: p50, p95, p99 per endpoint
+- **CTR**: Clicks / Impressions (per variant)
+- **Conversion**: Purchases / Recommendations shown
+- **Cold-start ratio**: New users / Total users
+
+### A/B Test Variants (4 variants)
+
+| Variant | Strategy | Focus |
+|---------|----------|-------|
+| A | Balanced | Standard weights |
+| B | Content-heavy | 35% content, 20% NCF |
+| C | NCF-aggressive | 38% NCF, minimal content |
+| D | Association-heavy | 20% association |
+
+---
+
+## 🐳 Docker Production Setup
+
+### Services
+
+| Service | Port | Image |
+|---------|------|-------|
+| ai-service | 8000 | Python 3.11 + PyTorch |
+| backend | 5000 | Node.js 18 Alpine |
+| frontend | 3000 | nginx:alpine |
+
+### Environment Variables (.env)
+
+```env
+# MongoDB
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/thietbidientu
+DATABASE_NAME=thietbidientu
+
+# Backend
+PORT=5000
+JWT_SECRET=your_jwt_secret
+NODE_ENV=production
+
+# AI Service
+AI_SERVICE_URL=http://ai-service:8000
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-1.5-flash
+
+# Frontend
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
+### Commands
+
+```bash
+# Build & Start
+docker compose up -d --build
+
+# View logs
+docker compose logs -f ai-service
+
+# Train models
+docker exec techstore-backend node scripts/seedInteractions.js
+curl -X POST http://localhost:8000/train -H "Content-Type: application/json" -d '{"force": true}'
+
+# Check status
+curl http://localhost:8000/status | jq
+
+# Rebuild images
+docker compose build --no-cache
+```

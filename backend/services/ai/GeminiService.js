@@ -257,62 +257,144 @@ class GeminiService {
   }
 
   /**
+   * Normalize Vietnamese text - remove diacritics for pattern matching
+   */
+  removeVietnameseTones(str) {
+    return str.normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove combining diacritical marks
+      .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  }
+
+  /**
    * Thử trả lời câu hỏi chung locally (không cần API)
    * Hỗ trợ tính toán đơn giản, câu hỏi cơ bản
    */
   tryAnswerLocally(message) {
-    const normalizedMessage = message.toLowerCase().trim();
+    const normalizedMessage = this.removeVietnameseTones(message).toLowerCase().trim();
+    console.log('🔍 tryAnswerLocally - normalized:', normalizedMessage);
     
     // 1. Xử lý phép tính đơn giản
     const mathResult = this.calculateMath(message);
     if (mathResult !== null) {
+      console.log('✅ Math result found:', mathResult);
       return `Kết quả: **${mathResult}** 🧮`;
     }
     
     // 2. Các câu hỏi có thể trả lời không cần AI
     const simpleAnswers = [
+      // Math & Numbers
       {
         patterns: [/^(1\s*\+\s*1|một cộng một)/i],
         answer: '1 + 1 = **2** 🧮'
       },
       {
-        patterns: [/bạn là ai|you are|ai đang nói/i],
-        answer: 'Tôi là **Gemini AI** - trợ lý thông minh được hỗ trợ bởi Google AI, hoạt động trên TechStore! 🤖 Tôi có thể giúp bạn tìm sản phẩm, trả lời câu hỏi, và nhiều hơn nữa!'
+        patterns: [/^(2\s*\+\s*2|hai cộng hai)/i],
+        answer: '2 + 2 = **4** 🧮'
+      },
+      
+      // About AI
+      {
+        patterns: [/ban la ai/i, /who are you/i, /you are who/i],
+        answer: 'Tôi là **Gemini AI** - trợ lý thông minh được hỗ trợ bởi Google AI, hoạt động trên TechStore! 🤖\n\nTôi có thể:\n✅ Trả lời câu hỏi tổng quát\n✅ Tư vấn sản phẩm công nghệ\n✅ Giải toán đơn giản\n✅ Trò chuyện thân thiện\n\nBạn cần giúp gì?'
       },
       {
-        patterns: [/bạn tên (là )?gì|tên của bạn/i],
+        patterns: [/ten cua ban/i, /ban ten gi/i, /your name/i],
         answer: 'Tôi là **Gemini AI** 🤖 - trợ lý AI thông minh của TechStore!'
       },
       {
-        patterns: [/mấy giờ|what time|giờ hiện tại/i],
+        patterns: [/ban co the (.+)?/i, /what can you do/i],
+        answer: '🤖 **Tôi có thể giúp bạn:**\n\n✅ Trả lời câu hỏi chung (khoa học, toán học, lịch sử...)\n✅ Tư vấn sản phẩm công nghệ\n✅ Giải toán đơn giản\n✅ Kiểm tra đơn hàng\n✅ Trò chuyện thân thiện\n\nHãy hỏi tôi bất cứ điều gì! 😊'
+      },
+      
+      // Time & Date
+      {
+        patterns: [/may gio|what time|gio hien tai|bay gio la may gio/i],
         answer: `Bây giờ là **${new Date().toLocaleTimeString('vi-VN')}** ⏰`
       },
       {
-        patterns: [/hôm nay (là )?ngày (mấy|bao nhiêu)|today.*date|ngày hôm nay/i],
+        patterns: [/hom nay (.+)?ngay|today.*date|ngay hom nay|hom nay la thu may/i],
         answer: `Hôm nay là **${new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}** 📅`
       },
+      
+      // Greetings
       {
-        patterns: [/hello|hi|xin chào/i],
+        patterns: [/^(hello|hi|xin chào|chào bạn|chào|hey)$/i],
         answer: 'Xin chào! 👋 Tôi là Gemini AI - rất vui được trò chuyện với bạn! Bạn cần giúp gì?'
       },
       {
-        patterns: [/cảm ơn|thank you|thanks/i],
+        patterns: [/^(good morning|morning|chào buổi sáng)/i],
+        answer: 'Chào buổi sáng! ☀️ Tôi là Gemini AI. Bạn cần hỗ trợ gì hôm nay?'
+      },
+      {
+        patterns: [/^(good afternoon|afternoon|chào buổi chiều)/i],
+        answer: 'Chào buổi chiều! 🌤️ Tôi là Gemini AI. Tôi có thể giúp gì cho bạn?'
+      },
+      {
+        patterns: [/^(good evening|evening|chào buổi tối)/i],
+        answer: 'Chào buổi tối! 🌙 Tôi là Gemini AI. Bạn cần tôi hỗ trợ gì?'
+      },
+      
+      // Thanks & Courtesy
+      {
+        patterns: [/cam on|thank you|thanks/i],
         answer: 'Không có gì! 😊 Rất vui được giúp bạn. Bạn còn cần hỗ trợ gì nữa không?'
       },
       {
-        patterns: [/khỏe không|how are you|bạn có khỏe/i],
+        patterns: [/khoe khong|how are you|ban co khoe|the nao roi/i],
         answer: 'Tôi luôn sẵn sàng phục vụ bạn! 😊 Cảm ơn bạn đã hỏi thăm. Bạn cần giúp gì hôm nay?'
+      },
+      {
+        patterns: [/bye|goodbye|tam biet|chao tam biet/i],
+        answer: 'Tạm biệt! 👋 Rất vui được trò chuyện với bạn. Hẹn gặp lại! 😊'
+      },
+      
+      // Simple Knowledge
+      {
+        patterns: [/thu do (.+)?viet nam|vietnam.*capital/i],
+        answer: 'Thủ đô của Việt Nam là **Hà Nội** 🇻🇳'
+      },
+      {
+        patterns: [/thu do (.+)?phap|france.*capital|paris/i],
+        answer: 'Thủ đô của Pháp là **Paris** 🇫🇷'
+      },
+      {
+        patterns: [/thu do (.+)?nhat|japan.*capital|tokyo/i],
+        answer: 'Thủ đô của Nhật Bản là **Tokyo** 🇯🇵'
+      },
+      {
+        patterns: [/thu do (.+)?my|america.*capital|washington/i],
+        answer: 'Thủ đô của Hoa Kỳ là **Washington, D.C.** 🇺🇸'
+      },
+      {
+        patterns: [/trái đất|earth/i],
+        answer: '🌍 **Trái Đất** là hành tinh thứ 3 trong hệ Mặt Trời, cách Mặt Trời khoảng 150 triệu km.'
+      },
+      {
+        patterns: [/mặt trời|sun/i],
+        answer: '☀️ **Mặt Trời** là ngôi sao trung tâm của hệ Mặt Trời, cung cấp ánh sáng và nhiệt cho Trái Đất.'
+      },
+      
+      // Programming Basics (limited)
+      {
+        patterns: [/python là gì|what is python/i],
+        answer: '🐍 **Python** là ngôn ngữ lập trình cấp cao, dễ học, phổ biến cho:\n• AI/Machine Learning\n• Web Development (Django, Flask)\n• Data Science\n• Automation\n\nĐể học Python chi tiết hơn, hãy thử lại khi tôi kết nối được API! 😊'
+      },
+      {
+        patterns: [/javascript là gì|what is javascript/i],
+        answer: '⚡ **JavaScript** là ngôn ngữ lập trình cho web:\n• Chạy trên trình duyệt\n• Backend với Node.js\n• React, Vue, Angular...\n• Rất phổ biến!\n\nĐể tìm hiểu code cụ thể, hãy thử lại sau! 😊'
       }
     ];
     
     for (const qa of simpleAnswers) {
       for (const pattern of qa.patterns) {
         if (pattern.test(normalizedMessage)) {
+          console.log('✅ Pattern matched:', pattern, '| answer:', qa.answer.substring(0, 50));
           return qa.answer;
         }
       }
     }
     
+    console.log('❌ No pattern matched');
     return null; // Không thể trả lời locally
   }
 
@@ -378,8 +460,81 @@ class GeminiService {
     const localAnswer = this.tryAnswerLocally(message);
     if (localAnswer) return localAnswer;
     
+    // Intelligent fallback based on question type
+    const normalizedMessage = message.toLowerCase();
+    
+    // Programming/Code questions
+    if (/(code|lập trình|viết|write|python|javascript|java|html|css)/i.test(normalizedMessage)) {
+      return `💻 **Câu hỏi lập trình!**
+
+Xin lỗi, tôi đang gặp giới hạn API để trả lời chi tiết câu này. Tuy nhiên, tôi có thể:
+
+**Tạm thời:**
+• Hãy thử tìm trên [Stack Overflow](https://stackoverflow.com)
+• Hoặc [W3Schools](https://w3schools.com) cho tutorial cơ bản
+• Quay lại sau vài phút để tôi có thể trả lời tốt hơn! ⏰
+
+**Trong khi đó:**
+Bạn có muốn xem laptop/PC cho lập trình không? 💼`;
+    }
+    
+    // Math/Calculation
+    if (/(tính|calculate|giải|phương trình|equation|toán|math)/i.test(normalizedMessage)) {
+      return `🧮 **Câu hỏi toán học!**
+
+Tôi có thể giải các phép tính đơn giản (như 1+1, 5*3...) ngay bây giờ!
+
+Với bài toán phức tạp hơn, hãy:
+• Thử lại sau vài phút ⏰
+• Hoặc dùng [Wolfram Alpha](https://wolframalpha.com)
+
+**Bạn muốn tính gì?** Thử hỏi phép tính đơn giản! 😊`;
+    }
+    
+    // Translation
+    if (/(dịch|translate|tiếng anh|tiếng việt|english)/i.test(normalizedMessage)) {
+      return `🌐 **Câu hỏi dịch thuật!**
+
+Xin lỗi, tôi cần kết nối API để dịch chính xác.
+
+**Tạm thời bạn có thể:**
+• Dùng [Google Translate](https://translate.google.com)
+• Quay lại sau vài phút để tôi dịch giúp! ⏰
+
+Còn vấn đề gì tôi có thể giúp không? 😊`;
+    }
+    
+    // General knowledge
+    if (/(tại sao|vì sao|why|how|là gì|what is|ai là|who is)/i.test(normalizedMessage)) {
+      return `🤔 **Câu hỏi kiến thức!**
+
+Tôi đang gặp giới hạn API tạm thời để trả lời chi tiết.
+
+**Bạn có thể:**
+• Thử lại sau vài phút ⏰
+• Tạm thời search trên Google
+• Hoặc hỏi tôi về sản phẩm công nghệ!
+
+**Trong khi chờ:**
+Bạn cần tư vấn laptop, PC, hay phụ kiện gaming không? 🎮`;
+    }
+    
     // Generic response for general questions
-    return `Xin lỗi, tôi đang gặp sự cố kết nối với hệ thống AI nên chưa thể trả lời câu hỏi này. 😅\n\nTuy nhiên, tôi vẫn có thể giúp bạn:\n• 🛒 Tìm kiếm sản phẩm công nghệ\n• 📦 Kiểm tra đơn hàng\n• 💬 Tư vấn mua sắm\n\nBạn thử hỏi về sản phẩm hoặc quay lại sau nhé!`;
+    return `😅 **Xin lỗi, tôi đang bận!**
+
+Hiện tại tôi đang gặp giới hạn kết nối API để trả lời câu hỏi tổng quát này.
+
+**📋 Tôi vẫn có thể:**
+✅ Trả lời phép tính đơn giản (1+1, 5*3...)
+✅ Cho biết thời gian, ngày tháng hiện tại
+✅ Tư vấn sản phẩm TechStore
+✅ Kiểm tra đơn hàng
+
+**⏰ Hoặc:**
+• Quay lại sau vài phút để hỏi lại
+• API sẽ reset và tôi có thể trả lời đầy đủ!
+
+Bạn có cần tư vấn sản phẩm công nghệ không? 💻`;
   }
 
   /**
@@ -424,52 +579,43 @@ class GeminiService {
   getSystemPrompt(context = {}) {
     const { products = [], categories = [], userInfo = null, analysis = null, hasProducts = false, isGeneralQuestion = false } = context;
 
-    let systemPrompt = `Bạn là Gemini AI - trợ lý AI cao cấp được hỗ trợ bởi Google AI, hoạt động trên nền tảng TechStore - cửa hàng công nghệ hàng đầu Việt Nam.
+    let systemPrompt = `Bạn là Gemini AI - trợ lý AI thông minh được hỗ trợ bởi Google AI, hoạt động trên nền tảng TechStore.
 
-🎯 VAI TRÒ CỦA BẠN:
-- Trợ lý AI THÔNG MINH có khả năng trả lời MỌI CÂU HỎI như Gemini gốc
-- Tư vấn viên chuyên nghiệp về công nghệ với kiến thức sâu rộng
-- Có thể trả lời câu hỏi chung, giải toán, dịch thuật, viết văn, hỏi đáp kiến thức...
-- Hiểu biết rộng về nhiều lĩnh vực: khoa học, lịch sử, văn hóa, lập trình, v.v.
-
-🧠 KHẢ NĂNG CỦA BẠN:
-- Trả lời câu hỏi TỔNG QUÁT về bất kỳ chủ đề nào
-- Giải thích khái niệm, định nghĩa, kiến thức
-- Hỗ trợ viết code, debug, giải thuật
-- Dịch ngôn ngữ, sửa lỗi ngữ pháp
-- Giải toán, tính toán, logic
-- Tư vấn công nghệ chuyên sâu
-- Trò chuyện tự nhiên, thân thiện
-
-📦 VỀ TECHSTORE (khi được hỏi về sản phẩm):
-- Laptop (Gaming, Văn phòng, Đồ họa sáng tạo, Ultrabook)
-- PC Desktop (Gaming PC, Workstation, PC văn phòng, Mini PC)
-- Linh kiện (CPU Intel/AMD, VGA NVIDIA/AMD, RAM, Mainboard, SSD/HDD, PSU, Case, Tản nhiệt)
-- Màn hình, Phụ kiện Gaming, Console & Gaming
-- Thương hiệu: ASUS, Acer, Dell, HP, Lenovo, MSI, Apple, Intel, AMD, NVIDIA...
-
-💎 PHONG CÁCH TRẢ LỜI:
-1. THÂN THIỆN & THÔNG MINH - Trả lời như một AI thực sự thông minh
-2. LINH HOẠT - Nếu hỏi về TechStore → tư vấn sản phẩm. Nếu hỏi chung → trả lời như Gemini
-3. TỰ NHIÊN & HỮU ÍCH - Luôn cố gắng giúp đỡ người dùng tốt nhất có thể
-4. SỬ DỤNG EMOJI PHÙ HỢP - Tạo cảm giác thân thiện 😊💻🎮
-5. KHÔNG GIỚI HẠN CHỦ ĐỀ - Trả lời bất kỳ câu hỏi hợp lệ nào
-
-⚠️ QUY TẮC:
+🎯 NHIỆM VỤ CHÍNH:
 ${isGeneralQuestion ? 
-`- Đây là CÂU HỎI CHUNG - hãy trả lời như Gemini AI thực sự
-- Không cần đề cập đến TechStore hay sản phẩm
-- Trả lời đầy đủ, chính xác, hữu ích` :
-`- KHÔNG liệt kê tên sản phẩm, giá cả trong câu trả lời text
-- Sản phẩm được hiển thị riêng dưới dạng card với hình ảnh
-- Nếu ${hasProducts ? 'CÓ' : 'KHÔNG CÓ'} sản phẩm phù hợp, hãy trả lời phù hợp
-- Chủ động hỏi: ngân sách, mục đích sử dụng, thương hiệu yêu thích`}
+`✨ HÃY TRẢ LỜI CÂU HỎI NÀY NHƯ MỘT AI THÔNG MINH THỰC SỰ!
+- Bạn là Gemini AI - có thể trả lời MỌI câu hỏi về bất kỳ chủ đề nào
+- Kiến thức KHÔNG GIỚI HẠN: khoa học, lịch sử, văn hóa, toán học, lập trình, văn học, nghệ thuật...
+- Có thể giải toán, viết code, dịch thuật, giải thích khái niệm, tư vấn, trò chuyện...
+- KHÔNG cần đề cập đến TechStore hay sản phẩm trong câu trả lời này
+- Hãy trả lời CHI TIẾT, CHÍNH XÁC và HỮU ÍCH như Gemini thực sự!` :
+`📦 TƯ VẤN SẢN PHẨM TECHSTORE:
+- Tìm kiếm và gợi ý sản phẩm phù hợp với nhu cầu khách hàng
+- KHÔNG liệt kê tên sản phẩm, giá trong text (sản phẩm hiển thị dạng card)
+- Hỏi thêm: ngân sách, mục đích sử dụng, thương hiệu yêu thích
+- Sản phẩm ${hasProducts ? 'CÓ' : 'KHÔNG CÓ'} trong kết quả tìm kiếm`}
 
-📋 CHÍNH SÁCH TECHSTORE:
+🧠 KHẢ NĂNG TOÀN DIỆN:
+- ✅ Trả lời MỌI câu hỏi tổng quát (khoa học, toán học, lịch sử, văn hóa...)
+- ✅ Viết code, debug, giải thuật toán  
+- ✅ Dịch ngôn ngữ, sửa lỗi văn phạm
+- ✅ Giải toán, tính toán phức tạp
+- ✅ Giải thích khái niệm, định nghĩa
+- ✅ Tư vấn công nghệ và sản phẩm TechStore
+- ✅ Trò chuyện tự nhiên, thân thiện
+
+💎 PHONG CÁCH:
+- Thân thiện, hữu ích, tự nhiên như con người thật
+- Sử dụng emoji phù hợp để sinh động 😊
+- Trả lời ngắn gọn nhưng đầy đủ
+- Linh hoạt theo ngữ cảnh câu hỏi
+
+📦 THÔNG TIN TECHSTORE (chỉ dùng khi được hỏi):
+- Sản phẩm: Laptop, PC, Linh kiện (CPU, VGA, RAM...), Màn hình, Phụ kiện
+- Thương hiệu: ASUS, MSI, Dell, HP, Lenovo, Intel, AMD, NVIDIA, Logitech, Razer...
 - Thanh toán: COD, Chuyển khoản, ZaloPay, Momo
 - Giao hàng: Miễn phí từ 500k | Nội thành 1-2 ngày | Tỉnh 3-5 ngày
-- Bảo hành: 12-36 tháng chính hãng
-- Đổi trả: 7 ngày nếu lỗi`;
+- Bảo hành: 12-36 tháng | Đổi trả: 7 ngày nếu lỗi`;
 
     // Add user context for personalization
     if (userInfo) {
@@ -606,20 +752,20 @@ ${isGeneralQuestion ?
       
       // Handle specific errors - use fallback instead of throwing
       if (error.message?.includes('API key')) {
-        console.warn('⚠️ API key không hợp lệ - sử dụng fallback response');
+        console.warn('⚠️ Gemini API key không hợp lệ - sử dụng fallback');
         this.quotaExhausted = true;
         return {
-          text: this.getFallbackResponse(message),
+          text: isGeneralQuestion ? this.getGeneralQuestionFallback(message) : this.getFallbackResponse(message),
           model: 'fallback',
           fallback: true,
           reason: 'invalid_api_key'
         };
       }
       if (error.message?.includes('quota') || error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED')) {
-        console.warn('⚠️ Hết quota API - sử dụng fallback response');
+        console.warn('⚠️ Gemini API hết quota - sử dụng fallback (reset sau vài phút)');
         this.quotaExhausted = true;
         return {
-          text: this.getFallbackResponse(message),
+          text: isGeneralQuestion ? this.getGeneralQuestionFallback(message) : this.getFallbackResponse(message),
           model: 'fallback',
           fallback: true,
           reason: 'quota_exceeded'
