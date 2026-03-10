@@ -1,12 +1,14 @@
 """
-Chat API routes — Intent-driven RAG chatbot.
+Chat API routes — Intent-driven RAG chatbot v2.0.
 
 POST /chat        — main endpoint, auto-detects intent and routes to the
                     appropriate answer strategy.
 POST /chat/intent — utility endpoint, returns intent label only (for debugging).
 
-Intent routing:
-  knowledge_question  → answer_knowledge_question()  (pure Gemini)
+Intent routing (v2.0):
+  greeting            → quick response (no LLM)
+  help                → chatbot features explanation (no LLM)
+  knowledge_question  → answer_knowledge_question()  (enhanced Gemini)
   product_search      → answer_question()             (FAISS RAG + Gemini)
   product_price       → answer_price_question()       (MongoDB text search + Gemini)
 """
@@ -15,7 +17,14 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from services.intent_service import IntentService, INTENT_KNOWLEDGE, INTENT_PRODUCT, INTENT_PRICE
+from services.intent_service import (
+    IntentService,
+    INTENT_KNOWLEDGE,
+    INTENT_PRODUCT,
+    INTENT_PRICE,
+    INTENT_GREETING,
+    INTENT_HELP,
+)
 from services.rag_pipeline import RAGPipeline
 
 router = APIRouter(prefix="", tags=["chat"])
@@ -35,6 +44,49 @@ class IntentRequest(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────────────────── #
+#  Quick Responses (no LLM needed)                                             #
+# ─────────────────────────────────────────────────────────────────────────── #
+
+def _greeting_response() -> dict:
+    """Quick greeting response."""
+    return {
+        "answer": (
+            "Xin chào! 👋 Tôi là trợ lý AI của TechStore. "
+            "Tôi có thể giúp bạn:\n"
+            "• Tìm kiếm và tư vấn sản phẩm phù hợp\n"
+            "• Kiểm tra giá và tồn kho\n"
+            "• Giải đáp kiến thức về phần cứng máy tính\n\n"
+            "Bạn cần hỗ trợ gì hôm nay?"
+        ),
+        "retrieved_products": [],
+        "source": "greeting",
+    }
+
+
+def _help_response() -> dict:
+    """Chatbot capabilities explanation."""
+    return {
+        "answer": (
+            "🤖 **Tôi có thể giúp bạn:**\n\n"
+            "**1. Tìm kiếm sản phẩm thông minh** 🔍\n"
+            "   • 'Tìm laptop gaming dưới 20 triệu'\n"
+            "   • 'VGA tốt cho render video'\n"
+            "   • 'PC văn phòng giá rẻ'\n\n"
+            "**2. Tra cứu giá & tồn kho** 💰\n"
+            "   • 'Giá laptop Asus ROG bao nhiêu?'\n"
+            "   • 'Còn hàng RTX 4090 không?'\n\n"
+            "**3. Kiến thức phần cứng** 📚\n"
+            "   • 'VGA khác CPU thế nào?'\n"
+            "   • 'RAM bao nhiêu là đủ cho gaming?'\n"
+            "   • 'Tại sao SSD nhanh hơn HDD?'\n\n"
+            "Hãy hỏi tôi bất cứ điều gì! 😊"
+        ),
+        "retrieved_products": [],
+        "source": "help",
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────── #
 #  POST /chat                                                                  #
 # ─────────────────────────────────────────────────────────────────────────── #
 
@@ -46,10 +98,10 @@ async def chat_endpoint(payload: ChatRequest):
     Response shape:
     {
         "success": true,
-        "intent": "product_search | product_price | knowledge_question",
+        "intent": "product_search | product_price | knowledge_question | greeting | help",
         "answer": "...",
         "retrieved_products": [...],
-        "source": "gemini_rag | price_lookup | knowledge_gemini | retrieval_only | ..."
+        "source": "gemini_rag | price_lookup | knowledge_gemini | greeting | help | ..."
     }
     """
     question = payload.message.strip()
@@ -58,8 +110,14 @@ async def chat_endpoint(payload: ChatRequest):
         # ── 1. Intent detection ─────────────────────────────────────────
         intent = intent_service.detect(question)
 
-        # ── 2. Route to the right answering strategy ────────────────────
-        if intent == INTENT_PRICE:
+        # ── 2. Quick responses (no LLM) ─────────────────────────────────
+        if intent == INTENT_GREETING:
+            result = _greeting_response()
+        elif intent == INTENT_HELP:
+            result = _help_response()
+        
+        # ── 3. Route to RAG pipeline ────────────────────────────────────
+        elif intent == INTENT_PRICE:
             result = await rag_pipeline.answer_price_question(
                 question, top_k=payload.top_k
             )

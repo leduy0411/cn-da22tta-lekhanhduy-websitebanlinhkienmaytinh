@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 import re
 
-import google.generativeai as genai  # type: ignore[import-not-found]
+from google import genai
 from bson import ObjectId
 from loguru import logger
 
@@ -36,7 +36,7 @@ class RAGPipeline:
         self.gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
         self.gemini_api_key = os.getenv("GEMINI_API_KEY", "")
 
-        self._gemini_model = None
+        self._gemini_client = None
         self._vector_loaded = self.vector_store.load()
         self._init_gemini()
 
@@ -45,8 +45,12 @@ class RAGPipeline:
             logger.warning("GEMINI_API_KEY is not configured. Using retrieval-only fallback.")
             return
 
-        genai.configure(api_key=self.gemini_api_key)
-        self._gemini_model = genai.GenerativeModel(self.gemini_model_name)
+        try:
+            self._gemini_client = genai.Client(api_key=self.gemini_api_key)
+            logger.info(f"✅ Gemini AI initialized with model: {self.gemini_model_name}")
+        except Exception as e:
+            logger.error(f"Failed to initialize Gemini client: {e}")
+            self._gemini_client = None
 
     # ──────────────────────────────────────────────────────────────────── #
     #  Query processing helpers                                            #
@@ -214,10 +218,13 @@ class RAGPipeline:
     # ──────────────────────────────────────────────────────────────────── #
 
     def _call_gemini(self, prompt: str) -> str:
-        """Call Gemini and return stripped text. Raises if model not ready."""
-        if not self._gemini_model:
-            raise RuntimeError("Gemini model is not configured")
-        result = self._gemini_model.generate_content(prompt)
+        """Call Gemini and return stripped text. Raises if client not ready."""
+        if not self._gemini_client:
+            raise RuntimeError("Gemini client is not configured")
+        result = self._gemini_client.models.generate_content(
+            model=self.gemini_model_name,
+            contents=prompt
+        )
         return (result.text or "").strip()
 
     # ──────────────────────────────────────────────────────────────────── #
@@ -269,7 +276,7 @@ class RAGPipeline:
         context_text = self._build_product_context(products)
 
         # 6. No Gemini → retrieval-only fallback
-        if not self._gemini_model:
+        if not self._gemini_client:
             return {
                 "answer": self._retrieval_only_answer(question, products),
                 "retrieved_products": products,
@@ -305,7 +312,7 @@ class RAGPipeline:
         # Build concise price block
         price_lines = self._build_price_lines(products)
 
-        if not self._gemini_model:
+        if not self._gemini_client:
             # Return raw price table without LLM
             header = "Dưới đây là thông tin giá sản phẩm tìm thấy trong cửa hàng:\n\n"
             return {
@@ -331,12 +338,17 @@ class RAGPipeline:
     async def answer_knowledge_question(self, question: str) -> dict:
         """
         Knowledge path — used for **knowledge_question** intent.
-        Pure Gemini, no product retrieval needed.
+        Enhanced Gemini with chain-of-thought reasoning for better answers.
+        
+        v2.0 Improvements:
+        - Better prompt engineering with chain-of-thought
+        - Encourages structured, comprehensive answers
+        - Includes hardware-specific context when relevant
         """
         if not question or not question.strip():
             raise ValueError("Question cannot be empty")
 
-        if not self._gemini_model:
+        if not self._gemini_client:
             return {
                 "answer": (
                     "Xin lỗi, tôi chưa được cấu hình Gemini API key nên chưa thể trả lời "
@@ -346,18 +358,72 @@ class RAGPipeline:
                 "source": "knowledge_fallback",
             }
 
+        # Enhanced prompt with chain-of-thought reasoning
         prompt = (
             f"{_SYSTEM_PERSONA}"
-            "Hướng dẫn:\n"
-            "- Đây là câu hỏi kiến thức tổng quát về phần cứng máy tính.\n"
-            "- Giải thích rõ ràng, giúp khách hàng hiểu vấn đề.\n"
-            "- Nếu liên quan đến so sánh, nêu ưu/nhược điểm cụ thể.\n"
-            "- Kết thúc bằng gợi ý hành động nếu phù hợp (ví dụ: xem sản phẩm tại cửa hàng).\n\n"
-            f"Câu hỏi: {question}"
+            "**Vai trò**: Bạn là chuyên gia phần cứng máy tính với kiến thức sâu rộng.\n\n"
+            
+            "**Hướng dẫn trả lời**:\n"
+            "1. **Hiểu câu hỏi**: Xác định chính xác điều người dùng muốn biết\n"
+            "2. **Giải thích rõ ràng**: Dùng thuật ngữ dễ hiểu, ví dụ thực tế\n"
+            "3. **Cấu trúc logic**: Chia nhỏ thành điểm nếu có nhiều khía cạnh\n"
+            "4. **Tương quan thực tế**: Liên hệ với use case thực tế nếu phù hợp\n"
+            "5. **Khuyến nghị hành động**: Kết thúc bằng gợi ý cụ thể nếu có thể\n\n"
+            
+            "**Lưu ý quan trọng**:\n"
+            "- Trả lời chính xác dựa trên kiến thức về phần cứng máy tính\n"
+            "- Nếu câu hỏi về so sánh, nêu rõ ưu/nhược điểm từng bên\n"
+            "- Nếu câu hỏi mơ hồ, đưa ra giả định hợp lý và giải thích\n"
+            "- Không bịa đặt thông tin kỹ thuật\n"
+            "- Có thể gợi ý khách hàng xem sản phẩm tại cửa hàng nếu phù hợp\n\n"
+            
+            "**Ví dụ câu trả lời tốt**:\n"
+            "Q: 'VGA khác CPU thế nào?'\n"
+            "A: 'VGA (card đồ họa) và CPU (bộ xử lý trung tâm) là 2 linh kiện khác nhau:\n\n"
+            "**CPU (Bộ xử lý)**:\n"
+            "- Xử lý các tính toán chung của hệ thống\n"
+            "- Quan trọng cho đa nhiệm, lập trình, xử lý văn phòng\n"
+            "- VD: Intel Core i7, AMD Ryzen 7\n\n"
+            "**VGA (Card đồ họa)**:\n"
+            "- Chuyên xử lý đồ họa, render hình ảnh\n"
+            "- Quan trọng cho gaming, thiết kế 3D, video editing\n"
+            "- VD: NVIDIA RTX 4070, AMD RX 7800 XT\n\n"
+            "💡 **Gợi ý**: Nếu bạn chơi game/đồ họa nhiều, ưu tiên nâng cấp VGA. "
+            "Nếu làm việc văn phòng/lập trình, ưu tiên CPU tốt.'\n\n"
+            
+            f"**Câu hỏi từ khách hàng**: {question}\n\n"
+            "**Trả lời chi tiết**:"
         )
 
-        answer = self._call_gemini(prompt)
-        return {"answer": answer, "retrieved_products": [], "source": "knowledge_gemini"}
+        try:
+            answer = self._call_gemini(prompt)
+            
+            # Post-process: ensure answer quality
+            if len(answer.strip()) < 50:
+                # Answer too short, might be error or refusal
+                answer += (
+                    "\n\nNếu bạn muốn tìm sản phẩm cụ thể, hãy cho tôi biết "
+                    "nhu cầu và ngân sách của bạn nhé!"
+                )
+            
+            return {
+                "answer": answer,
+                "retrieved_products": [],
+                "source": "knowledge_gemini_enhanced"
+            }
+        except Exception as e:
+            logger.error(f"Gemini call failed for knowledge question: {e}")
+            return {
+                "answer": (
+                    f"Xin lỗi, tôi đang gặp sự cố xử lý câu hỏi này. "
+                    f"Bạn có thể:\n"
+                    f"• Hỏi câu hỏi khác\n"
+                    f"• Tìm kiếm sản phẩm cụ thể\n"
+                    f"• Liên hệ nhân viên hỗ trợ để được tư vấn tốt nhất"
+                ),
+                "retrieved_products": [],
+                "source": "knowledge_error_fallback",
+            }
 
     # ──────────────────────────────────────────────────────────────────── #
     #  Fallback                                                            #

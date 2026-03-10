@@ -1,9 +1,10 @@
 /**
- * AI Routes
+ * AI Routes v2.0
  * API endpoints cho tất cả AI services
  * 
  * @module routes/ai
  * @description Express routes cho AI Service Layer
+ * @version 2.0 - Direct Gemini integration, removed Python AI dependency
  */
 
 const express = require('express');
@@ -15,10 +16,11 @@ const {
   SemanticSearchService,
   ReviewAnalysisService,
   SalesForecastingService,
-  ChatbotService,
-  ModelEvaluationService,
-  GeminiService
+  ModelEvaluationService
 } = require('../services/ai');
+
+// Import new Gemini chat service
+const geminiChatService = require('../services/GeminiChatService');
 
 // ==================== GEMINI AI STATUS ====================
 
@@ -36,17 +38,19 @@ router.get('/gemini/status', auth, async (req, res) => {
     res.json({
       success: true,
       gemini: {
-        initialized: GeminiService.isReady(),
-        model: 'gemini-2.0-flash',
+        initialized: geminiChatService.isReady(),
+        service: 'Direct Gemini Integration',
+        model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
         features: [
-          'Chat conversations',
-          'Intent analysis', 
-          'Product comparison',
-          'Review analysis',
-          'Product recommendations'
+          'RAG-based chatbot',
+          'Product context search',
+          'Streaming responses',
+          'Conversation history',
+          'MongoDB integration'
         ]
       }
     });
+
   } catch (error) {
     console.error('Gemini status error:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -55,7 +59,7 @@ router.get('/gemini/status', auth, async (req, res) => {
 
 /**
  * @route POST /api/ai/gemini/chat
- * @desc Direct chat with Gemini (admin testing)
+ * @desc Chat with Gemini (admin testing)
  * @access Admin
  */
 router.post('/gemini/chat', auth, async (req, res) => {
@@ -64,24 +68,19 @@ router.post('/gemini/chat', auth, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Admin access required' });
     }
 
-    const { message, context = {} } = req.body;
+    const { message } = req.body;
 
     if (!message) {
       return res.status(400).json({ success: false, message: 'Message is required' });
     }
 
-    if (!GeminiService.isReady()) {
-      return res.status(503).json({ 
-        success: false, 
-        message: 'Gemini AI chưa được khởi tạo. Vui lòng kiểm tra GEMINI_API_KEY' 
-      });
-    }
-
-    const response = await GeminiService.chat(message, [], context);
+    // Use new Gemini chat service
+    const result = await geminiChatService.generateResponse(message, [], []);
 
     res.json({
-      success: true,
-      response
+      success: result.success,
+      response: result.answer,
+      source: result.source
     });
   } catch (error) {
     console.error('Gemini chat error:', error);
@@ -91,7 +90,7 @@ router.post('/gemini/chat', auth, async (req, res) => {
 
 /**
  * @route POST /api/ai/gemini/analyze-intent
- * @desc Analyze intent using Gemini
+ * @desc Analyze intent via Python AI service
  * @access Admin
  */
 router.post('/gemini/analyze-intent', auth, async (req, res) => {
@@ -106,18 +105,17 @@ router.post('/gemini/analyze-intent', auth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Message is required' });
     }
 
-    if (!GeminiService.isReady()) {
-      return res.status(503).json({ success: false, message: 'Gemini AI not initialized' });
-    }
-
-    const analysis = await GeminiService.analyzeIntent(message);
+    // Use Python AI service for intent detection
+    const intent = await detectIntent(message);
 
     res.json({
       success: true,
-      analysis
+      intent,
+      message,
+      service: 'Python AI Microservice'
     });
   } catch (error) {
-    console.error('Gemini analyze error:', error);
+    console.error('Intent analysis error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -668,7 +666,7 @@ router.get('/chatbot/admin/conversations', auth, async (req, res) => {
 
 /**
  * @route POST /api/ai/chatbot/message
- * @desc Send message to chatbot
+ * @desc Send message to chatbot (via Python AI service)
  * @access Public
  */
 router.post('/chatbot/message', optionalAuth, async (req, res) => {
@@ -683,20 +681,37 @@ router.post('/chatbot/message', optionalAuth, async (req, res) => {
     }
 
     const userId = req.user?._id;
-    const userContext = {
-      ...context,
-      isAuthenticated: !!userId,
-      userId
-    };
 
-    const response = await ChatbotService.chat(sessionId, message, {
-      userId,
-      userContext
-    });
+    // Use Python AI service for intelligent chat
+    const result = await chatWithIntent(message, { topK: 5 });
+
+    // Store conversation in database for history tracking
+    const ChatbotConversation = require('../models/ChatbotConversation');
+    let conversation = await ChatbotConversation.findOne({ sessionId });
+    
+    if (!conversation) {
+      conversation = new ChatbotConversation({
+        sessionId,
+        userId,
+        messages: []
+      });
+    }
+
+    conversation.messages.push(
+      { role: 'user', content: message, timestamp: new Date() },
+      { role: 'assistant', content: result.answer, intent: result.intent, timestamp: new Date() }
+    );
+    conversation.updatedAt = new Date();
+    await conversation.save();
 
     res.json({
       success: true,
-      response
+      response: {
+        message: result.answer,
+        intent: result.intent,
+        products: result.products || [],
+        source: result.source
+      }
     });
   } catch (error) {
     console.error('Chatbot error:', error);
@@ -714,7 +729,12 @@ router.get('/chatbot/history/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     const { limit = 50 } = req.query;
 
-    const history = await ChatbotService.getConversationHistory(sessionId, parseInt(limit));
+    const ChatbotConversation = require('../models/ChatbotConversation');
+    const conversation = await ChatbotConversation.findOne({ sessionId })
+      .select('messages')
+      .lean();
+
+    const history = conversation?.messages.slice(-parseInt(limit)) || [];
 
     res.json({
       success: true,
@@ -736,12 +756,19 @@ router.post('/chatbot/end/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     const { satisfaction } = req.body;
 
-    const result = await ChatbotService.endConversation(sessionId, satisfaction);
+    const ChatbotConversation = require('../models/ChatbotConversation');
+    const conversation = await ChatbotConversation.findOne({ sessionId });
+
+    if (conversation) {
+      conversation.status = 'completed';
+      conversation.satisfactionScore = satisfaction;
+      await conversation.save();
+    }
 
     res.json({
       success: true,
       message: 'Conversation ended',
-      conversationId: result?._id
+      conversationId: conversation?._id
     });
   } catch (error) {
     console.error('End conversation error:', error);

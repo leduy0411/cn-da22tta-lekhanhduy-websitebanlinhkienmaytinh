@@ -61,6 +61,7 @@ const couponRoutes = require('./routes/coupons');
 const aiRoutes = require('./routes/ai');
 const recommendationV2Routes = require('./routes/v2/recommendations');
 const videoReviewRoutes = require('./routes/videoReviews');
+const aiAssistantRoutes = require('./routes/aiAssistant');
 
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -74,6 +75,7 @@ app.use('/api/filters', filterRoutes);
 app.use('/api/zalopay', zalopayRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
+app.use('/api/ai-assistant', aiAssistantRoutes); // New multi-agent system
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai/v2', recommendationV2Routes);
 app.use('/api/video-reviews', videoReviewRoutes);
