@@ -27,9 +27,9 @@ const productEmbeddingSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: function(v) {
-        return v.length > 0 && v.length <= 1536; // Max dimension cho OpenAI ada-002
+        return v.length > 0 && v.length <= 4096;
       },
-      message: 'Embedding dimension phải từ 1 đến 1536'
+      message: 'Embedding dimension phải từ 1 đến 4096'
     }
   },
   // Dimension của vector
@@ -41,7 +41,7 @@ const productEmbeddingSchema = new mongoose.Schema({
   embeddingModel: {
     type: String,
     required: true,
-    enum: ['tfidf', 'word2vec', 'fasttext', 'sentence-transformer', 'openai-ada-002', 'custom'],
+    enum: ['tfidf', 'word2vec', 'fasttext', 'sentence-transformer', 'openai-ada-002', 'gemini-embedding-001', 'custom'],
     default: 'tfidf'
   },
   // Category embedding (cho content-based filtering)

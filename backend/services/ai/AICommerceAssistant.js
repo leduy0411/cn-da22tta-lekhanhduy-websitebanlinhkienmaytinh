@@ -17,6 +17,8 @@ const RecommendationAgent = require('./agents/RecommendationAgent');
 const ComparisonAgent = require('./agents/ComparisonAgent');
 const PCBuilderAgent = require('./agents/PCBuilderAgent');
 const KnowledgeAgent = require('./agents/KnowledgeAgent');
+const GeneralChatAgent = require('./agents/GeneralChatAgent');
+const TechKnowledgeAgent = require('./agents/TechKnowledgeAgent');
 
 class AICommerceAssistant {
   constructor() {
@@ -45,6 +47,8 @@ class AICommerceAssistant {
       this.router.registerAgent('ComparisonAgent', ComparisonAgent);
       this.router.registerAgent('PCBuilderAgent', PCBuilderAgent);
       this.router.registerAgent('KnowledgeAgent', KnowledgeAgent);
+      this.router.registerAgent('GeneralChatAgent', GeneralChatAgent);
+      this.router.registerAgent('TechKnowledgeAgent', TechKnowledgeAgent);
 
       this.initialized = true;
 

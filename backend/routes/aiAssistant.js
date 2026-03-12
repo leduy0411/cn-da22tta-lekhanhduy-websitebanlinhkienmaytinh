@@ -61,6 +61,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
     }
 
     const conversation = conversationResult.conversation;
+    const actualSessionId = conversationResult.sessionId; // Use the actual session ID
 
     if (!conversation || !conversation.messages) {
       throw new Error('Invalid conversation object');
@@ -69,7 +70,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
     // Build context from conversation
     const context = {
       userId,
-      sessionId,
+      sessionId: actualSessionId, // Use actual session ID
       conversationHistory: (conversation.messages || []).slice(-5).map(m => ({
         role: m.role,
         content: m.content
@@ -86,15 +87,15 @@ router.post('/chat', optionalAuth, async (req, res) => {
     const answerText = aiResponse.result?.answer || aiResponse.fallback?.answer || 'Xin lỗi, có lỗi xảy ra.';
     const productIds = aiResponse.result?.products?.map(p => p._id) || [];
 
-    // Save user message
-    await ConversationMemoryService.addMessage(sessionId, 'user', message, {
+    // Save user message (use actual session ID)
+    await ConversationMemoryService.addMessage(actualSessionId, 'user', message, {
       intent: aiResponse.intent,
       entities: aiResponse.metadata?.entities,
       confidence: aiResponse.confidence
     });
 
-    // Save assistant message
-    await ConversationMemoryService.addMessage(sessionId, 'assistant', answerText, {
+    // Save assistant message (use actual session ID)
+    await ConversationMemoryService.addMessage(actualSessionId, 'assistant', answerText, {
       agent: aiResponse.agent,
       executionTime,
       products: productIds
@@ -104,7 +105,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
     if (aiResponse.intent) {
       // Track search query
       if (aiResponse.intent === 'product_search') {
-        await BehaviorTrackerService.trackSearch(userId, sessionId, message, {
+        await BehaviorTrackerService.trackSearch(userId, actualSessionId, message, {
           productCount: aiResponse.result?.productCount,
           intent: aiResponse.intent,
           agent: aiResponse.agent
@@ -115,7 +116,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
       if (aiResponse.intent === 'recommendation' && productIds.length > 0) {
         await BehaviorTrackerService.trackRecommendation(
           userId, 
-          sessionId, 
+          actualSessionId, 
           productIds, 
           aiResponse.metadata?.recommendationStrategy || 'unknown'
         );
@@ -123,7 +124,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
       
       // Track comparison
       if (aiResponse.intent === 'comparison' && productIds.length > 0) {
-        await BehaviorTrackerService.trackComparison(userId, sessionId, productIds);
+        await BehaviorTrackerService.trackComparison(userId, actualSessionId, productIds);
       }
       
       // Track PC build
@@ -131,7 +132,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
         const entities = aiResponse.metadata?.entities || {};
         await BehaviorTrackerService.trackPCBuild(
           userId, 
-          sessionId, 
+          actualSessionId, 
           entities.price?.max || 0, 
           entities.purpose || 'general'
         );
@@ -141,7 +142,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
     // Return response
     res.json({
       success: true,
-      sessionId,
+      sessionId: actualSessionId, // Return actual session ID
       answer: answerText,
       products: aiResponse.result?.products || [],
       productCount: aiResponse.result?.productCount || 0,

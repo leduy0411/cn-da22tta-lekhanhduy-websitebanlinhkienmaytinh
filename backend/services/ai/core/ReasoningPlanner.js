@@ -121,6 +121,30 @@ class ReasoningPlanner {
           { action: 'suggest_examples', description: 'Give example queries' }
         ],
         tools: ['searchKnowledge']
+      },
+
+      general_chat: {
+        agent: 'GeneralChatAgent',
+        steps: [
+          { action: 'load_context', description: 'Load conversation history' },
+          { action: 'analyze_message', description: 'Analyze message intent and tone' },
+          { action: 'generate_response', description: 'Generate natural conversational response' },
+          { action: 'add_personality', description: 'Add friendly personality to response' }
+        ],
+        tools: []
+      },
+
+      technical_question: {
+        agent: 'TechKnowledgeAgent',
+        steps: [
+          { action: 'classify_topic', description: 'Classify technical topic domain' },
+          { action: 'search_knowledge_base', description: 'Search vector knowledge base via RAG' },
+          { action: 'retrieve_context', description: 'Retrieve relevant knowledge documents' },
+          { action: 'augment_prompt', description: 'Build augmented prompt with RAG context' },
+          { action: 'generate_explanation', description: 'Generate detailed technical explanation' },
+          { action: 'format_response', description: 'Format with examples, diagrams, comparisons' }
+        ],
+        tools: ['searchKnowledge', 'generateExplanation', 'analyzeSpecs']
       }
     };
   }

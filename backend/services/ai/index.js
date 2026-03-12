@@ -9,13 +9,9 @@
 const RecommendationService = require('./RecommendationService');
 const SemanticSearchService = require('./SemanticSearchService');
 const ReviewAnalysisService = require('./ReviewAnalysisService');
-const SalesForecastingService = require('./SalesForecastingService');
-const ModelEvaluationService = require('./ModelEvaluationService');
 
 module.exports = {
   RecommendationService,
   SemanticSearchService,
-  ReviewAnalysisService,
-  SalesForecastingService,
-  ModelEvaluationService
+  ReviewAnalysisService
 };

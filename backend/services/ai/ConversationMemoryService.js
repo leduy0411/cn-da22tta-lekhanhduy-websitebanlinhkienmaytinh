@@ -31,7 +31,11 @@ class ConversationMemoryService {
    */
   async createSession(userId = null, metadata = {}) {
     try {
+      // Generate unique session ID
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      
       const conversation = new ChatbotConversation({
+        sessionId,
         userId,
         messages: [],
         context: {
@@ -77,6 +81,16 @@ class ConversationMemoryService {
 
       if (!conversation) {
         throw new Error('Conversation not found');
+      }
+
+      // Initialize context if not exists
+      if (!conversation.context) {
+        conversation.context = {
+          lastIntent: null,
+          interestedProducts: [],
+          viewedProducts: [],
+          preferences: {}
+        };
       }
 
       // Add message

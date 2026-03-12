@@ -9,6 +9,7 @@
 const ToolSystem = require('../core/ToolSystem');
 const Product = require('../../../models/Product');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const VectorSearchService = require('../rag/VectorSearchService');
 
 class ComparisonAgent {
   constructor() {
@@ -298,11 +299,14 @@ ${specsTable}
 - Điểm mạnh: ${JSON.stringify(analysis.strengths)}
 - Điểm yếu: ${JSON.stringify(analysis.weaknesses)}
 
+${await this._getRAGContext(query)}
+
 Hãy:
 1. Tóm tắt sự khác biệt chính
 2. Phân tích ưu/nhược điểm từng sản phẩm
-3. Đề xuất sản phẩm phù hợp nhất dựa trên mục đích sử dụng
-4. Đưa ra lời khuyên cuối cùng
+3. Giải thích kỹ thuật (dựa trên tài liệu tham khảo nếu có)
+4. Đề xuất sản phẩm phù hợp nhất dựa trên mục đích sử dụng
+5. Đưa ra lời khuyên cuối cùng
 
 Trả lời bằng tiếng Việt, chi tiết và dễ hiểu.`;
 
@@ -312,6 +316,29 @@ Trả lời bằng tiếng Việt, chi tiết và dễ hiểu.`;
     } catch (error) {
       console.error('Gemini generation error:', error);
       return this._getFallbackResponse(query, entities);
+    }
+  }
+
+  /**
+   * Get RAG context for richer comparison advice
+   * @private
+   */
+  async _getRAGContext(query) {
+    try {
+      const docs = await VectorSearchService.hybridSearch(query, {
+        limit: 2,
+        minSimilarity: 0.25,
+        categories: ['hardware', 'technology', 'product_spec']
+      });
+      if (docs.length === 0) return '';
+
+      let context = '**TÀI LIỆU THAM KHẢO:**\n';
+      docs.forEach((doc, i) => {
+        context += `--- ${doc.source} ---\n${doc.text.substring(0, 500)}\n\n`;
+      });
+      return context;
+    } catch {
+      return '';
     }
   }
 

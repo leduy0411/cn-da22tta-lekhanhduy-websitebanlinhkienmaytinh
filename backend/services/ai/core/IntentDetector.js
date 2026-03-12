@@ -91,6 +91,35 @@ class IntentDetector {
         confidence: 0.8
       },
 
+      technical_question: {
+        patterns: [
+          /(hoạt động|hoat dong|work|works|how does|nguyên lý|nguyen ly|nguyên tắc|cơ chế|co che)/i,
+          /(machine learning|deep learning|neural network|ai|trí tuệ nhân tạo|tri tue nhan tao)/i,
+          /(algorithm|thuật toán|thuat toan|mô hình|mo hinh|model|framework)/i,
+          /(networking|tcp|udp|http|dns|firewall|vpn|protocol|giao thức|giao thuc)/i,
+          /(programming|lập trình|lap trinh|code|coding|python|javascript|java|c\+\+|rust)/i,
+          /(blockchain|cloud|devops|docker|kubernetes|microservice)/i,
+          /(encryption|mã hóa|ma hoa|bảo mật|bao mat|security|hacking|cyber)/i,
+          /(database|cơ sở dữ liệu|co so du lieu|sql|nosql|mongodb|redis)/i,
+          /(ray tracing|dlss|fsr|cuda|tensor|vram|overclock|benchmark)/i,
+          /(linux|windows|macos|operating system|hệ điều hành|he dieu hanh)/i,
+          /.+\s+(la gi|là gì|hoat dong|hoạt động)\s*\??$/i,
+          /(giai thich|giải thích|explain).+?(cong nghe|công nghệ|ky thuat|kỹ thuật)/i
+        ],
+        keywords: [
+          'machine learning', 'deep learning', 'neural network', 'ai',
+          'hoạt động', 'hoat dong', 'nguyên lý', 'nguyen ly', 'how does', 'how do',
+          'algorithm', 'thuật toán', 'thuat toan', 'blockchain', 'cloud computing',
+          'programming', 'lập trình', 'lap trinh', 'networking', 'protocol',
+          'encryption', 'mã hóa', 'ma hoa', 'database', 'ray tracing',
+          'dlss', 'fsr', 'cuda', 'overclock', 'benchmark',
+          'linux', 'docker', 'kubernetes', 'devops', 'api',
+          'la gi', 'là gì', 'giai thich', 'giải thích'
+        ],
+        confidence: 0.85,
+        description: 'Technical/scientific questions about technology, CS, engineering'
+      },
+
       order_status: {
         patterns: [
           /(đơn hàng|order).*?(status|trạng thái|đang ở đâu)/i,
@@ -107,6 +136,21 @@ class IntentDetector {
         ],
         keywords: ['help', 'giúp', 'hỗ trợ', 'support', 'làm sao'],
         confidence: 0.85
+      },
+
+      general_chat: {
+        patterns: [
+          /(bạn là ai|bạn là gì|you are|who are you|bạn tên gì)/i,
+          /(có phải ai|có phải là|are you)/i,
+          /(hôm nay|today|thời tiết|weather|ăn gì|eat what)/i,
+          /(mệt|tired|buồn|sad|vui|happy|cảm thấy|feel)/i,
+          /(kể cho|tell me|nói cho|talk about)/i,
+          /(bạn nghĩ gì|what do you think|ý kiến|opinion)/i,
+          /(khỏe không|how are you|bạn thế nào|dạo này)/i
+        ],
+        keywords: ['bạn là ai', 'có phải', 'hôm nay', 'thời tiết', 'ăn gì', 'kể cho', 'bạn nghĩ', 'khỏe không'],
+        confidence: 0.8,
+        description: 'General conversation not related to products or shopping'
       }
     };
 
@@ -404,6 +448,15 @@ class IntentDetector {
     // If searching with comparison keywords, change to comparison
     if (entities.products && entities.products.length >= 2) {
       return 'comparison';
+    }
+
+    // If message is a technical/knowledge question about a product category,
+    // prioritize technical_question over product_search
+    if (primaryIntent === 'product_search' && intentScores.technical_question > 0.5) {
+      return 'technical_question';
+    }
+    if (primaryIntent === 'product_search' && intentScores.knowledge_question > 0.5) {
+      return 'knowledge_question';
     }
 
     // If asking to build PC with budget

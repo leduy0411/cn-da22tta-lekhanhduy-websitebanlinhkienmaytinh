@@ -53,7 +53,6 @@ const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const categoryRoutes = require('./routes/categories');
 const uploadRoutes = require('./routes/upload');
-const chatRoutes = require('./routes/chat');
 const filterRoutes = require('./routes/filters');
 const zalopayRoutes = require('./routes/zalopay');
 const reviewRoutes = require('./routes/reviews');
@@ -62,6 +61,7 @@ const aiRoutes = require('./routes/ai');
 const recommendationV2Routes = require('./routes/v2/recommendations');
 const videoReviewRoutes = require('./routes/videoReviews');
 const aiAssistantRoutes = require('./routes/aiAssistant');
+const knowledgeRoutes = require('./routes/knowledge');
 
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -70,7 +70,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/chat', chatRoutes);
 app.use('/api/filters', filterRoutes);
 app.use('/api/zalopay', zalopayRoutes);
 app.use('/api/reviews', reviewRoutes);
@@ -79,6 +78,7 @@ app.use('/api/ai-assistant', aiAssistantRoutes); // New multi-agent system
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai/v2', recommendationV2Routes);
 app.use('/api/video-reviews', videoReviewRoutes);
+app.use('/api/knowledge', knowledgeRoutes); // RAG knowledge base
 
 // Home route
 app.get('/', (req, res) => {

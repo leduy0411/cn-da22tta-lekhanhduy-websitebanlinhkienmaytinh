@@ -7,6 +7,7 @@
  */
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const VectorSearchService = require('../rag/VectorSearchService');
 
 class KnowledgeAgent {
   constructor() {
@@ -178,18 +179,40 @@ class KnowledgeAgent {
       }
     }
 
-    if (knowledgeResponse) {
+    // Search RAG knowledge base for additional context
+    let ragDocs = [];
+    try {
+      ragDocs = await VectorSearchService.hybridSearch(message, {
+        limit: 3,
+        minSimilarity: 0.25,
+        categories: ['hardware', 'technology', 'general']
+      });
+    } catch (err) {
+      // RAG not available, continue without it
+    }
+
+    // If we have embedded knowledge, return it directly
+    if (knowledgeResponse && ragDocs.length === 0) {
       return knowledgeResponse;
     }
 
-    // Use Gemini for complex questions
+    // Use Gemini with RAG context for richer answers
     if (this.model) {
       try {
-        const prompt = `Bạn là chuyên gia công nghệ tại TechStore.
+        let prompt = `Bạn là chuyên gia công nghệ tại TechStore.
 
 Khách hàng hỏi: "${message}"
 
-Hãy:
+`;
+        if (ragDocs.length > 0) {
+          prompt += 'TÀI LIỆU THAM KHẢO:\n';
+          ragDocs.forEach((doc, i) => {
+            prompt += `--- Tài liệu ${i + 1} [${doc.source}] ---\n${doc.text}\n\n`;
+          });
+          prompt += 'Hãy sử dụng thông tin từ tài liệu trên để trả lời chính xác.\n\n';
+        }
+
+        prompt += `Hãy:
 1. Giải thích rõ ràng và dễ hiểu
 2. Sử dụng ví dụ minh họa
 3. So sánh với các khái niệm tương tự (nếu có)

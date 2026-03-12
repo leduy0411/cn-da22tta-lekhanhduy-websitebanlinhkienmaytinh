@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { RiRobot2Line, RiSearchLine, RiBarChartLine, RiSettings4Line, RiRefreshLine, RiPlayCircleLine, RiFileChartLine, RiSendPlaneFill, RiPieChartLine } from 'react-icons/ri';
+import { RiRobot2Line, RiSearchLine, RiBarChartLine, RiSettings4Line, RiRefreshLine, RiSendPlaneFill, RiPieChartLine } from 'react-icons/ri';
 import { FiMessageCircle, FiTrendingUp, FiDatabase, FiCpu, FiActivity, FiCheckCircle, FiAlertCircle, FiZap, FiShoppingCart, FiUsers, FiTarget, FiEye, FiMousePointer, FiPackage } from 'react-icons/fi';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -12,8 +12,7 @@ const AdminAI = () => {
   const [loading, setLoading] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [aiStats, setAiStats] = useState(null);
-  const [evaluationReport, setEvaluationReport] = useState(null);
-  const [forecast, setForecast] = useState(null);
+
   const [geminiStatus, setGeminiStatus] = useState(null);
   const [geminiTestMessage, setGeminiTestMessage] = useState('');
   const [geminiTestResponse, setGeminiTestResponse] = useState(null);
@@ -56,32 +55,7 @@ const AdminAI = () => {
     }
   }, [getAuthHeader]);
 
-  const loadEvaluationReport = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_URL}/ai/evaluate/report`, getAuthHeader()).catch(() => null);
-      setEvaluationReport(response?.data?.report || null);
-    } catch (error) {
-      console.error('Error loading evaluation report:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [getAuthHeader]);
 
-  const loadForecast = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_URL}/ai/forecast`, {
-        ...getAuthHeader(),
-        params: { periods: 30, type: 'daily', algorithm: 'ensemble' }
-      }).catch(() => null);
-      setForecast(response?.data?.forecast || null);
-    } catch (error) {
-      console.error('Error loading forecast:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [getAuthHeader]);
 
   const loadGeminiStatus = useCallback(async () => {
     try {
@@ -113,38 +87,12 @@ const AdminAI = () => {
       loadGeminiStatus();
     } else if (activeTab === 'conversations') {
       loadConversations();
-    } else if (activeTab === 'evaluation') {
-      loadEvaluationReport();
-    } else if (activeTab === 'forecast') {
-      loadForecast();
     } else if (activeTab === 'settings') {
       loadGeminiStatus();
     } else if (activeTab === 'stats') {
       loadAIUsageStats();
     }
-  }, [activeTab, loadAIStats, loadConversations, loadEvaluationReport, loadForecast, loadGeminiStatus, loadAIUsageStats]);
-
-  const handleRunEvaluation = async (modelType) => {
-    try {
-      Swal.fire({
-        title: 'Đang đánh giá...',
-        text: 'Quá trình đánh giá mô hình đang chạy',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      });
-
-      if (modelType === 'all') {
-        await axios.post(`${API_URL}/ai/evaluate/all`, {}, getAuthHeader());
-        Swal.fire('Thành công', 'Đã bắt đầu đánh giá tất cả các mô hình', 'success');
-      } else {
-        await axios.post(`${API_URL}/ai/evaluate/${modelType}/default`, {}, getAuthHeader());
-        Swal.fire('Thành công', `Đã hoàn thành đánh giá mô hình ${modelType}`, 'success');
-      }
-      loadEvaluationReport();
-    } catch (error) {
-      Swal.fire('Lỗi', 'Không thể chạy đánh giá: ' + error.message, 'error');
-    }
-  };
+  }, [activeTab, loadAIStats, loadConversations, loadGeminiStatus, loadAIUsageStats]);
 
   const handleGenerateEmbeddings = async () => {
     try {
@@ -223,8 +171,6 @@ const AdminAI = () => {
     { id: 'overview', label: 'Tổng quan', icon: RiBarChartLine },
     { id: 'stats', label: 'Thống kê AI', icon: RiPieChartLine },
     { id: 'conversations', label: 'Hội thoại AI', icon: FiMessageCircle },
-    { id: 'evaluation', label: 'Đánh giá Model', icon: RiFileChartLine },
-    { id: 'forecast', label: 'Dự báo', icon: FiTrendingUp },
     { id: 'settings', label: 'Cài đặt', icon: RiSettings4Line }
   ];
 
@@ -276,17 +222,6 @@ const AdminAI = () => {
             <span className="stat-label">Hybrid Recommendation</span>
           </div>
         </div>
-
-        <div className="ai-stat-card">
-          <div className="stat-icon forecast">
-            <FiTrendingUp />
-          </div>
-          <div className="stat-info">
-            <h4>Dự báo doanh số</h4>
-            <p className="stat-value status-active"><FiCheckCircle /> Hoạt động</p>
-            <span className="stat-label">Ensemble Model</span>
-          </div>
-        </div>
       </div>
 
       <div className="ai-features-section">
@@ -333,20 +268,6 @@ const AdminAI = () => {
               <li>Hybrid Recommendations</li>
             </ul>
           </div>
-
-          <div className="feature-card">
-            <div className="feature-header">
-              <FiTrendingUp className="feature-icon" />
-              <h4>Dự báo Doanh số</h4>
-            </div>
-            <p>Dự báo doanh số với nhiều thuật toán ensemble.</p>
-            <ul className="feature-list">
-              <li>Moving Average</li>
-              <li>Exponential Smoothing</li>
-              <li>Linear Regression</li>
-              <li>Ensemble Model</li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>
@@ -385,146 +306,6 @@ const AdminAI = () => {
               </div>
             </div>
           ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderEvaluation = () => (
-    <div className="ai-evaluation">
-      <div className="section-header">
-        <h3>Đánh giá Mô hình AI</h3>
-        <div className="header-actions">
-          <button className="action-btn primary" onClick={() => handleRunEvaluation('all')}>
-            <RiPlayCircleLine /> Chạy tất cả
-          </button>
-          <button className="refresh-btn" onClick={loadEvaluationReport} disabled={loading}>
-            <RiRefreshLine className={loading ? 'spinning' : ''} /> Làm mới
-          </button>
-        </div>
-      </div>
-
-      <div className="evaluation-models">
-        <div className="eval-card">
-          <div className="eval-header">
-            <FiActivity className="eval-icon" />
-            <h4>Recommendation Models</h4>
-          </div>
-          <div className="eval-metrics">
-            <div className="metric">
-              <span className="metric-label">Precision@10</span>
-              <span className="metric-value">{evaluationReport?.recommendation?.precision || 'N/A'}</span>
-            </div>
-            <div className="metric">
-              <span className="metric-label">Recall@10</span>
-              <span className="metric-value">{evaluationReport?.recommendation?.recall || 'N/A'}</span>
-            </div>
-            <div className="metric">
-              <span className="metric-label">NDCG@10</span>
-              <span className="metric-value">{evaluationReport?.recommendation?.ndcg || 'N/A'}</span>
-            </div>
-          </div>
-          <button className="eval-btn" onClick={() => handleRunEvaluation('recommendation')}>
-            Đánh giá
-          </button>
-        </div>
-
-        <div className="eval-card">
-          <div className="eval-header">
-            <RiSearchLine className="eval-icon" />
-            <h4>Search Models</h4>
-          </div>
-          <div className="eval-metrics">
-            <div className="metric">
-              <span className="metric-label">Precision</span>
-              <span className="metric-value">{evaluationReport?.search?.precision || 'N/A'}</span>
-            </div>
-            <div className="metric">
-              <span className="metric-label">Recall</span>
-              <span className="metric-value">{evaluationReport?.search?.recall || 'N/A'}</span>
-            </div>
-            <div className="metric">
-              <span className="metric-label">MRR</span>
-              <span className="metric-value">{evaluationReport?.search?.mrr || 'N/A'}</span>
-            </div>
-          </div>
-          <button className="eval-btn" onClick={() => handleRunEvaluation('search')}>
-            Đánh giá
-          </button>
-        </div>
-
-        <div className="eval-card">
-          <div className="eval-header">
-            <FiMessageCircle className="eval-icon" />
-            <h4>Sentiment Analysis</h4>
-          </div>
-          <div className="eval-metrics">
-            <div className="metric">
-              <span className="metric-label">Accuracy</span>
-              <span className="metric-value">{evaluationReport?.sentiment?.accuracy || 'N/A'}</span>
-            </div>
-            <div className="metric">
-              <span className="metric-label">F1 Score</span>
-              <span className="metric-value">{evaluationReport?.sentiment?.f1 || 'N/A'}</span>
-            </div>
-          </div>
-          <button className="eval-btn" onClick={() => handleRunEvaluation('sentiment')}>
-            Đánh giá
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderForecast = () => (
-    <div className="ai-forecast">
-      <div className="section-header">
-        <h3>Dự báo Doanh số</h3>
-        <button className="refresh-btn" onClick={loadForecast} disabled={loading}>
-          <RiRefreshLine className={loading ? 'spinning' : ''} /> Làm mới
-        </button>
-      </div>
-
-      {forecast ? (
-        <div className="forecast-content">
-          <div className="forecast-summary">
-            <div className="forecast-stat">
-              <h4>Dự báo 30 ngày tới</h4>
-              <p className="forecast-value">
-                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(forecast.totalPredicted || 0)}
-              </p>
-            </div>
-            <div className="forecast-stat">
-              <h4>Thuật toán</h4>
-              <p>{forecast.algorithm || 'Ensemble'}</p>
-            </div>
-            <div className="forecast-stat">
-              <h4>Độ tin cậy</h4>
-              <p>{forecast.confidence ? `${(forecast.confidence * 100).toFixed(1)}%` : 'N/A'}</p>
-            </div>
-          </div>
-
-          <div className="forecast-details">
-            <h4>Chi tiết dự báo</h4>
-            <div className="forecast-table">
-              {forecast.predictions?.slice(0, 10).map((pred, idx) => (
-                <div key={idx} className="forecast-row">
-                  <span className="forecast-date">
-                    {new Date(pred.date).toLocaleDateString('vi-VN')}
-                  </span>
-                  <span className="forecast-amount">
-                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(pred.amount)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="empty-state">
-          <FiTrendingUp size={60} />
-          <p>Không có dữ liệu dự báo</p>
-          <button className="action-btn" onClick={loadForecast}>Tải dự báo</button>
         </div>
       )}
     </div>
@@ -893,8 +674,6 @@ const AdminAI = () => {
         {activeTab === 'overview' && renderOverview()}
         {activeTab === 'stats' && renderStats()}
         {activeTab === 'conversations' && renderConversations()}
-        {activeTab === 'evaluation' && renderEvaluation()}
-        {activeTab === 'forecast' && renderForecast()}
         {activeTab === 'settings' && renderSettings()}
       </div>
     </div>

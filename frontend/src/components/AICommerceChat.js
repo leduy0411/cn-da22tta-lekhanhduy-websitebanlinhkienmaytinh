@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import './AICommerceChat.css';
 
-const AICommerceChat = ({ isOpen, onClose }) => {
+const AICommerceChat = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -181,16 +183,37 @@ const AICommerceChat = ({ isOpen, onClose }) => {
     'SSD là gì?'
   ];
 
-  if (!isOpen) return null;
-
   return (
-    <div className="ai-chat-overlay">
-      <div className="ai-chat-container">
+    <>
+      {/* Floating Chat Button */}
+      {!isOpen && (
+        <button 
+          className="ai-chat-fab"
+          onClick={() => setIsOpen(true)}
+          title="Mở trợ lý AI"
+        >
+          <span className="chat-icon">🤖</span>
+          <span className="chat-badge">AI</span>
+        </button>
+      )}
+
+      {/* Chat Window */}
+      {isOpen && (
+        <div className={`ai-chat-overlay ${isExpanded ? 'expanded' : ''}`}>
+      <div className={`ai-chat-container ${isExpanded ? 'expanded' : ''}`}>
         <div className="ai-chat-header">
           <div className="header-info">
-            <div className="header-icon">🤖</div>
+            <div className="header-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="url(#botGrad)" opacity="0.15"/>
+                <path d="M9 11a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM15 11a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" fill="#fff"/>
+                <path d="M12 17c2.5 0 4-1.5 4-3H8c0 1.5 1.5 3 4 3z" fill="#fff"/>
+                <path d="M12 1v2M4.22 4.22l1.42 1.42M1 12h2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+                <defs><linearGradient id="botGrad" x1="2" y1="2" x2="22" y2="22"><stop stopColor="#a78bfa"/><stop offset="1" stopColor="#6366f1"/></linearGradient></defs>
+              </svg>
+            </div>
             <div className="header-text">
-              <h3>AI Commerce Assistant</h3>
+              <h3>Trợ lý TechStore</h3>
               <p className="header-status">
                 <span className="status-dot"></span>
                 Đang hoạt động
@@ -201,7 +224,14 @@ const AICommerceChat = ({ isOpen, onClose }) => {
             <button className="header-btn" onClick={handleNewChat} title="Cuộc hội thoại mới">
               🔄
             </button>
-            <button className="header-btn close-btn" onClick={onClose} title="Đóng">
+            <button 
+              className="header-btn expand-btn" 
+              onClick={() => setIsExpanded(!isExpanded)} 
+              title={isExpanded ? 'Thu nhỏ' : 'Mở rộng'}
+            >
+              {isExpanded ? '⊖' : '⊕'}
+            </button>
+            <button className="header-btn close-btn" onClick={() => { setIsOpen(false); setIsExpanded(false); }} title="Đóng">
               ✕
             </button>
           </div>
@@ -288,6 +318,8 @@ const AICommerceChat = ({ isOpen, onClose }) => {
         </div>
       </div>
     </div>
+      )}
+    </>
   );
 };
 

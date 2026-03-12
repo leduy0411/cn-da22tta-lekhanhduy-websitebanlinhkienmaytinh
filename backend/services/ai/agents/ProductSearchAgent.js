@@ -36,14 +36,26 @@ class ProductSearchAgent {
       console.log(`🔍 ProductSearchAgent executing for intent: ${intent.intent}`);
 
       // Step 1: Search products using ToolSystem
-      const searchResult = await ToolSystem.execute('searchProducts', {
+      const searchParams = {
         query: message,
-        category: entities.category ? entities.category[0] : null,
-        brand: entities.brand ? entities.brand[0] : null,
-        minPrice: entities.price?.min,
-        maxPrice: entities.price?.max,
         limit: 10
-      });
+      };
+      
+      // Only add params if they have values
+      if (entities.category && entities.category[0]) {
+        searchParams.category = entities.category[0];
+      }
+      if (entities.brand && entities.brand[0]) {
+        searchParams.brand = entities.brand[0];
+      }
+      if (entities.price?.min) {
+        searchParams.minPrice = entities.price.min;
+      }
+      if (entities.price?.max) {
+        searchParams.maxPrice = entities.price.max;
+      }
+
+      const searchResult = await ToolSystem.execute('searchProducts', searchParams);
 
       if (!searchResult.success) {
         throw new Error('Product search failed');
@@ -106,7 +118,7 @@ class ProductSearchAgent {
       console.error('ProductSearchAgent error:', error);
       
       return {
-        answer: this._getFallbackResponse(message, entities),
+        answer: this._getFallbackResponse(message, entities, 0),
         products: [],
         intent: intent.intent,
         source: 'ProductSearchAgent_Fallback',
@@ -121,10 +133,36 @@ class ProductSearchAgent {
    */
   async _generateResponse(query, products, entities) {
     if (!this.model) {
-      return this._getFallbackResponse(query, entities);
+      return this._getFallbackResponse(query, entities, products.length);
     }
 
     try {
+      // Handle no results case
+      if (products.length === 0) {
+        const prompt = `Bạn là chuyên gia tư vấn sản phẩm công nghệ tại TechStore.
+
+Khách hàng hỏi: "${query}"
+
+Tiêu chí tìm kiếm:
+${entities.category ? `- Danh mục: ${entities.category.join(', ')}` : ''}
+${entities.price ? `- Giá: ${entities.price.min ? `từ ${entities.price.min.toLocaleString('vi-VN')} VND` : ''} ${entities.price.max ? `đến ${entities.price.max.toLocaleString('vi-VN')} VND` : ''}` : ''}
+${entities.brand ? `- Thương hiệu: ${entities.brand.join(', ')}` : ''}
+
+Không tìm thấy sản phẩm phù hợp với tiêu chí trên.
+
+Hãy:
+1. Thông báo lịch sự rằng không có sản phẩm phù hợp
+2. Giải thích ngắn gọn lý do (ví dụ: giá quá thấp cho loại sản phẩm này)
+3. Gợi ý giải pháp: nâng ngân sách, xem sản phẩm tương tự, hoặc danh mục khác
+4. Hỏi có muốn xem các lựa chọn thay thế không
+
+Trả lời bằng tiếng Việt, thân thiện và hữu ích.`;
+
+        const result = await this.model.generateContent(prompt);
+        const response = result.response;
+        return response.text();
+      }
+
       // Build product context
       const productContext = products.slice(0, 5).map((p, idx) => `
 ${idx + 1}. **${p.name}**
@@ -156,7 +194,7 @@ Trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp.`;
 
     } catch (error) {
       console.error('Gemini generation error:', error);
-      return this._getFallbackResponse(query, entities);
+      return this._getFallbackResponse(query, entities, products.length);
     }
   }
 
@@ -164,7 +202,37 @@ Trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp.`;
    * Fallback response when AI unavailable
    * @private
    */
-  _getFallbackResponse(query, entities) {
+  _getFallbackResponse(query, entities, productCount = 0) {
+    // Handle no results case
+    if (productCount === 0) {
+      let response = '😔 **Không tìm thấy sản phẩm phù hợp**\n\n';
+      
+      if (entities.category) {
+        response += `📦 Danh mục: **${entities.category.join(', ')}**\n`;
+      }
+      
+      if (entities.price) {
+        if (entities.price.max) {
+          response += `💰 Giá tối đa: **${entities.price.max.toLocaleString('vi-VN')} VND**\n`;
+        }
+        if (entities.price.min) {
+          response += `💰 Giá tối thiểu: **${entities.price.min.toLocaleString('vi-VN')} VND**\n`;
+        }
+      }
+      
+      if (entities.brand) {
+        response += `🏷️ Thương hiệu: **${entities.brand.join(', ')}**\n`;
+      }
+      
+      response += '\n💡 **Gợi ý:**\n';
+      response += '• Thử tăng ngân sách hoặc giảm yêu cầu\n';
+      response += '• Xem các thương hiệu khác\n';
+      response += '• Hỏi tôi để tìm sản phẩm tương tự';
+      
+      return response;
+    }
+    
+    // Has results - show summary
     let response = '🛍️ **Kết quả tìm kiếm**\n\n';
 
     if (entities.category) {
@@ -184,7 +252,7 @@ Trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp.`;
       response += `🏷️ Thương hiệu: **${entities.brand.join(', ')}**\n`;
     }
 
-    response += '\n✨ Tôi đã tìm thấy các sản phẩm phù hợp với yêu cầu của bạn. Vui lòng xem danh sách bên dưới.';
+    response += `\n✨ Tìm thấy **${productCount}** sản phẩm phù hợp. Vui lòng xem danh sách bên dưới.`;
 
     return response;
   }

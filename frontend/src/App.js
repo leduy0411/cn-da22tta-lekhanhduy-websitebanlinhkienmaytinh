@@ -4,7 +4,7 @@ import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import AIChat from './components/AIChat';
+import AICommerceChat from './components/AICommerceChat';
 import GiftBox from './components/GiftBox';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
@@ -61,7 +61,7 @@ const CustomerLayout = ({ children, onSearch }) => {
       <Header onSearch={handleSearchWithRedirect} />
       {children}
       <GiftBox />
-      <AIChat />
+      <AICommerceChat />
       <Footer />
     </>
   );

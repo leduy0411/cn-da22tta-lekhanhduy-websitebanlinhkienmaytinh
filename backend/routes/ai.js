@@ -14,9 +14,7 @@ const { auth, optionalAuth } = require('../middleware/auth');
 const {
   RecommendationService,
   SemanticSearchService,
-  ReviewAnalysisService,
-  SalesForecastingService,
-  ModelEvaluationService
+  ReviewAnalysisService
 } = require('../services/ai');
 
 // Import new Gemini chat service
@@ -465,110 +463,6 @@ router.post('/reviews/analyze-all', auth, async (req, res) => {
   }
 });
 
-// ==================== SALES FORECASTING ROUTES ====================
-
-/**
- * @route GET /api/ai/forecast
- * @desc Get sales forecast
- * @access Admin
- */
-router.get('/forecast', auth, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin' && req.user.role !== 'staff') {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    const { 
-      periods = 30, 
-      type = 'daily', 
-      scope = 'overall',
-      algorithm = 'ensemble'
-    } = req.query;
-
-    const forecast = await SalesForecastingService.generateForecast({
-      forecastPeriods: parseInt(periods),
-      forecastType: type,
-      scope,
-      algorithm
-    });
-
-    res.json({
-      success: true,
-      forecast
-    });
-  } catch (error) {
-    console.error('Forecast error:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-/**
- * @route GET /api/ai/forecast/historical
- * @desc Get historical sales data
- * @access Admin
- */
-router.get('/forecast/historical', auth, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin' && req.user.role !== 'staff') {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    const { 
-      days = 90, 
-      groupBy = 'day' 
-    } = req.query;
-
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(days));
-
-    const data = await SalesForecastingService.aggregateSalesData({
-      startDate,
-      groupBy
-    });
-
-    res.json({
-      success: true,
-      period: {
-        start: startDate,
-        end: new Date(),
-        groupBy
-      },
-      data
-    });
-  } catch (error) {
-    console.error('Historical data error:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-/**
- * @route GET /api/ai/forecast/categories
- * @desc Get category breakdown
- * @access Admin
- */
-router.get('/forecast/categories', auth, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin' && req.user.role !== 'staff') {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    const { days = 30 } = req.query;
-
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(days));
-
-    const breakdown = await SalesForecastingService.getCategoryBreakdown(startDate, new Date());
-
-    res.json({
-      success: true,
-      breakdown
-    });
-  } catch (error) {
-    console.error('Category breakdown error:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
 // ==================== ADMIN CHATBOT ROUTES ====================
 
 /**
@@ -772,95 +666,6 @@ router.post('/chatbot/end/:sessionId', async (req, res) => {
     });
   } catch (error) {
     console.error('End conversation error:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// ==================== MODEL EVALUATION ROUTES ====================
-
-/**
- * @route POST /api/ai/evaluate/:modelType/:modelName
- * @desc Evaluate a specific model
- * @access Admin
- */
-router.post('/evaluate/:modelType/:modelName', auth, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Admin access required' });
-    }
-
-    const { modelType, modelName } = req.params;
-    let result;
-
-    switch (modelType) {
-      case 'recommendation':
-        result = await ModelEvaluationService.evaluateRecommendationModel(modelName, req.body);
-        break;
-      case 'sentiment':
-        result = await ModelEvaluationService.evaluateSentimentModel(modelName, req.body);
-        break;
-      case 'search':
-        result = await ModelEvaluationService.evaluateSearchModel(modelName, req.body);
-        break;
-      default:
-        return res.status(400).json({ success: false, message: 'Invalid model type' });
-    }
-
-    res.json({
-      success: true,
-      evaluation: result
-    });
-  } catch (error) {
-    console.error('Evaluation error:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-/**
- * @route POST /api/ai/evaluate/all
- * @desc Run all model evaluations
- * @access Admin
- */
-router.post('/evaluate/all', auth, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Admin access required' });
-    }
-
-    // Run in background
-    ModelEvaluationService.runAllEvaluations()
-      .then(results => console.log('All evaluations complete'))
-      .catch(err => console.error('Evaluations failed:', err));
-
-    res.json({
-      success: true,
-      message: 'Model evaluations started in background'
-    });
-  } catch (error) {
-    console.error('Batch evaluation error:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-/**
- * @route GET /api/ai/evaluate/report
- * @desc Get evaluation report for thesis
- * @access Admin
- */
-router.get('/evaluate/report', auth, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Admin access required' });
-    }
-
-    const report = await ModelEvaluationService.generateThesisReport();
-
-    res.json({
-      success: true,
-      report
-    });
-  } catch (error) {
-    console.error('Report generation error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

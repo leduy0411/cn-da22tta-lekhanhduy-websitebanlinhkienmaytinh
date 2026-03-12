@@ -218,8 +218,13 @@ class ToolSystem {
     const tool = this.tools.get(toolName);
 
     if (!tool) {
+      console.error(`❌ Tool "${toolName}" not found. Available tools:`, Array.from(this.tools.keys()));
       throw new Error(`Tool "${toolName}" not found`);
     }
+
+    console.log(`🔧 Executing tool: ${toolName}`);
+    console.log(`📝 Tool definition:`, JSON.stringify({ name: tool.name, hasExecute: !!tool.execute, paramKeys: tool.parameters ? Object.keys(tool.parameters) : 'NO_PARAMS' }));
+    console.log(`📨 Params:`, JSON.stringify(params, null, 2));
 
     const startTime = Date.now();
 
@@ -250,6 +255,9 @@ class ToolSystem {
 
     } catch (error) {
       const executionTime = Date.now() - startTime;
+
+      console.error(`❌ Tool execution error for "${toolName}":`, error.message);
+      console.error('Stack:', error.stack);
 
       // Log error
       this._logExecution({
@@ -371,6 +379,8 @@ class ToolSystem {
   async _searchProducts(params) {
     const { query, category, brand, minPrice, maxPrice, limit = 10, sortBy = 'relevance' } = params;
 
+    console.log('🔍 _searchProducts called with:', JSON.stringify(params, null, 2));
+
     const filter = {};
 
     if (category) {
@@ -394,10 +404,14 @@ class ToolSystem {
       filter.$text = { $search: query };
     }
 
+    console.log('📋 Filter:', JSON.stringify(filter, null, 2));
+
     let products = await Product.find(filter)
       .select('name description price originalPrice brand category image rating stock specifications')
       .limit(limit * 2) // Get more for ranking
       .lean();
+
+    console.log(`✅ Found ${products.length} products`);
 
     // Sort by relevance, rating, or price
     if (sortBy === 'price_asc') {

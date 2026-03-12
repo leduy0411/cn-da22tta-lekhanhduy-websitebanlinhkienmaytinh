@@ -20,10 +20,12 @@
     "react-router-dom": "^6.20.0",
     "react-scripts": "^5.0.1",
     "recharts": "^3.6.0",
-    "sweetalert2": "^11.26.17"
+    "sweetalert2": "^11.26.17",
+    "uuid": "^13.0.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation react-scripts start",
+    "start:clean": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -45,5 +47,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost:5000",
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
 }
