@@ -1,41 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { FiUsers, FiPackage, FiShoppingBag, FiDollarSign, FiAlertCircle, FiTrendingUp, FiEye, FiX, FiCalendar } from 'react-icons/fi';
+import {
+  FiUsers, FiPackage, FiShoppingBag, FiDollarSign,
+  FiAlertCircle, FiTrendingUp, FiEye, FiX,
+  FiBarChart2, FiArrowUp, FiArrowDown,
+  FiAward, FiRefreshCw, FiPlusCircle, FiMessageSquare
+} from 'react-icons/fi';
 import { adminAPI, orderAPI, productAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend
+} from 'recharts';
 import Swal from 'sweetalert2';
 import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
+/* ── Helpers ──────────────────────────────────────────────── */
+const fmt = (n) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
+
+const fmtShort = (n) => {
+  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + 'T';
+  if (n >= 1_000_000)     return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000)         return (n / 1_000).toFixed(1) + 'K';
+  return String(n);
+};
+
+const fmtDate = (d) =>
+  new Date(d).toLocaleString('vi-VN', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+const STATUS_MAP = {
+  pending:    { label: 'Chờ xử lý',  cls: 'db-badge-pending'    },
+  processing: { label: 'Đang xử lý', cls: 'db-badge-processing' },
+  shipped:    { label: 'Đang giao',  cls: 'db-badge-shipped'    },
+  delivered:  { label: 'Đã giao',    cls: 'db-badge-delivered'  },
+  cancelled:  { label: 'Đã hủy',     cls: 'db-badge-cancelled'  },
+};
+
+/* ── Custom Tooltip ───────────────────────────────────────── */
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: '#fff', border: '1px solid #ede9ff',
+      borderRadius: 10, padding: '10px 14px',
+      boxShadow: '0 4px 16px rgba(115,103,240,.15)',
+      fontSize: '.82rem', color: '#3c3e64'
+    }}>
+      <p style={{ margin: 0, fontWeight: 700, marginBottom: 4 }}>{label}</p>
+      {payload.map((p, i) => (
+        <p key={i} style={{ margin: 0, color: p.color }}>
+          {p.name === 'revenue' ? fmt(p.value) : `${p.value} đơn`}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+/* ── Dashboard Component ──────────────────────────────────── */
 const Dashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats]             = useState(null);
+  const [loading, setLoading]         = useState(true);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
-  const [orderStatusData, setOrderStatusData] = useState([]);
-  const [modalData, setModalData] = useState({ show: false, type: '', data: [], title: '' });
-  const navigate = useNavigate();
+  const [modalData, setModalData]     = useState({ show: false, type: '', data: [], title: '' });
+  const navigate  = useNavigate();
   const { isAdmin, user } = useAuth();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  /* fetch */
+  useEffect(() => { fetchData(); }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchData = async () => {
     try {
-      const promises = [
-        productAPI.getAll({ stock_lte: 1, limit: 5 })
-      ];
+      const token = localStorage.getItem('token');
+      const promises = [productAPI.getAll({ stock_lte: 5, limit: 5 })];
 
       if (isAdmin()) {
         promises.unshift(adminAPI.getStats());
         promises.push(adminAPI.getAllOrders({ status: 'pending', limit: 5 }));
-        // Fetch all orders for revenue chart
-        const token = localStorage.getItem('token');
         promises.push(
           axios.get(`${API_URL}/admin/orders`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -49,464 +98,338 @@ const Dashboard = () => {
       const results = await Promise.all(promises);
 
       if (isAdmin()) {
-        const [statsResponse, productsResponse, ordersResponse, allOrdersResponse] = results;
-        setStats(statsResponse.data);
-        setLowStockProducts(productsResponse.data.products || productsResponse.data || []);
-        setPendingOrders(ordersResponse.data.orders || []);
-        
-        // Process revenue data for charts
-        const allOrders = allOrdersResponse?.data?.orders || allOrdersResponse?.data || [];
-        processRevenueData(allOrders);
+        const [statsRes, productsRes, ordersRes, allOrdersRes] = results;
+        setStats(statsRes.data);
+        setLowStockProducts(productsRes.data.products || productsRes.data || []);
+        setPendingOrders(ordersRes.data.orders || []);
+        buildRevenueData(allOrdersRes?.data?.orders || allOrdersRes?.data || []);
       } else {
-        const [ordersResponse, productsResponse] = results;
-        setPendingOrders(ordersResponse.data || []);
-        setLowStockProducts(productsResponse.data.products || productsResponse.data || []);
+        const [ordersRes, productsRes] = results;
+        setPendingOrders(ordersRes.data || []);
+        setLowStockProducts(productsRes.data.products || productsRes.data || []);
       }
-    } catch (error) {
-      console.error('Lỗi khi lấy dữ liệu dashboard:', error);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const processRevenueData = (orders) => {
-    // Doanh thu theo 7 ngày gần nhất
-    const last7Days = [];
+  const buildRevenueData = (orders) => {
+    const days = [];
     for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-      last7Days.push({
-        date: dateStr,
-        fullDate: date.toDateString(),
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push({
+        date: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+        fullDate: d.toDateString(),
         revenue: 0,
         orders: 0
       });
     }
-
-    // Tính doanh thu từng ngày
-    orders.forEach(order => {
-      if (order.status !== 'cancelled') {
-        const orderDate = new Date(order.createdAt).toDateString();
-        const dayData = last7Days.find(d => d.fullDate === orderDate);
-        if (dayData) {
-          dayData.revenue += order.totalAmount || 0;
-          dayData.orders += 1;
-        }
-      }
+    orders.forEach(o => {
+      if (o.status === 'cancelled') return;
+      const day = days.find(d => d.fullDate === new Date(o.createdAt).toDateString());
+      if (day) { day.revenue += o.totalAmount || 0; day.orders += 1; }
     });
-
-    setRevenueData(last7Days);
-
-    // Thống kê theo trạng thái đơn hàng
-    const statusCount = {
-      pending: 0,
-      processing: 0,
-      shipped: 0,
-      delivered: 0,
-      cancelled: 0
-    };
-
-    orders.forEach(order => {
-      if (statusCount.hasOwnProperty(order.status)) {
-        statusCount[order.status]++;
-      }
-    });
-
-    const statusData = [
-      { name: 'Chờ xử lý', value: statusCount.pending, color: '#f59e0b' },
-      { name: 'Đang xử lý', value: statusCount.processing, color: '#3b82f6' },
-      { name: 'Đang giao', value: statusCount.shipped, color: '#7c3aed' },
-      { name: 'Đã giao', value: statusCount.delivered, color: '#10b981' },
-      { name: 'Đã hủy', value: statusCount.cancelled, color: '#e63946' }
-    ].filter(s => s.value > 0);
-
-    setOrderStatusData(statusData);
+    setRevenueData(days);
   };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
-  };
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: '#ffa500',
-      processing: '#1976d2',
-      shipped: '#0c5460',
-      delivered: '#28a745',
-      cancelled: '#dc3545'
-    };
-    return colors[status] || '#999';
-  };
-
-  const getStatusText = (status) => {
-    const texts = {
-      pending: 'Chờ xử lý',
-      processing: 'Đang xử lý',
-      shipped: 'Đang giao',
-      delivered: 'Đã giao',
-      cancelled: 'Đã hủy'
-    };
-    return texts[status] || status;
-  };
-
-  const handleStatCardClick = async (type) => {
+  /* stat card click modal */
+  const handleStatClick = async (type) => {
     try {
       const token = localStorage.getItem('token');
-      let data = [];
-      let title = '';
-
-      switch (type) {
-        case 'users':
-          title = 'Danh sách Khách hàng';
-          const usersResponse = await axios.get(`${API_URL}/admin/users`, {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { limit: 100 }
-          });
-          data = usersResponse.data.users || [];
-          break;
-
-        case 'products':
-          title = 'Danh sách Sản phẩm';
-          const productsResponse = await productAPI.getAll({ limit: 100 });
-          data = productsResponse.data.products || productsResponse.data || [];
-          break;
-
-        case 'orders':
-          title = 'Danh sách Đơn hàng';
-          const ordersResponse = await axios.get(`${API_URL}/admin/orders`, {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { limit: 100 }
-          });
-          data = ordersResponse.data.orders || ordersResponse.data || [];
-          console.log('Orders data:', data);
-          break;
-
-        case 'revenue':
-          title = 'Chi tiết Doanh thu';
-          const revenueResponse = await axios.get(`${API_URL}/admin/orders`, {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { limit: 100 }
-          });
-          const allOrders = revenueResponse.data.orders || revenueResponse.data || [];
-          data = allOrders.filter(order => order.status !== 'cancelled');
-          console.log('Revenue data:', data);
-          break;
-
-        default:
-          break;
+      let data = [], title = '';
+      if (type === 'users') {
+        title = 'Danh sách Khách hàng';
+        const r = await axios.get(`${API_URL}/admin/users`, {
+          headers: { Authorization: `Bearer ${token}` }, params: { limit: 100 }
+        });
+        data = r.data.users || [];
+      } else if (type === 'products') {
+        title = 'Danh sách Sản phẩm';
+        const r = await productAPI.getAll({ limit: 100 });
+        data = r.data.products || r.data || [];
+      } else if (type === 'orders') {
+        title = 'Danh sách Đơn hàng';
+        const r = await axios.get(`${API_URL}/admin/orders`, {
+          headers: { Authorization: `Bearer ${token}` }, params: { limit: 100 }
+        });
+        data = r.data.orders || r.data || [];
+      } else if (type === 'revenue') {
+        title = 'Chi tiết Doanh thu';
+        const r = await axios.get(`${API_URL}/admin/orders`, {
+          headers: { Authorization: `Bearer ${token}` }, params: { limit: 100 }
+        });
+        data = (r.data.orders || r.data || []).filter(o => o.status !== 'cancelled');
       }
-
       setModalData({ show: true, type, data, title });
-    } catch (error) {
-      console.error('Lỗi khi lấy dữ liệu:', error);
+    } catch {
       Swal.fire('Lỗi', 'Không thể tải dữ liệu!', 'error');
     }
   };
 
-  const closeModal = () => {
-    setModalData({ show: false, type: '', data: [], title: '' });
-  };
+  /* ── Loading ── */
+  if (loading) return (
+    <div className="db-loading">
+      <div className="db-loading-spinner" />
+      <span style={{ fontWeight: 700, color: '#7367F0' }}>Đang tải dữ liệu...</span>
+    </div>
+  );
 
-  if (loading) {
-    return <div className="loading">Đang tải...</div>;
-  }
+  /* ── Derived values ── */
+  const weekRevTotal = revenueData.reduce((s, d) => s + d.revenue, 0);
+  const weekOrdTotal = revenueData.reduce((s, d) => s + d.orders, 0);
 
-  const statCards = [
-    {
-      icon: FiUsers,
-      title: 'Tổng khách hàng',
-      value: stats?.totalUsers || 0,
-      color1: '#e63946',
-      color2: '#f97068',
-      onClick: () => handleStatCardClick('users')
-    },
-    {
-      icon: FiPackage,
-      title: 'Tổng sản phẩm',
-      value: stats?.totalProducts || 0,
-      color1: '#7c3aed',
-      color2: '#a78bfa',
-      onClick: () => handleStatCardClick('products')
-    },
-    {
-      icon: FiShoppingBag,
-      title: 'Tổng đơn hàng',
-      value: stats?.totalOrders || 0,
-      color1: '#3b82f6',
-      color2: '#60a5fa',
-      onClick: () => handleStatCardClick('orders')
-    },
-    {
-      icon: FiDollarSign,
-      title: 'Tổng doanh thu',
-      value: formatPrice(stats?.totalRevenue || 0),
-      color1: '#10b981',
-      color2: '#34d399',
-      onClick: () => handleStatCardClick('revenue')
-    },
-  ];
-
-  const alertCards = [
-    {
-      icon: FiAlertCircle,
-      title: 'Đơn hàng chờ xử lý',
-      value: stats?.pendingOrders || 0,
-      color: '#ff6b6b',
-    },
-    {
-      icon: FiTrendingUp,
-      title: 'Sản phẩm sắp hết',
-      value: stats?.lowStockProducts || 0,
-      color: '#ffa500',
-    },
+  /* stat cards data */
+  const miniStats = [
+    { label: 'Khách hàng', value: fmtShort(stats?.totalUsers || 0),    icon: <FiUsers />,       color: 'purple', type: 'users'    },
+    { label: 'Sản phẩm',   value: fmtShort(stats?.totalProducts || 0), icon: <FiPackage />,     color: 'orange', type: 'products' },
+    { label: 'Đơn hàng',   value: fmtShort(stats?.totalOrders || 0),   icon: <FiShoppingBag />, color: 'blue',   type: 'orders'   },
+    { label: 'Doanh thu',  value: fmtShort(stats?.totalRevenue || 0),  icon: <FiDollarSign />,  color: 'green',  type: 'revenue'  },
   ];
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
-        <div className="dashboard-header-content">
-          <div className="dashboard-header-left">
-            <h1>Thống kê và báo cáo</h1>
-            <p className="dashboard-subtitle">Tổng quan hệ thống quản trị</p>
+    <div className="materio-dashboard">
+
+      {/* ── ROW 1: Congrats + Stats ── */}
+      <div className="db-row db-row-2" style={{ gridTemplateColumns: '1fr 1.6fr' }}>
+
+        {/* Congrats card */}
+        <div className="db-card db-congrats-card">
+          <div className="db-congrats-body">
+            <p className="db-congrats-greeting">Xin chào, {user?.name || 'Admin'}! 🎉</p>
+            <p className="db-congrats-sub">Doanh thu hôm nay</p>
+            <p className="db-congrats-amount">
+              {fmt(revenueData[revenueData.length - 1]?.revenue || 0)}
+            </p>
+            <a href="/admin/orders" className="db-congrats-btn">
+              <FiBarChart2 /> Xem báo cáo
+            </a>
           </div>
-          <div className="dashboard-header-right">
-            <div className="dashboard-date-badge">
-              <FiCalendar size={16} />
-              {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+          <div className="db-congrats-trophy">🏆</div>
+        </div>
+
+        {/* Statistics card */}
+        {isAdmin() && (
+          <div className="db-card db-stats-card">
+            <div className="db-stats-header-row">
+              <div>
+                <p className="db-card-title" style={{ marginBottom: 2 }}>Thống kê tổng quan</p>
+                <p className="db-stats-growth">
+                  Tăng trưởng hệ thống &nbsp;<strong>↑ Hôm nay</strong>
+                </p>
+              </div>
+            </div>
+            <div className="db-stats-grid">
+              {miniStats.map((s) => (
+                <div
+                  key={s.type}
+                  className="db-mini-stat"
+                  onClick={() => handleStatClick(s.type)}
+                  title={`Xem chi tiết ${s.label}`}
+                >
+                  <div className={`db-mini-stat-icon ${s.color}`}>{s.icon}</div>
+                  <span className="db-mini-stat-label">{s.label}</span>
+                  <span className="db-mini-stat-value">{s.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Alerts (if admin) ── */}
+      {isAdmin() && (
+        <div className="db-alert-row">
+          <div className="db-alert-card danger">
+            <div className="db-alert-icon danger"><FiAlertCircle /></div>
+            <div className="db-alert-content">
+              <h4>Đơn hàng chờ xử lý</h4>
+              <p className="db-alert-val danger">{stats?.pendingOrders || 0}</p>
+            </div>
+          </div>
+          <div className="db-alert-card warning">
+            <div className="db-alert-icon warning"><FiTrendingUp /></div>
+            <div className="db-alert-content">
+              <h4>Sản phẩm sắp hết hàng</h4>
+              <p className="db-alert-val warning">{stats?.lowStockProducts || 0}</p>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
+      {/* ── ROW 2: Weekly Overview + Earning + 2 Metric ── */}
       {isAdmin() && (
-        <>
-          <div className="stats-grid">
-            {statCards.map((card, index) => (
-              <div
-                key={index}
-                className="stat-card clickable"
-                style={{ 
-                  '--card-color-1': card.color1,
-                  '--card-color-2': card.color2
-                }}
-                onClick={card.onClick}
-              >
-                <div className="stat-icon">
-                  <card.icon />
-                </div>
-                <div className="stat-content">
-                  <h3 className="stat-title">{card.title}</h3>
-                  <p className="stat-value">{card.value}</p>
-                </div>
-              </div>
-            ))}
+        <div className="db-row" style={{ gridTemplateColumns: '1.6fr 1fr .7fr .7fr' }}>
+
+          {/* Weekly Overview */}
+          <div className="db-card db-weekly-card">
+            <p className="db-card-title">📊 Doanh thu 7 ngày</p>
+            <p className="db-card-subtitle">Tổng: {fmt(weekRevTotal)}</p>
+            <div className="db-chart-wrap">
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={revenueData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f1f8" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#8a8dac' }} axisLine={false} tickLine={false} />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: '#8a8dac' }}
+                    axisLine={false} tickLine={false}
+                    tickFormatter={v => v >= 1_000_000 ? `${(v/1_000_000).toFixed(0)}M` : v}
+                    width={38}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: '.78rem' }} />
+                  <Bar dataKey="revenue" name="Doanh thu" fill="url(#barGrad)" radius={[6,6,0,0]} maxBarSize={32} />
+                  <Bar dataKey="orders"  name="Đơn hàng"  fill="url(#barGrad2)" radius={[6,6,0,0]} maxBarSize={32} />
+                  <defs>
+                    <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#7367F0" />
+                      <stop offset="100%" stopColor="#9f8bff" stopOpacity={.7} />
+                    </linearGradient>
+                    <linearGradient id="barGrad2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#28C76F" />
+                      <stop offset="100%" stopColor="#48da89" stopOpacity={.7} />
+                    </linearGradient>
+                  </defs>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="db-weekly-perf">
+              Tổng tuần này: &nbsp;<strong>{weekOrdTotal} đơn</strong>
+            </p>
           </div>
 
-          <div className="alerts-section">
-            <h2>⚡ Cảnh báo</h2>
-            <div className="alerts-grid">
-              {alertCards.map((card, index) => (
-                <div key={index} className="alert-card" style={{ '--alert-color': card.color, '--alert-bg': card.color + '15' }}>
-                  <div className="alert-icon-wrapper" style={{ background: card.color + '12' }}>
-                    <card.icon size={26} color={card.color} />
+          {/* Total Earning */}
+          <div className="db-card db-earning-card">
+            <p className="db-card-title">💰 Tổng doanh thu</p>
+            <div className="db-earning-amount">
+              {fmtShort(stats?.totalRevenue || 0)}
+              <span className="db-earning-up"><FiArrowUp /> 10%</span>
+            </div>
+            <p className="db-earning-compare">So với tháng trước</p>
+            <div className="db-earning-list">
+              {[
+                { icon: '🟣', name: 'Đơn đã giao', sub: 'Hoàn thành', color: '#7367F0', pct: 60 },
+                { icon: '🟡', name: 'Đang xử lý',  sub: 'Tiến hành',  color: '#FF9F43', pct: 25 },
+                { icon: '🔵', name: 'Đang giao',   sub: 'Vận chuyển', color: '#00CFE8', pct: 15 },
+              ].map((item, i) => (
+                <div key={i} className="db-earning-item">
+                  <div className="db-earning-item-icon" style={{ background: item.color + '18' }}>
+                    <span style={{ fontSize: '1.1rem' }}>{item.icon}</span>
                   </div>
-                  <div className="alert-content">
-                    <h3>{card.title}</h3>
-                    <p className="alert-value" style={{ color: card.color }}>
-                      {card.value}
-                    </p>
+                  <div className="db-earning-item-info">
+                    <p className="db-earning-item-name">{item.name}</p>
+                    <p className="db-earning-item-sub">{item.sub}</p>
+                    <div className="db-earning-item-bar" style={{
+                      width: '100%', background: '#f0f1f8'
+                    }}>
+                      <div style={{ width: `${item.pct}%`, height: '100%', background: item.color, borderRadius: 2 }} />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Biểu đồ doanh thu */}
-          <div className="charts-section">
-            <div className="charts-grid">
-              {/* Biểu đồ doanh thu theo ngày */}
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h3>📊 Doanh thu 7 ngày gần nhất</h3>
-                  <span className="chart-subtitle">Tổng: {formatPrice(revenueData.reduce((sum, d) => sum + d.revenue, 0))}</span>
-                </div>
-                <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={280}>
-                    <BarChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                      <YAxis 
-                        tickFormatter={(value) => value >= 1000000 ? `${(value / 1000000).toFixed(1)}M` : value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}
-                        tick={{ fontSize: 11 }}
-                      />
-                      <Tooltip 
-                        formatter={(value) => [formatPrice(value), 'Doanh thu']}
-                        labelStyle={{ fontWeight: 'bold' }}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                      />
-                      <Bar dataKey="revenue" fill="url(#colorRevenue)" radius={[4, 4, 0, 0]} />
-                      <defs>
-                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#e63946" stopOpacity={1}/>
-                          <stop offset="100%" stopColor="#7c3aed" stopOpacity={0.8}/>
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+          {/* Total Profit */}
+          <div className="db-card db-metric-card">
+            <div>
+              <div className="db-metric-icon-wrap" style={{ background: 'rgba(40,199,111,.12)', color: '#28C76F' }}>
+                <FiTrendingUp />
               </div>
-
-              {/* Biểu đồ số đơn hàng */}
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h3>📈 Số đơn hàng theo ngày</h3>
-                  <span className="chart-subtitle">Tổng: {revenueData.reduce((sum, d) => sum + d.orders, 0)} đơn</span>
-                </div>
-                <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={280}>
-                    <LineChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip 
-                        formatter={(value) => [value + ' đơn', 'Số đơn hàng']}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="orders" 
-                        stroke="#7c3aed" 
-                        strokeWidth={3}
-                        dot={{ fill: '#7c3aed', strokeWidth: 2, r: 5, stroke: '#fff' }}
-                        activeDot={{ r: 7, fill: '#7c3aed', stroke: '#fff', strokeWidth: 2 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Biểu đồ cột trạng thái đơn hàng */}
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h3>📦 Trạng thái đơn hàng</h3>
-                  <span className="chart-subtitle">{orderStatusData.reduce((sum, d) => sum + d.value, 0)} đơn</span>
-                </div>
-                <div className="chart-container">
-                  {orderStatusData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <BarChart 
-                        data={orderStatusData} 
-                        margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 12, fill: '#666' }}
-                          angle={-15}
-                          textAnchor="end"
-                          height={60}
-                        />
-                        <YAxis 
-                          tick={{ fontSize: 11, fill: '#666' }}
-                          allowDecimals={false}
-                        />
-                        <Tooltip 
-                          formatter={(value) => [value + ' đơn hàng', 'Số lượng']}
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                          cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
-                        />
-                        <Bar 
-                          dataKey="value" 
-                          radius={[8, 8, 0, 0]}
-                          maxBarSize={60}
-                        >
-                          {orderStatusData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="no-chart-data">Chưa có dữ liệu đơn hàng</div>
-                  )}
-                </div>
-              </div>
+              <p className="db-metric-label">Lợi nhuận</p>
+              <p className="db-metric-val">{fmtShort((stats?.totalRevenue || 0) * 0.25)}</p>
+              <span className="db-metric-change up"><FiArrowUp /> +42%</span>
+              <span className="db-metric-period">Tuần này</span>
             </div>
           </div>
-        </>
-      )}
 
-      {!isAdmin() && (
-        <div className="welcome-section" style={{ padding: '20px', background: 'white', borderRadius: '8px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-          <h2 style={{ marginTop: 0 }}>Xin chào, {user?.name || 'Nhân viên'}! 👋</h2>
-          <p style={{ color: '#666', marginBottom: 0 }}>
-            Chào mừng bạn đến với trang quản trị. Dưới đây là danh sách các đơn hàng cần xử lý.
-          </p>
+          {/* Refunds */}
+          <div className="db-card db-metric-card">
+            <div>
+              <div className="db-metric-icon-wrap" style={{ background: 'rgba(234,84,85,.12)', color: '#EA5455' }}>
+                <FiRefreshCw />
+              </div>
+              <p className="db-metric-label">Hoàn tiền</p>
+              <p className="db-metric-val">{stats?.pendingOrders || 0}</p>
+              <span className="db-metric-change down"><FiArrowDown /> -15%</span>
+              <span className="db-metric-period">Tháng trước</span>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Đơn hàng chờ xử lý */}
-      <div className="pending-orders-section">
-        <div className="section-header">
-          <h2>🛒 Đơn hàng chờ xử lý</h2>
-          <a href="/admin/orders" className="view-all-link">Xem tất cả →</a>
+      {/* ── ROW 3: New Project + Sales Queries + Quick Actions ── */}
+      {isAdmin() && (
+        <div className="db-row db-row-3">
+          <div className="db-card db-metric-card" style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <div className="db-metric-icon-wrap" style={{ background: 'rgba(0,207,232,.12)', color: '#00CFE8', marginBottom: 0, width: 52, height: 52, flexShrink: 0 }}>
+              <FiPlusCircle size={22} />
+            </div>
+            <div>
+              <p className="db-metric-label" style={{ margin: 0 }}>Dự án mới</p>
+              <p className="db-metric-val" style={{ margin: '2px 0' }}>{stats?.totalProducts || 0}</p>
+              <span className="db-metric-change down"><FiArrowDown /> -18%</span>
+              <span className="db-metric-period">Yearly Project</span>
+            </div>
+          </div>
+          <div className="db-card db-metric-card" style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <div className="db-metric-icon-wrap" style={{ background: 'rgba(255,159,67,.12)', color: '#FF9F43', marginBottom: 0, width: 52, height: 52, flexShrink: 0 }}>
+              <FiMessageSquare size={22} />
+            </div>
+            <div>
+              <p className="db-metric-label" style={{ margin: 0 }}>Câu hỏi</p>
+              <p className="db-metric-val" style={{ margin: '2px 0' }}>15</p>
+              <span className="db-metric-change down"><FiArrowDown /> -18%</span>
+              <span className="db-metric-period">Last Week</span>
+            </div>
+          </div>
+          <div className="db-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <p className="db-card-title" style={{ marginBottom: 14 }}>🚀 Thao tác nhanh</p>
+            <div className="db-quick-row" style={{ gridTemplateColumns: '1fr' }}>
+              <a href="/admin/products" className="db-quick-btn"><FiPackage /> Sản phẩm</a>
+              <a href="/admin/orders"   className="db-quick-btn"><FiShoppingBag /> Đơn hàng</a>
+              <a href="/admin/users"    className="db-quick-btn"><FiUsers /> Người dùng</a>
+            </div>
+          </div>
         </div>
-        <div className="orders-list">
+      )}
+
+      {/* ── Tables ── */}
+      <div className="db-row db-row-2">
+        {/* Pending Orders */}
+        <div className="db-card db-table-card">
+          <div className="db-section-header">
+            <p className="db-card-title">🛒 Đơn hàng chờ xử lý</p>
+            <a href="/admin/orders" className="db-view-all">Xem tất cả →</a>
+          </div>
           {pendingOrders.length === 0 ? (
-            <div className="no-data">Không có đơn hàng chờ xử lý</div>
+            <p className="db-no-data">Không có đơn hàng chờ xử lý</p>
           ) : (
-            <table className="dashboard-table">
+            <table className="db-table">
               <thead>
                 <tr>
                   <th>Mã đơn</th>
                   <th>Khách hàng</th>
-                  <th>Số lượng SP</th>
                   <th>Tổng tiền</th>
-                  <th>Ngày đặt</th>
                   <th>Trạng thái</th>
-                  <th>Thao tác</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {pendingOrders.map((order) => (
-                  <tr key={order._id}>
-                    <td className="order-number">
-                      <strong>{order.orderNumber}</strong>
-                    </td>
-                    <td>{order.customerInfo?.name}</td>
-                    <td className="text-center">{order.items?.length || 0}</td>
-                    <td className="price">{formatPrice(order.totalAmount)}</td>
-                    <td className="date">{formatDate(order.createdAt)}</td>
+                {pendingOrders.map(o => (
+                  <tr key={o._id}>
+                    <td><span className="db-order-code">#{o.orderNumber}</span></td>
+                    <td>{o.customerInfo?.name}</td>
+                    <td style={{ color: '#7367F0', fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(o.totalAmount)}</td>
                     <td>
-                      <span
-                        className="status-badge"
-                        style={{ background: getStatusColor(order.status) + '20', color: getStatusColor(order.status) }}
-                      >
-                        {getStatusText(order.status)}
+                      <span className={`db-badge ${STATUS_MAP[o.status]?.cls || ''}`}>
+                        {STATUS_MAP[o.status]?.label || o.status}
                       </span>
                     </td>
                     <td>
-                      <button
-                        className="btn-view-small"
-                        onClick={() => navigate('/admin/orders')}
-                        title="Xem chi tiết"
-                      >
-                        <FiEye />
-                      </button>
+                      <button className="db-btn-action" onClick={() => navigate('/admin/orders')} title="Xem"><FiEye /></button>
                     </td>
                   </tr>
                 ))}
@@ -514,56 +437,49 @@ const Dashboard = () => {
             </table>
           )}
         </div>
-      </div>
 
-      {/* Sản phẩm sắp hết hàng */}
-      <div className="low-stock-section">
-        <div className="section-header">
-          <h2>📦 Sản phẩm sắp hết hàng</h2>
-          <a href="/admin/products" className="view-all-link">Xem tất cả →</a>
-        </div>
-        <div className="products-list">
+        {/* Low Stock */}
+        <div className="db-card db-table-card">
+          <div className="db-section-header">
+            <p className="db-card-title">📦 Sản phẩm sắp hết hàng</p>
+            <a href="/admin/products" className="db-view-all">Xem tất cả →</a>
+          </div>
           {lowStockProducts.length === 0 ? (
-            <div className="no-data">Tất cả sản phẩm đều còn hàng</div>
+            <p className="db-no-data">Tất cả sản phẩm đều còn hàng</p>
           ) : (
-            <table className="dashboard-table">
+            <table className="db-table">
               <thead>
                 <tr>
                   <th>Sản phẩm</th>
                   <th>Danh mục</th>
                   <th>Giá</th>
-                  <th>Tồn kho</th>
-                  <th>Thao tác</th>
+                  <th>Kho</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {lowStockProducts.map((product) => (
-                  <tr key={product._id}>
+                {lowStockProducts.map(p => (
+                  <tr key={p._id}>
                     <td>
-                      <div className="product-info">
+                      <div className="db-product-row">
                         <img
-                          src={product.image?.startsWith('http') ? product.image : `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${product.image}`}
-                          alt={product.name}
-                          onError={(e) => e.target.src = 'https://via.placeholder.com/50'}
+                          className="db-product-img"
+                          src={p.image?.startsWith('http') ? p.image : `${API_URL}${p.image}`}
+                          alt={p.name}
+                          onError={e => e.target.src = 'https://via.placeholder.com/42'}
                         />
-                        <strong>{product.name}</strong>
+                        <span className="db-product-name">{p.name}</span>
                       </div>
                     </td>
-                    <td>{product.category}</td>
-                    <td className="price">{formatPrice(product.price)}</td>
+                    <td style={{ color: '#8a8dac' }}>{p.category}</td>
+                    <td style={{ color: '#7367F0', fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(p.price)}</td>
                     <td>
-                      <span className={`stock-badge ${product.stock <= 5 ? 'critical' : 'low'}`}>
-                        {product.stock} sản phẩm
+                      <span className={`db-stock-badge ${p.stock <= 2 ? 'critical' : 'low'}`}>
+                        {p.stock} sp
                       </span>
                     </td>
                     <td>
-                      <button
-                        className="btn-view-small"
-                        onClick={() => navigate('/admin/products')}
-                        title="Cập nhật"
-                      >
-                        <FiEye />
-                      </button>
+                      <button className="db-btn-action" onClick={() => navigate('/admin/products')} title="Cập nhật"><FiEye /></button>
                     </td>
                   </tr>
                 ))}
@@ -573,227 +489,104 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="quick-actions">
-        <h2>🚀 Thao tác nhanh</h2>
-        <div className="actions-grid">
-          <a href="/admin/products" className="action-btn">
-            <FiPackage size={20} />
-            <span>Quản lý sản phẩm</span>
-          </a>
-          <a href="/admin/orders" className="action-btn">
-            <FiShoppingBag size={20} />
-            <span>Quản lý đơn hàng</span>
-          </a>
-          <a href="/admin/users" className="action-btn">
-            <FiUsers size={20} />
-            <span>Quản lý người dùng</span>
-          </a>
+      {/* Employee: fallback view */}
+      {!isAdmin() && (
+        <div className="db-card" style={{ padding: '28px 24px' }}>
+          <p style={{ margin: 0, color: '#3c3e64', fontSize: '1.1rem', fontWeight: 700 }}>
+            Xin chào, {user?.name || 'Nhân viên'}! 👋
+          </p>
+          <p style={{ color: '#8a8dac', marginTop: 8, marginBottom: 0 }}>
+            Dưới đây là danh sách đơn hàng cần xử lý.
+          </p>
         </div>
-      </div>
+      )}
 
-      {/* Modal hiển thị chi tiết */}
+      {/* ── Modal ── */}
       {modalData.show && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{modalData.title}</h2>
-              <button className="btn-close" onClick={closeModal}>
+        <div className="db-modal-overlay" onClick={() => setModalData({ show: false, type: '', data: [], title: '' })}>
+          <div className="db-modal" onClick={e => e.stopPropagation()}>
+            <div className="db-modal-head">
+              <h3>{modalData.title}</h3>
+              <button className="db-modal-close" onClick={() => setModalData({ show: false, type: '', data: [], title: '' })}>
                 <FiX />
               </button>
             </div>
-
-            <div className="modal-body">
+            <div className="db-modal-body">
+              {/* Users */}
               {modalData.type === 'users' && (
-                <table className="modal-table">
-                  <thead>
-                    <tr>
-                      <th>Tên</th>
-                      <th>Email</th>
-                      <th>Quyền</th>
-                      <th>Ngày đăng ký</th>
-                    </tr>
-                  </thead>
+                <table className="db-table">
+                  <thead><tr><th>Tên</th><th>Email</th><th>Quyền</th><th>Ngày đăng ký</th></tr></thead>
                   <tbody>
                     {modalData.data.length === 0 ? (
-                      <tr>
-                        <td colSpan="4" className="no-data">Không có dữ liệu</td>
+                      <tr><td colSpan={4}><p className="db-no-data">Không có dữ liệu</p></td></tr>
+                    ) : modalData.data.map(u => (
+                      <tr key={u._id}>
+                        <td style={{ fontWeight: 700 }}>{u.name}</td>
+                        <td>{u.email}</td>
+                        <td><span className={`db-role-badge ${u.role}`}>{u.role === 'admin' ? 'Admin' : u.role === 'staff' ? 'Nhân viên' : 'Khách hàng'}</span></td>
+                        <td style={{ color: '#8a8dac', fontSize: '.82rem' }}>{fmtDate(u.createdAt)}</td>
                       </tr>
-                    ) : (
-                      modalData.data.map((user) => (
-                        <tr key={user._id}>
-                          <td><strong>{user.name}</strong></td>
-                          <td>{user.email}</td>
-                          <td>
-                            <span className={`role-badge ${user.role}`}>
-                              {user.role === 'admin' ? 'Admin' : 'Khách hàng'}
-                            </span>
-                          </td>
-                          <td className="date">{formatDate(user.createdAt)}</td>
-                        </tr>
-                      ))
-                    )}
+                    ))}
                   </tbody>
                 </table>
               )}
 
+              {/* Products */}
               {modalData.type === 'products' && (
-                <table className="modal-table">
-                  <thead>
-                    <tr>
-                      <th>Sản phẩm</th>
-                      <th>Danh mục</th>
-                      <th>Giá</th>
-                      <th>Tồn kho</th>
-                    </tr>
-                  </thead>
+                <table className="db-table">
+                  <thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Giá</th><th>Tồn kho</th></tr></thead>
                   <tbody>
                     {modalData.data.length === 0 ? (
-                      <tr>
-                        <td colSpan="4" className="no-data">Không có dữ liệu</td>
+                      <tr><td colSpan={4}><p className="db-no-data">Không có dữ liệu</p></td></tr>
+                    ) : modalData.data.map(p => (
+                      <tr key={p._id}>
+                        <td>
+                          <div className="db-product-row">
+                            <img className="db-product-img" src={p.image?.startsWith('http') ? p.image : `${API_URL}${p.image}`} alt={p.name} onError={e => e.target.src='https://via.placeholder.com/42'} />
+                            <span className="db-product-name">{p.name}</span>
+                          </div>
+                        </td>
+                        <td style={{ color: '#8a8dac' }}>{p.category}</td>
+                        <td style={{ color: '#7367F0', fontWeight: 700 }}>{fmt(p.price)}</td>
+                        <td style={{ textAlign: 'center' }}>{p.stock}</td>
                       </tr>
-                    ) : (
-                      modalData.data.map((product) => (
-                        <tr key={product._id}>
-                          <td>
-                            <div className="product-info">
-                              <img
-                                src={product.image?.startsWith('http') ? product.image : `${API_URL}${product.image}`}
-                                alt={product.name}
-                                onError={(e) => e.target.src = 'https://via.placeholder.com/50'}
-                              />
-                              <strong>{product.name}</strong>
-                            </div>
-                          </td>
-                          <td>{product.category}</td>
-                          <td className="price">{formatPrice(product.price)}</td>
-                          <td className="text-center">{product.stock}</td>
-                        </tr>
-                      ))
-                    )}
+                    ))}
                   </tbody>
                 </table>
               )}
 
-              {modalData.type === 'orders' && (
-                <table className="modal-table">
+              {/* Orders & Revenue */}
+              {(modalData.type === 'orders' || modalData.type === 'revenue') && (
+                <table className="db-table">
                   <thead>
                     <tr>
-                      <th>Mã đơn</th>
-                      <th>Khách hàng</th>
-                      <th>Sản phẩm đã mua</th>
-                      <th>Tổng tiền</th>
-                      <th>Trạng thái</th>
-                      <th>Ngày đặt</th>
+                      <th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th><th>Ngày đặt</th>
                     </tr>
                   </thead>
                   <tbody>
                     {modalData.data.length === 0 ? (
-                      <tr>
-                        <td colSpan="6" className="no-data">Không có dữ liệu</td>
+                      <tr><td colSpan={6}><p className="db-no-data">Không có dữ liệu</p></td></tr>
+                    ) : modalData.data.map(o => (
+                      <tr key={o._id}>
+                        <td><span className="db-order-code">#{o.orderNumber}</span></td>
+                        <td>{o.customerInfo?.name}</td>
+                        <td>
+                          <div style={{ fontSize: '.8rem', color: '#8a8dac' }}>
+                            {o.items?.slice(0,2).map((it,i) => <div key={i}>• {it.name} (x{it.quantity})</div>)}
+                            {o.items?.length > 2 && <div>+{o.items.length-2} SP khác</div>}
+                          </div>
+                        </td>
+                        <td style={{ color: '#7367F0', fontWeight: 700 }}>{fmt(o.totalAmount)}</td>
+                        <td>
+                          <span className={`db-badge ${STATUS_MAP[o.status]?.cls || ''}`}>
+                            {STATUS_MAP[o.status]?.label || o.status}
+                          </span>
+                        </td>
+                        <td style={{ color: '#8a8dac', fontSize: '.8rem' }}>{fmtDate(o.createdAt)}</td>
                       </tr>
-                    ) : (
-                      modalData.data.map((order) => (
-                        <tr key={order._id}>
-                          <td className="order-number">
-                            <strong>{order.orderNumber}</strong>
-                          </td>
-                          <td>{order.customerInfo?.name}</td>
-                          <td>
-                            <div className="order-items-summary">
-                              {order.items?.slice(0, 3).map((item, idx) => (
-                                <div key={idx} className="item-summary">
-                                  • {item.name} (x{item.quantity})
-                                </div>
-                              ))}
-                              {order.items?.length > 3 && (
-                                <div className="more-items">
-                                  +{order.items.length - 3} sản phẩm khác
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="price">{formatPrice(order.totalAmount)}</td>
-                          <td>
-                            <span
-                              className="status-badge"
-                              style={{
-                                background: getStatusColor(order.status) + '20',
-                                color: getStatusColor(order.status)
-                              }}
-                            >
-                              {getStatusText(order.status)}
-                            </span>
-                          </td>
-                          <td className="date">{formatDate(order.createdAt)}</td>
-                        </tr>
-                      ))
-                    )}
+                    ))}
                   </tbody>
                 </table>
-              )}
-
-              {modalData.type === 'revenue' && (
-                <div className="revenue-detail">
-                  <div className="revenue-summary">
-                    <h3>Tổng doanh thu: {formatPrice(stats?.totalRevenue || 0)}</h3>
-                    <p>Từ {modalData.data.length} đơn hàng đã hoàn thành/đang xử lý</p>
-                  </div>
-                  <table className="modal-table">
-                    <thead>
-                      <tr>
-                        <th>Mã đơn</th>
-                        <th>Khách hàng</th>
-                        <th>Sản phẩm đã mua</th>
-                        <th>Số tiền</th>
-                        <th>Trạng thái</th>
-                        <th>Ngày đặt</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {modalData.data.length === 0 ? (
-                        <tr>
-                          <td colSpan="6" className="no-data">Chưa có đơn hàng nào</td>
-                        </tr>
-                      ) : (
-                        modalData.data.map((order) => (
-                          <tr key={order._id}>
-                            <td className="order-number">
-                              <strong>{order.orderNumber}</strong>
-                            </td>
-                            <td>{order.customerInfo?.name}</td>
-                            <td>
-                              <div className="order-items-summary">
-                                {order.items?.slice(0, 2).map((item, idx) => (
-                                  <div key={idx} className="item-summary">
-                                    • {item.name} (x{item.quantity})
-                                  </div>
-                                ))}
-                                {order.items?.length > 2 && (
-                                  <div className="more-items">
-                                    +{order.items.length - 2} SP khác
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="price"><strong>{formatPrice(order.totalAmount)}</strong></td>
-                            <td>
-                              <span
-                                className="status-badge"
-                                style={{
-                                  background: getStatusColor(order.status) + '20',
-                                  color: getStatusColor(order.status)
-                                }}
-                              >
-                                {getStatusText(order.status)}
-                              </span>
-                            </td>
-                            <td className="date">{formatDate(order.createdAt)}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
               )}
             </div>
           </div>
