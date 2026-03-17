@@ -149,18 +149,6 @@ const AdminLayout = () => {
       )}
 
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-        <div className="sidebar-header">
-          <Link to="/admin" className="brand-wrapper" onClick={closeSidebarOnMobile}>
-            <span className="brand-mark">
-              <FiCpu className="brand-icon" />
-            </span>
-            <span className="brand-text">
-              <span className="brand-title">TechStore</span>
-              <span className="brand-subtitle">Materio-style admin</span>
-            </span>
-          </Link>
-        </div>
-
         <div className="sidebar-shortcut">
           <FiCommand />
           <span>Tìm nhanh</span>
@@ -203,17 +191,6 @@ const AdminLayout = () => {
             </button>
           </div>
         </nav>
-
-        <div className="sidebar-promo">
-          <div className="promo-badge">AI</div>
-          <div className="promo-content">
-            <h3>Tăng tốc vận hành</h3>
-            <p>Quản lý nội dung, đơn hàng và trợ lý AI trong cùng một nơi.</p>
-            <Link to="/admin/ai" className="promo-link" onClick={closeSidebarOnMobile}>
-              Mở AI Assistant
-            </Link>
-          </div>
-        </div>
 
         <div className="sidebar-footer">
           <div className="admin-info">

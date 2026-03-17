@@ -1,31 +1,26 @@
 /**
- * RAG Pipeline
- * Retrieval-Augmented Generation: retrieve → augment prompt → generate via Gemini
+ * RAG Pipeline (self-hosted retrieval + free LLM)
+ * Flow: query -> local embedding -> Atlas vector search -> context assembly -> LLM generation
  * 
  * @module services/ai/rag/RAGPipeline
  */
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const KnowledgeDocument = require('../../../models/KnowledgeDocument');
 const VectorSearchService = require('./VectorSearchService');
-const Product = require('../../../models/Product');
+const EmbeddingService = require('./EmbeddingService');
+const GroqChatService = require('../core/GroqChatService');
 
 class RAGPipeline {
   constructor() {
-    this.genAI = null;
-    this.model = null;
-    this._initialize();
-  }
-
-  _initialize() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error('❌ GEMINI_API_KEY not configured - RAGPipeline disabled');
-      return;
-    }
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({
-      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash'
-    });
-    console.log('✅ RAGPipeline initialized');
+    this.maxContextChars = Number(process.env.RAG_MAX_CONTEXT_CHARS || 8000);
+    this.defaultSystemPrompt = [
+      'Bạn là AI tư vấn của TechStore.',
+      'QUY TẮC BẮT BUỘC:',
+      '1) Chỉ được trả lời dựa trên CONTEXT được cung cấp.',
+      '2) Nếu CONTEXT không đủ dữ liệu thì phải nói rõ: "Không đủ dữ liệu trong hệ thống hiện tại".',
+      '3) Tuyệt đối không bịa thông số linh kiện, giá, tồn kho.',
+      '4) Nếu có nhiều lựa chọn thì so sánh ngắn gọn theo dữ liệu context.',
+      '5) Trả lời tiếng Việt, rõ ràng, ưu tiên bullet points.'
+    ].join('\n');
   }
 
   /**
@@ -36,53 +31,76 @@ class RAGPipeline {
    */
   async query(query, options = {}) {
     const {
-      pipeline = 'auto', // 'general_knowledge', 'product_rag', 'recommendation', 'auto'
+      pipeline = 'auto',
       conversationHistory = [],
-      categories = null,
       includeProducts = true,
       maxKnowledgeDocs = 5,
-      maxProducts = 5
+      maxProducts = 6,
+      minSimilarity = 0.35,
+      categories = null
     } = options;
 
-    // 1. Retrieve knowledge context
-    const knowledgeContext = await this._retrieveKnowledge(query, {
-      categories,
-      limit: maxKnowledgeDocs
-    });
+    try {
+      // 1) Embed locally (CPU)
+      const queryVector = await EmbeddingService.embedText(query);
 
-    // 2. Retrieve product context (if relevant)
-    let productContext = [];
-    if (includeProducts) {
-      productContext = await this._retrieveProducts(query, { limit: maxProducts });
+      // 2) Retrieve product context via Atlas vector search
+      const productContext = includeProducts
+        ? await VectorSearchService.searchSimilarProducts(queryVector, maxProducts, { minSimilarity })
+        : [];
+
+      // 3) Retrieve policy/knowledge context via Atlas vector search on documents
+      const knowledgeContext = await this._retrieveKnowledgeByVector(queryVector, query, {
+        limit: maxKnowledgeDocs,
+        categories,
+        minSimilarity: Math.max(0.25, minSimilarity - 0.1)
+      });
+
+      const contextBlocks = this._buildContextBlocks({ productContext, knowledgeContext, pipeline });
+      const systemPrompt = this._buildSystemPrompt(pipeline);
+
+      // 4) Generate with Groq primary + Gemini fallback
+      const llmResult = await GroqChatService.generateRagAnswer({
+        systemPrompt,
+        userQuestion: query,
+        contextBlocks,
+        conversationHistory
+      });
+
+      return {
+        answer: llmResult.text,
+        sourceProvider: llmResult.provider,
+        sourceModel: llmResult.model,
+        sources: knowledgeContext.map((doc) => ({
+          source: doc.source,
+          category: doc.category,
+          similarity: doc.similarity || doc.finalScore || 0,
+          snippet: String(doc.text || '').slice(0, 180)
+        })),
+        products: productContext.map((p) => p.product),
+        knowledgeDocsUsed: knowledgeContext.length,
+        productsUsed: productContext.length,
+        pipeline,
+        retrieval: {
+          embeddingModel: EmbeddingService.getInfo().modelName,
+          productMatches: productContext.length,
+          knowledgeMatches: knowledgeContext.length
+        }
+      };
+    } catch (error) {
+      console.error('RAGPipeline.query failed:', error.message);
+      return {
+        answer: 'Xin lỗi, hệ thống AI đang lỗi tạm thời. Vui lòng thử lại sau.',
+        sourceProvider: 'none',
+        sourceModel: 'none',
+        sources: [],
+        products: [],
+        knowledgeDocsUsed: 0,
+        productsUsed: 0,
+        pipeline,
+        error: error.message
+      };
     }
-
-    // 3. Build augmented prompt
-    const augmentedPrompt = this._buildPrompt(query, {
-      pipeline,
-      knowledgeContext,
-      productContext,
-      conversationHistory
-    });
-
-    // 4. Generate response
-    const answer = await this._generate(augmentedPrompt);
-
-    // 5. Collect sources
-    const sources = knowledgeContext.map(doc => ({
-      source: doc.source,
-      category: doc.category,
-      similarity: doc.similarity || doc.finalScore,
-      snippet: doc.text.substring(0, 150) + '...'
-    }));
-
-    return {
-      answer,
-      sources,
-      products: productContext,
-      knowledgeDocsUsed: knowledgeContext.length,
-      productsUsed: productContext.length,
-      pipeline
-    };
   }
 
   /**
@@ -96,8 +114,7 @@ class RAGPipeline {
       ...options,
       pipeline: 'general_knowledge',
       includeProducts: false,
-      categories: ['technology', 'networking', 'programming', 'hardware',
-                   'software', 'ai_ml', 'security', 'cloud', 'general']
+      categories: ['technology', 'networking', 'programming', 'hardware', 'software', 'ai_ml', 'security', 'cloud', 'general']
     });
   }
 
@@ -131,163 +148,120 @@ class RAGPipeline {
     });
   }
 
-  // --- Private Methods ---
+  async _retrieveKnowledgeByVector(queryVector, queryText, options = {}) {
+    const {
+      limit = 5,
+      categories = null,
+      minSimilarity = 0.25
+    } = options;
 
-  /**
-   * Retrieve relevant knowledge documents
-   */
-  async _retrieveKnowledge(query, options = {}) {
     try {
-      const results = await VectorSearchService.hybridSearch(query, {
-        limit: options.limit || 5,
-        minSimilarity: 0.25,
-        categories: options.categories
-      });
-      return results;
+      const filter = { status: 'completed' };
+      if (Array.isArray(categories) && categories.length > 0) {
+        filter.category = { $in: categories };
+      }
+
+      const docs = await KnowledgeDocument.aggregate([
+        {
+          $vectorSearch: {
+            index: process.env.MONGODB_KNOWLEDGE_VECTOR_INDEX || 'knowledge_embedding_index',
+            path: 'embedding',
+            queryVector,
+            numCandidates: Math.max(limit * 8, 40),
+            limit,
+            filter
+          }
+        },
+        {
+          $project: {
+            text: 1,
+            source: 1,
+            category: 1,
+            metadata: 1,
+            similarity: { $meta: 'vectorSearchScore' }
+          }
+        }
+      ]);
+
+      return docs.filter((d) => (d.similarity || 0) >= minSimilarity);
     } catch (error) {
-      console.warn('Knowledge retrieval failed:', error.message);
-      return [];
+      console.warn('Knowledge Atlas search failed, fallback to hybrid search:', error.message);
+      return VectorSearchService.hybridSearch(queryText, {
+        limit,
+        minSimilarity,
+        categories
+      });
     }
   }
 
-  /**
-   * Retrieve relevant products from database
-   */
-  async _retrieveProducts(query, options = {}) {
-    try {
-      const keywords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-      if (keywords.length === 0) return [];
+  _buildSystemPrompt(pipeline) {
+    const modeInstruction = {
+      recommendation: 'Ưu tiên so sánh phương án mua và đề xuất sản phẩm phù hợp theo context.',
+      product_rag: 'Ưu tiên tư vấn sản phẩm và thông số trong context.',
+      general_knowledge: 'Ưu tiên trả lời tri thức kỹ thuật từ context tài liệu.'
+    };
 
-      const regexPattern = keywords
-        .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-        .join('|');
-
-      const products = await Product.find({
-        $or: [
-          { name: { $regex: regexPattern, $options: 'i' } },
-          { description: { $regex: regexPattern, $options: 'i' } },
-          { brand: { $regex: regexPattern, $options: 'i' } },
-          { category: { $regex: regexPattern, $options: 'i' } }
-        ],
-        stock: { $gt: 0 }
-      })
-        .select('name brand category price originalPrice rating reviewCount stock image specifications description')
-        .sort({ rating: -1, reviewCount: -1 })
-        .limit(options.limit || 5)
-        .lean();
-
-      return products;
-    } catch (error) {
-      console.warn('Product retrieval failed:', error.message);
-      return [];
-    }
+    const mode = modeInstruction[pipeline] || 'Ưu tiên trả lời đúng dữ liệu truy xuất.';
+    return `${this.defaultSystemPrompt}\n${mode}`;
   }
 
-  /**
-   * Build the augmented prompt for Gemini
-   */
-  _buildPrompt(query, { pipeline, knowledgeContext, productContext, conversationHistory }) {
-    let systemInstruction = `**Vai trò**: Bạn là TechStore AI Assistant - trợ lý AI chuyên về khoa học và công nghệ của cửa hàng TechStore.
+  _buildContextBlocks({ productContext, knowledgeContext, pipeline }) {
+    const blocks = [];
 
-**Chuyên môn**:
-- Tư vấn sản phẩm công nghệ (laptop, PC, linh kiện, phụ kiện)
-- Giải thích kiến thức khoa học và công nghệ
-- So sánh và đánh giá sản phẩm
-- Tư vấn cấu hình và lựa chọn thiết bị
-- Trả lời câu hỏi về AI, Machine Learning, lập trình, mạng, bảo mật
-
-**Nguyên tắc**:
-1. Trả lời bằng tiếng Việt, thân thiện, chuyên nghiệp
-2. Đưa ra giải thích rõ ràng, dễ hiểu
-3. Khi có dữ liệu từ cửa hàng, ưu tiên giới thiệu sản phẩm có sẵn
-4. Không bịa đặt thông số kỹ thuật - chỉ dùng dữ liệu được cung cấp
-5. Format câu trả lời đẹp với markdown (**, ##, •, bảng so sánh)
-6. Khi so sánh hoặc tư vấn: giải thích lý do trước, sau đó gợi ý sản phẩm`;
-
-    // Pipeline-specific instructions
-    if (pipeline === 'general_knowledge') {
-      systemInstruction += `\n\n**Chế độ**: Kiến thức tổng hợp
-- Giải thích chi tiết về khoa học và công nghệ
-- Đưa ra ví dụ thực tế
-- Nếu có tài liệu tham khảo bên dưới, hãy sử dụng chúng`;
-    } else if (pipeline === 'product_rag') {
-      systemInstruction += `\n\n**Chế độ**: Tư vấn sản phẩm
-- Ưu tiên thông tin từ danh sách sản phẩm bên dưới
-- Đề xuất sản phẩm cụ thể kèm giá và thông số
-- So sánh nếu có nhiều lựa chọn`;
-    } else if (pipeline === 'recommendation') {
-      systemInstruction += `\n\n**Chế độ**: Tư vấn và đề xuất
-- Phân tích nhu cầu của người dùng
-- Giải thích ưu nhược điểm của các lựa chọn
-- Đề xuất sản phẩm phù hợp nhất kèm lý do
-- Hỏi thêm nếu cần thông tin`;
-    }
-
-    let prompt = systemInstruction + '\n\n';
-
-    // Add knowledge context
-    if (knowledgeContext.length > 0) {
-      prompt += '**TÀI LIỆU THAM KHẢO (Knowledge Base)**:\n';
-      knowledgeContext.forEach((doc, i) => {
-        prompt += `\n--- Tài liệu ${i + 1} [${doc.source}] (${doc.category}) ---\n${doc.text}\n`;
-      });
-      prompt += '\n';
-    }
-
-    // Add product context
     if (productContext.length > 0) {
-      prompt += '**SẢN PHẨM CÓ SẴN TRONG CỬA HÀNG**:\n';
-      productContext.forEach((p, i) => {
-        const specs = p.specifications
-          ? Object.entries(p.specifications).map(([k, v]) => `${k}: ${v}`).join(', ')
-          : '';
-        prompt += `${i + 1}. **${p.name}** (${p.brand}) - ${p.price?.toLocaleString('vi-VN')}đ`;
-        prompt += ` | ⭐${p.rating || 0}/5 (${p.reviewCount || 0} đánh giá)`;
-        prompt += ` | Kho: ${p.stock > 0 ? 'Còn hàng' : 'Hết hàng'}`;
-        if (specs) prompt += ` | ${specs}`;
-        if (p.description) prompt += `\n   ${p.description.substring(0, 200)}`;
-        prompt += '\n';
-      });
-      prompt += '\n';
+      const productBlock = productContext
+        .map((item, idx) => {
+          const p = item.product;
+          if (!p) {
+            return null;
+          }
+
+          const specs = p.specifications && typeof p.specifications === 'object'
+            ? Object.entries(p.specifications).slice(0, 10).map(([k, v]) => `${k}: ${v}`).join('; ')
+            : 'N/A';
+
+          return [
+            `${idx + 1}. ${p.name}`,
+            `- Brand: ${p.brand || 'N/A'}`,
+            `- Category: ${p.category || 'N/A'}`,
+            `- Price: ${p.salePrice || p.price || 'N/A'}`,
+            `- Stock: ${p.stock ?? 'N/A'}`,
+            `- Rating: ${p.rating || 0}`,
+            `- Similarity: ${Number(item.score || 0).toFixed(4)}`,
+            `- Specs: ${specs}`
+          ].join('\n');
+        })
+        .filter(Boolean)
+        .join('\n\n');
+
+      blocks.push(`PRODUCT_CONTEXT (${pipeline})\n${productBlock}`);
     }
 
-    // Add conversation history
-    if (conversationHistory.length > 0) {
-      prompt += '**LỊCH SỬ HỘI THOẠI** (gần nhất):\n';
-      const recent = conversationHistory.slice(-6);
-      recent.forEach(msg => {
-        prompt += `${msg.role === 'user' ? 'Người dùng' : 'Trợ lý'}: ${msg.content}\n`;
-      });
-      prompt += '\n';
+    if (knowledgeContext.length > 0) {
+      const knowledgeBlock = knowledgeContext
+        .map((doc, idx) => {
+          const text = String(doc.text || '').slice(0, 800);
+          return `${idx + 1}. [${doc.source}] (${doc.category}) score=${Number(doc.similarity || doc.finalScore || 0).toFixed(4)}\n${text}`;
+        })
+        .join('\n\n');
+
+      blocks.push(`POLICY_KNOWLEDGE_CONTEXT\n${knowledgeBlock}`);
     }
 
-    prompt += `**CÂU HỎI MỚI**: ${query}\n\n**TRẢ LỜI** (format đẹp với markdown):`;
-    return prompt;
-  }
-
-  /**
-   * Generate response via Gemini
-   */
-  async _generate(prompt) {
-    if (!this.model) {
-      return 'Xin lỗi, hệ thống AI đang tạm thời không khả dụng. Vui lòng thử lại sau.';
+    if (blocks.length === 0) {
+      blocks.push('NO_CONTEXT_FOUND');
     }
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('RAG generation error:', error.message);
-      return 'Xin lỗi, tôi gặp lỗi khi xử lý câu hỏi của bạn. Vui lòng thử lại.';
-    }
+    // Guard token budget
+    const joined = blocks.join('\n\n').slice(0, this.maxContextChars);
+    return [joined];
   }
 
   /**
    * Check if pipeline is available
    */
   isAvailable() {
-    return this.model !== null;
+    return EmbeddingService.isAvailable();
   }
 }
 

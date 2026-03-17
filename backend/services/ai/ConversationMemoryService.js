@@ -36,7 +36,10 @@ class ConversationMemoryService {
       
       const conversation = new ChatbotConversation({
         sessionId,
-        userId,
+        user: userId || null,
+        userContext: {
+          isAuthenticated: Boolean(userId)
+        },
         messages: [],
         context: {
           interestedProducts: [],
@@ -255,7 +258,12 @@ class ConversationMemoryService {
     try {
       const { limit = 10, status = null, includeMessages = false } = options;
 
-      let query = ChatbotConversation.find({ userId });
+      let query = ChatbotConversation.find({
+        $or: [
+          { user: userId },
+          { userId }
+        ]
+      });
 
       if (status) {
         query = query.where('status').equals(status);

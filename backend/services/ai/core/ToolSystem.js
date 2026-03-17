@@ -138,6 +138,17 @@ class ToolSystem {
     });
 
     this.register({
+      name: 'pcCompatibilityCheck',
+      description: 'Rule-based CPU/Mainboard/RAM compatibility validator',
+      parameters: {
+        cpu: { type: 'object', required: true, description: 'CPU specs {name, socket}' },
+        motherboard: { type: 'object', required: true, description: 'Mainboard specs {name, socket, supportedRamBus[]}' },
+        ram: { type: 'object', required: true, description: 'RAM specs {name, bus}' }
+      },
+      execute: this._pcCompatibilityCheck.bind(this)
+    });
+
+    this.register({
       name: 'suggestAlternatives',
       description: 'Suggest alternative components',
       parameters: {
@@ -690,6 +701,75 @@ class ToolSystem {
   }
 
   /**
+   * Strict rule-based compatibility logic.
+   * Independent from RAG/LLM for deterministic hardware validation.
+   *
+   * Input shape:
+   * {
+   *   cpu: { name: string, socket: string },
+   *   motherboard: { name: string, socket: string, supportedRamBus: number[] | string[] },
+   *   ram: { name: string, bus: number | string }
+   * }
+   */
+  async _pcCompatibilityCheck(params) {
+    try {
+      const cpu = params?.cpu || {};
+      const motherboard = params?.motherboard || {};
+      const ram = params?.ram || {};
+
+      const reasons = [];
+      const warnings = [];
+
+      // Rule 1: CPU socket must match motherboard socket.
+      const cpuSocket = this._normalizeSocket(cpu.socket);
+      const mbSocket = this._normalizeSocket(motherboard.socket);
+
+      if (!cpuSocket || !mbSocket) {
+        reasons.push('Thiếu thông tin socket của CPU hoặc Mainboard.');
+      } else if (cpuSocket !== mbSocket) {
+        reasons.push(`Socket không tương thích: CPU=${cpuSocket}, Mainboard=${mbSocket}.`);
+      }
+
+      // Rule 2: Mainboard must support RAM bus.
+      const ramBus = this._normalizeBusValue(ram.bus);
+      const mbSupportedBus = this._normalizeBusList(motherboard.supportedRamBus);
+
+      if (!ramBus) {
+        warnings.push('Không xác định được bus RAM, bỏ qua kiểm tra bus.');
+      } else if (mbSupportedBus.length === 0) {
+        warnings.push('Mainboard chưa có danh sách bus RAM hỗ trợ, bỏ qua kiểm tra bus.');
+      } else if (!mbSupportedBus.includes(ramBus)) {
+        reasons.push(`Bus RAM không tương thích: RAM=${ramBus}MHz, Mainboard hỗ trợ=${mbSupportedBus.join(', ')}MHz.`);
+      }
+
+      return {
+        compatible: reasons.length === 0,
+        reasons,
+        warnings,
+        checked: {
+          cpu: { name: cpu.name || 'N/A', socket: cpuSocket || null },
+          motherboard: {
+            name: motherboard.name || 'N/A',
+            socket: mbSocket || null,
+            supportedRamBus: mbSupportedBus
+          },
+          ram: {
+            name: ram.name || 'N/A',
+            bus: ramBus || null
+          }
+        }
+      };
+    } catch (error) {
+      return {
+        compatible: false,
+        reasons: [`Lỗi xử lý compatibility: ${error.message}`],
+        warnings: [],
+        checked: null
+      };
+    }
+  }
+
+  /**
    * Suggest alternatives implementation
    * @private
    */
@@ -700,6 +780,89 @@ class ToolSystem {
       alternatives: [],
       reason
     };
+  }
+
+  getPCToolSchema() {
+    return {
+      name: 'pcCompatibilityCheck',
+      description: 'Validate hardware compatibility by deterministic rules (socket + RAM bus).',
+      jsonSchema: {
+        type: 'object',
+        required: ['cpu', 'motherboard', 'ram'],
+        properties: {
+          cpu: {
+            type: 'object',
+            required: ['name', 'socket'],
+            properties: {
+              name: { type: 'string' },
+              socket: { type: 'string' }
+            }
+          },
+          motherboard: {
+            type: 'object',
+            required: ['name', 'socket', 'supportedRamBus'],
+            properties: {
+              name: { type: 'string' },
+              socket: { type: 'string' },
+              supportedRamBus: {
+                type: 'array',
+                items: {
+                  anyOf: [{ type: 'number' }, { type: 'string' }]
+                }
+              }
+            }
+          },
+          ram: {
+            type: 'object',
+            required: ['name', 'bus'],
+            properties: {
+              name: { type: 'string' },
+              bus: {
+                anyOf: [{ type: 'number' }, { type: 'string' }]
+              }
+            }
+          }
+        }
+      },
+      resultShape: {
+        compatible: 'boolean',
+        reasons: 'string[]',
+        warnings: 'string[]',
+        checked: 'object|null'
+      }
+    };
+  }
+
+  _normalizeSocket(value) {
+    if (!value || typeof value !== 'string') {
+      return '';
+    }
+    return value.trim().toUpperCase().replace(/\s+/g, '');
+  }
+
+  _normalizeBusValue(value) {
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    const numeric = Number(String(value).replace(/[^0-9.]/g, ''));
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+      return null;
+    }
+
+    return Math.round(numeric);
+  }
+
+  _normalizeBusList(list) {
+    if (!Array.isArray(list)) {
+      return [];
+    }
+
+    const normalized = list
+      .map((value) => this._normalizeBusValue(value))
+      .filter((value) => value !== null);
+
+    return [...new Set(normalized)].sort((a, b) => a - b);
   }
 
   /**

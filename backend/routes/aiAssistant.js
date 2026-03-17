@@ -11,7 +11,33 @@ const router = express.Router();
 const AICommerceAssistant = require('../services/ai/AICommerceAssistant');
 const ConversationMemoryService = require('../services/ai/ConversationMemoryService');
 const BehaviorTrackerService = require('../services/ai/BehaviorTrackerService');
-const { optionalAuth } = require('../middleware/auth');
+const ToolSystem = require('../services/ai/core/ToolSystem');
+const ChatbotConversation = require('../models/ChatbotConversation');
+const { auth, optionalAuth, isStaffOrAdmin } = require('../middleware/auth');
+
+function getConversationOwnerId(conversation) {
+  if (!conversation || !conversation.user) {
+    return null;
+  }
+
+  if (typeof conversation.user === 'string') {
+    return conversation.user;
+  }
+
+  if (conversation.user._id) {
+    return conversation.user._id.toString();
+  }
+
+  if (typeof conversation.user.toString === 'function') {
+    return conversation.user.toString();
+  }
+
+  return null;
+}
+
+function isElevatedRole(user) {
+  return user?.role === 'admin' || user?.role === 'staff';
+}
 
 // Initialize AI system on first request
 let aiInitialized = false;
@@ -62,6 +88,31 @@ router.post('/chat', optionalAuth, async (req, res) => {
 
     const conversation = conversationResult.conversation;
     const actualSessionId = conversationResult.sessionId; // Use the actual session ID
+
+    // Ownership hardening:
+    // - Authenticated users can only reuse their own sessions (admin/staff bypass).
+    // - Guest users cannot reuse sessions already bound to a user.
+    const conversationOwnerId = getConversationOwnerId(conversation);
+    if (conversationOwnerId && userId && conversationOwnerId !== userId && !isElevatedRole(req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not allowed to use this session'
+      });
+    }
+
+    if (conversationOwnerId && !userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'This session requires authentication'
+      });
+    }
+
+    if (!conversationOwnerId && userId) {
+      await ChatbotConversation.updateOne(
+        { sessionId: actualSessionId },
+        { $set: { user: userId, 'userContext.isAuthenticated': true } }
+      );
+    }
 
     if (!conversation || !conversation.messages) {
       throw new Error('Invalid conversation object');
@@ -204,6 +255,23 @@ router.post('/chat/stream', optionalAuth, async (req, res) => {
     }
 
     const conversation = conversationResult.conversation;
+    const actualSessionId = conversationResult.sessionId;
+
+    const conversationOwnerId = getConversationOwnerId(conversation);
+    if (conversationOwnerId && userId && conversationOwnerId !== userId && !isElevatedRole(req.user)) {
+      throw new Error('You are not allowed to stream this session');
+    }
+
+    if (conversationOwnerId && !userId) {
+      throw new Error('This session requires authentication');
+    }
+
+    if (!conversationOwnerId && userId) {
+      await ChatbotConversation.updateOne(
+        { sessionId: actualSessionId },
+        { $set: { user: userId, 'userContext.isAuthenticated': true } }
+      );
+    }
 
     if (!conversation || !conversation.messages) {
       throw new Error('Invalid conversation object in streaming');
@@ -211,7 +279,7 @@ router.post('/chat/stream', optionalAuth, async (req, res) => {
 
     const context = {
       userId,
-      sessionId,
+      sessionId: actualSessionId,
       conversationHistory: (conversation.messages || []).slice(-5).map(m => ({
         role: m.role,
         content: m.content
@@ -336,6 +404,14 @@ router.get('/conversations', optionalAuth, async (req, res) => {
 router.get('/conversation/:sessionId', optionalAuth, async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const requesterId = req.user?._id?.toString();
+
+    if (!requesterId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
 
     const result = await ConversationMemoryService.getSession(sessionId, {
       includeMessages: true,
@@ -347,6 +423,21 @@ router.get('/conversation/:sessionId', optionalAuth, async (req, res) => {
         success: false,
         message: 'Conversation not found'
       });
+    }
+
+    const ownerId = getConversationOwnerId(result.conversation);
+    if (ownerId && ownerId !== requesterId && !isElevatedRole(req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not allowed to access this conversation'
+      });
+    }
+
+    if (!ownerId) {
+      await ChatbotConversation.updateOne(
+        { sessionId },
+        { $set: { user: requesterId, 'userContext.isAuthenticated': true } }
+      );
     }
 
     res.json({
@@ -378,6 +469,40 @@ router.get('/conversation/:sessionId', optionalAuth, async (req, res) => {
 router.delete('/conversation/:sessionId', optionalAuth, async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const requesterId = req.user?._id?.toString();
+
+    if (!requesterId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    const sessionResult = await ConversationMemoryService.getSession(sessionId, {
+      includeMessages: false
+    });
+
+    if (!sessionResult.success) {
+      return res.status(404).json({
+        success: false,
+        message: 'Conversation not found'
+      });
+    }
+
+    const ownerId = getConversationOwnerId(sessionResult.conversation);
+    if (ownerId && ownerId !== requesterId && !isElevatedRole(req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not allowed to delete this conversation'
+      });
+    }
+
+    if (!ownerId) {
+      await ChatbotConversation.updateOne(
+        { sessionId },
+        { $set: { user: requesterId, 'userContext.isAuthenticated': true } }
+      );
+    }
 
     const result = await ConversationMemoryService.deleteSession(sessionId);
 
@@ -404,9 +529,36 @@ router.delete('/conversation/:sessionId', optionalAuth, async (req, res) => {
  * @desc Get session statistics
  * @access Public
  */
-router.get('/session/:sessionId/stats', async (req, res) => {
+router.get('/session/:sessionId/stats', optionalAuth, async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const requesterId = req.user?._id?.toString();
+
+    if (!requesterId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    const sessionResult = await ConversationMemoryService.getSession(sessionId, {
+      includeMessages: false
+    });
+
+    if (!sessionResult.success) {
+      return res.status(404).json({
+        success: false,
+        message: 'Conversation not found'
+      });
+    }
+
+    const ownerId = getConversationOwnerId(sessionResult.conversation);
+    if (ownerId && ownerId !== requesterId && !isElevatedRole(req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not allowed to view this session stats'
+      });
+    }
 
     const result = await ConversationMemoryService.getSessionStats(sessionId);
 
@@ -492,6 +644,69 @@ router.get('/trending', async (req, res) => {
 
   } catch (error) {
     console.error('Get trending behaviors error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+/**
+ * @route GET /api/ai-assistant/tools/pc-compatibility/schema
+ * @desc Get JSON schema for deterministic PC compatibility tool
+ * @access Admin/Staff
+ */
+router.get('/tools/pc-compatibility/schema', auth, isStaffOrAdmin, async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      schema: ToolSystem.getPCToolSchema()
+    });
+  } catch (error) {
+    console.error('Get PC tool schema error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+/**
+ * @route POST /api/ai-assistant/tools/pc-compatibility/check
+ * @desc Execute deterministic CPU/Mainboard/RAM compatibility check
+ * @access Admin/Staff
+ */
+router.post('/tools/pc-compatibility/check', auth, isStaffOrAdmin, async (req, res) => {
+  try {
+    const { cpu, motherboard, ram } = req.body || {};
+
+    if (!cpu || !motherboard || !ram) {
+      return res.status(400).json({
+        success: false,
+        message: 'cpu, motherboard, ram are required'
+      });
+    }
+
+    const result = await ToolSystem.execute('pcCompatibilityCheck', {
+      cpu,
+      motherboard,
+      ram
+    });
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: result.error || 'Tool execution failed'
+      });
+    }
+
+    res.json({
+      success: true,
+      tool: 'pcCompatibilityCheck',
+      data: result.data
+    });
+  } catch (error) {
+    console.error('PC compatibility check error:', error);
     res.status(500).json({
       success: false,
       message: error.message

@@ -9,6 +9,7 @@
 const IntentDetector = require('./IntentDetector');
 const ReasoningPlanner = require('./ReasoningPlanner');
 const ToolSystem = require('./ToolSystem');
+const GroqChatService = require('./GroqChatService');
 
 class AIRouter {
   constructor() {
@@ -47,11 +48,73 @@ class AIRouter {
     const startTime = Date.now();
 
     try {
-      // 1. Detect intent
+      // 1. Detect intent (Groq primary, regex fallback)
       console.log(`🔍 [${routingId}] Detecting intent...`);
-      const intentResult = await IntentDetector.detect(message, context.conversationHistory || []);
+      const intentResult = await this._detectIntent(message, context.conversationHistory || []);
       
       console.log(`✅ Intent: ${intentResult.intent} (confidence: ${(intentResult.confidence * 100).toFixed(1)}%)`);
+
+      const toolCallResult = await this._tryCompatibilityToolCall(message, context, intentResult);
+      if (toolCallResult) {
+        const executionTime = Date.now() - startTime;
+        this._logRouting({
+          routingId,
+          message,
+          intent: intentResult.intent,
+          agent: 'pcCompatibilityCheck',
+          executionTime,
+          success: true,
+          timestamp: new Date()
+        });
+
+        return {
+          success: true,
+          routingId,
+          intent: intentResult.intent,
+          confidence: intentResult.confidence,
+          agent: 'pcCompatibilityCheck',
+          result: toolCallResult,
+          executionTime,
+          metadata: {
+            intentReasoning: intentResult.reasoning || 'tool-call',
+            entities: intentResult.entities || {}
+          }
+        };
+      }
+
+      // Short-circuit: general chat is handled by LLM directly for speed/cost.
+      if (['general_chat', 'greeting', 'help'].includes(intentResult.intent)) {
+        const llmResult = await GroqChatService.generateGeneralChat(message, context.conversationHistory || []);
+        const executionTime = Date.now() - startTime;
+
+        this._logRouting({
+          routingId,
+          message,
+          intent: intentResult.intent,
+          agent: 'GroqChatService',
+          executionTime,
+          success: true,
+          timestamp: new Date()
+        });
+
+        return {
+          success: true,
+          routingId,
+          intent: intentResult.intent,
+          confidence: intentResult.confidence,
+          agent: 'GroqChatService',
+          result: {
+            answer: llmResult.text,
+            source: llmResult.provider,
+            model: llmResult.model
+          },
+          executionTime,
+          metadata: {
+            intentReasoning: intentResult.reasoning || 'llm-intent',
+            entities: intentResult.entities || {}
+          }
+        };
+      }
 
       // 2. Create execution plan
       console.log(`📋 [${routingId}] Creating execution plan...`);
@@ -157,7 +220,7 @@ class AIRouter {
       console.log(`🔀 [${routingId}] Parallel routing to: ${agentNames.join(', ')}`);
 
       // Detect intent once
-      const intentResult = await IntentDetector.detect(message, context.conversationHistory || []);
+      const intentResult = await this._detectIntent(message, context.conversationHistory || []);
 
       // Execute agents in parallel
       const agentPromises = agentNames.map(async (agentName) => {
@@ -243,7 +306,7 @@ class AIRouter {
 
     try {
       // 1. Detect intent
-      const intentResult = await IntentDetector.detect(message, context.conversationHistory || []);
+      const intentResult = await this._detectIntent(message, context.conversationHistory || []);
       
       onChunk?.({
         type: 'intent',
@@ -252,6 +315,24 @@ class AIRouter {
           confidence: intentResult.confidence
         }
       });
+
+      // Fast path for general chat
+      if (['general_chat', 'greeting', 'help'].includes(intentResult.intent)) {
+        const llmResult = await GroqChatService.generateGeneralChat(message, context.conversationHistory || []);
+        onChunk?.({
+          type: 'result',
+          data: {
+            answer: llmResult.text,
+            source: llmResult.provider,
+            model: llmResult.model
+          }
+        });
+        return {
+          answer: llmResult.text,
+          source: llmResult.provider,
+          model: llmResult.model
+        };
+      }
 
       // 2. Create plan
       const plan = await ReasoningPlanner.createPlan(intentResult, {
@@ -354,6 +435,123 @@ class AIRouter {
    */
   _generateRoutingId() {
     return `route_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  async _detectIntent(message, conversationHistory) {
+    // LLM-based intent detection with strict fallback to current rule-based detector.
+    try {
+      const llmIntent = await GroqChatService.detectIntent(message, conversationHistory);
+      if (!llmIntent?.intent) {
+        throw new Error('LLM intent payload invalid');
+      }
+
+      const entitiesResult = await IntentDetector.detect(message, conversationHistory);
+      return {
+        intent: llmIntent.intent,
+        confidence: Number(llmIntent.confidence || entitiesResult.confidence || 0.6),
+        entities: entitiesResult.entities || {},
+        reasoning: llmIntent.reasoning || 'llm-detected',
+        allScores: entitiesResult.allScores || {}
+      };
+    } catch (error) {
+      console.warn('LLM intent detection failed, fallback to rule-based:', error.message);
+      return IntentDetector.detect(message, conversationHistory);
+    }
+  }
+
+  async _tryCompatibilityToolCall(message, context, intentResult) {
+    const shouldCheck = ['pc_build', 'comparison', 'technical_question', 'product_details'].includes(intentResult.intent)
+      || /compatible|tương thích|socket|ram bus|mainboard|cpu|ddr4|ddr5/i.test(message);
+
+    if (!shouldCheck) {
+      return null;
+    }
+
+    try {
+      const schema = ToolSystem.getPCToolSchema();
+      const planner = await GroqChatService.chat([
+        {
+          role: 'system',
+          content: [
+            'Bạn là AI planner cho tool-call phần cứng.',
+            'Nhiệm vụ: nếu câu hỏi có đủ dữ liệu CPU/Mainboard/RAM thì tạo JSON gọi tool.',
+            'Nếu không đủ dữ liệu thì trả useTool=false.',
+            'Chỉ trả JSON thuần, không markdown.',
+            'Schema output:',
+            '{"useTool": boolean, "arguments": {"cpu": {...}, "motherboard": {...}, "ram": {...}}, "missing": string[]}'
+          ].join(' ')
+        },
+        {
+          role: 'user',
+          content: JSON.stringify({
+            message,
+            entities: intentResult.entities || {},
+            conversationHistory: (context.conversationHistory || []).slice(-3),
+            toolSchema: schema
+          })
+        }
+      ], {
+        temperature: 0,
+        maxTokens: 420
+      });
+
+      let callPlan;
+      try {
+        callPlan = JSON.parse(planner.text);
+      } catch (parseError) {
+        return null;
+      }
+
+      if (!callPlan?.useTool) {
+        return null;
+      }
+
+      const args = callPlan.arguments || {};
+      if (!args.cpu || !args.motherboard || !args.ram) {
+        return {
+          answer: `Mình chưa đủ dữ liệu để kiểm tra tương thích tự động. Thiếu: ${(callPlan.missing || []).join(', ') || 'CPU/Mainboard/RAM'}.`,
+          compatibility: null,
+          source: 'tool-call-missing-args'
+        };
+      }
+
+      const toolResult = await ToolSystem.execute('pcCompatibilityCheck', args);
+      if (!toolResult.success) {
+        return {
+          answer: `Không thể chạy kiểm tra tương thích: ${toolResult.error || 'unknown error'}.`,
+          compatibility: null,
+          source: 'tool-call-failed'
+        };
+      }
+
+      const explanation = await GroqChatService.chat([
+        {
+          role: 'system',
+          content: [
+            'Bạn là tư vấn viên linh kiện PC.',
+            'Dựa 100% vào JSON kết quả tool để trả lời ngắn gọn tiếng Việt.',
+            'Nêu rõ hợp lệ hay không hợp lệ, và lý do chính.',
+            'Không bịa thêm thông số.'
+          ].join(' ')
+        },
+        {
+          role: 'user',
+          content: JSON.stringify({ tool: 'pcCompatibilityCheck', output: toolResult.data })
+        }
+      ], {
+        temperature: 0.1,
+        maxTokens: 300
+      });
+
+      return {
+        answer: explanation.text,
+        compatibility: toolResult.data,
+        source: explanation.provider
+      };
+    } catch (error) {
+      console.warn('Compatibility tool-call flow skipped:', error.message);
+      return null;
+    }
   }
 
   /**

@@ -1,85 +1,119 @@
 /**
- * Embedding Service
- * Generates vector embeddings using Google Gemini Embedding API
- * 
+ * Embedding Service (local/self-hosted)
+ * Uses @xenova/transformers on CPU with persistent model cache.
+ *
+ * Model: Xenova/all-MiniLM-L6-v2 (384 dimensions)
+ *
  * @module services/ai/rag/EmbeddingService
  */
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+const path = require('path');
 
 class EmbeddingService {
   constructor() {
-    this.genAI = null;
-    this.model = null;
-    this.modelName = 'gemini-embedding-001';
-    this.dimension = 3072;
+    this.modelName = 'Xenova/all-MiniLM-L6-v2';
+    this.dimension = 384;
+    this.extractor = null;
+    this.readyPromise = null;
+    this.cacheDir = process.env.TRANSFORMERS_CACHE || path.join(process.cwd(), '.cache', 'transformers');
+
+    // Warm up model in background. Calls are still safe without awaiting this constructor.
     this._initialize();
   }
 
-  _initialize() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error('❌ GEMINI_API_KEY not configured - EmbeddingService disabled');
-      return;
+  async _initialize() {
+    if (this.readyPromise) {
+      return this.readyPromise;
     }
-    try {
-      this.genAI = new GoogleGenerativeAI(apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: this.modelName });
-      console.log(`✅ EmbeddingService initialized with ${this.modelName}`);
-    } catch (error) {
-      console.error('❌ EmbeddingService initialization failed:', error.message);
+
+    this.readyPromise = (async () => {
+      try {
+        const transformers = await import('@xenova/transformers');
+        const { pipeline, env } = transformers;
+
+        env.allowRemoteModels = true;
+        env.cacheDir = this.cacheDir;
+
+        this.extractor = await pipeline('feature-extraction', this.modelName);
+        console.log(`EmbeddingService ready: ${this.modelName} (cache: ${this.cacheDir})`);
+      } catch (error) {
+        this.extractor = null;
+        console.error('EmbeddingService initialization failed:', error.message);
+        throw error;
+      }
+    })();
+
+    return this.readyPromise;
+  }
+
+  async _ensureReady() {
+    if (!this.extractor) {
+      await this._initialize();
+    }
+
+    if (!this.extractor) {
+      throw new Error('Embedding model is not available');
     }
   }
 
   /**
-   * Generate embedding for a single text
-   * @param {string} text - Text to embed
-   * @returns {Promise<number[]>} Embedding vector
+   * Generate embedding vector for text.
+   * Mean pooling + normalization for stable cosine comparison.
    */
   async embedText(text) {
-    if (!this.model) throw new Error('EmbeddingService not initialized');
-    if (!text || !text.trim()) throw new Error('Text cannot be empty');
+    try {
+      if (!text || !text.trim()) {
+        throw new Error('Text cannot be empty');
+      }
 
-    // Truncate to avoid token limits (roughly 2048 tokens ≈ 8000 chars)
-    const truncated = text.slice(0, 8000);
+      await this._ensureReady();
 
-    const result = await this.model.embedContent(truncated);
-    return result.embedding.values;
+      const output = await this.extractor(text.slice(0, 4000), {
+        pooling: 'mean',
+        normalize: true
+      });
+
+      const vector = Array.from(output.data || []);
+      if (vector.length === 0) {
+        throw new Error('Embedding output is empty');
+      }
+
+      this.dimension = vector.length;
+      return vector;
+    } catch (error) {
+      throw new Error(`embedText failed: ${error.message}`);
+    }
   }
 
-  /**
-   * Generate embeddings for multiple texts in batch
-   * @param {string[]} texts - Array of texts to embed
-   * @returns {Promise<number[][]>} Array of embedding vectors
-   */
   async embedBatch(texts) {
-    if (!this.model) throw new Error('EmbeddingService not initialized');
+    if (!Array.isArray(texts) || texts.length === 0) {
+      return [];
+    }
 
-    const results = [];
-    // Process in batches of 5 to respect rate limits
-    const batchSize = 5;
-    for (let i = 0; i < texts.length; i += batchSize) {
-      const batch = texts.slice(i, i + batchSize);
-      const embeddings = await Promise.all(
-        batch.map(text => this.embedText(text))
-      );
-      results.push(...embeddings);
-
-      // Rate limit pause between batches
-      if (i + batchSize < texts.length) {
-        await new Promise(resolve => setTimeout(resolve, 200));
+    const vectors = [];
+    for (const text of texts) {
+      try {
+        vectors.push(await this.embedText(text));
+      } catch (error) {
+        console.error('embedBatch item failed:', error.message);
+        vectors.push([]);
       }
     }
-    return results;
+    return vectors;
   }
 
-  /**
-   * Check if the service is available
-   * @returns {boolean}
-   */
   isAvailable() {
-    return this.model !== null;
+    return this.extractor !== null;
+  }
+
+  getInfo() {
+    return {
+      modelName: this.modelName,
+      dimension: this.dimension,
+      cacheDir: this.cacheDir,
+      ready: this.isAvailable()
+    };
   }
 }
 
-// Singleton
 module.exports = new EmbeddingService();

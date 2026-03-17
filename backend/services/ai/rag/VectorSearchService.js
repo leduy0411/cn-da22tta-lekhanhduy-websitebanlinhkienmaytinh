@@ -1,14 +1,21 @@
 /**
  * Vector Search Service
- * Performs semantic vector search against KnowledgeDocument collection
+ * Performs semantic vector search against Atlas Vector Search indexes.
+ * Uses MongoDB M0 compatible $vectorSearch with graceful fallback.
  * 
  * @module services/ai/rag/VectorSearchService
  */
 const KnowledgeDocument = require('../../../models/KnowledgeDocument');
 const ProductEmbedding = require('../../../models/ProductEmbedding');
+const Product = require('../../../models/Product');
 const EmbeddingService = require('./EmbeddingService');
 
 class VectorSearchService {
+  constructor() {
+    this.knowledgeIndexName = process.env.MONGODB_KNOWLEDGE_VECTOR_INDEX || 'knowledge_embedding_index';
+    this.productIndexName = process.env.MONGODB_PRODUCT_VECTOR_INDEX || 'product_embedding_index';
+  }
+
   /**
    * Semantic search: embed query then find similar documents
    * @param {string} query - User query text
@@ -23,23 +30,54 @@ class VectorSearchService {
       categories = null
     } = options;
 
-    if (!EmbeddingService.isAvailable()) {
-      console.warn('⚠️ EmbeddingService unavailable, returning empty results');
-      return [];
+    try {
+      const queryEmbedding = await EmbeddingService.embedText(query);
+
+      const filter = { status: 'completed' };
+      if (category) {
+        filter.category = category;
+      }
+      if (Array.isArray(categories) && categories.length > 0) {
+        filter.category = { $in: categories };
+      }
+
+      const numCandidates = Math.max(limit * 8, 40);
+
+      const atlasResults = await KnowledgeDocument.aggregate([
+        {
+          $vectorSearch: {
+            index: this.knowledgeIndexName,
+            path: 'embedding',
+            queryVector: queryEmbedding,
+            numCandidates,
+            limit,
+            filter
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            text: 1,
+            source: 1,
+            category: 1,
+            metadata: 1,
+            chunkIndex: 1,
+            similarity: { $meta: 'vectorSearchScore' }
+          }
+        }
+      ]);
+
+      return atlasResults.filter((doc) => (doc.similarity || 0) >= minSimilarity);
+    } catch (error) {
+      console.warn('Atlas knowledge vector search failed, fallback to in-app cosine:', error.message);
+      const queryEmbedding = await EmbeddingService.embedText(query);
+      return KnowledgeDocument.findSimilar(queryEmbedding, {
+        limit,
+        minSimilarity,
+        category,
+        categories
+      });
     }
-
-    // 1. Embed the query
-    const queryEmbedding = await EmbeddingService.embedText(query);
-
-    // 2. Find similar documents
-    const results = await KnowledgeDocument.findSimilar(queryEmbedding, {
-      limit,
-      minSimilarity,
-      category,
-      categories
-    });
-
-    return results;
   }
 
   /**
@@ -149,21 +187,122 @@ class VectorSearchService {
       excludeProductIds = []
     } = options;
 
-    if (!EmbeddingService.isAvailable()) {
-      return [];
-    }
-
     const queryEmbedding = await EmbeddingService.embedText(query);
-
-    const results = await ProductEmbedding.findSimilarProducts(queryEmbedding, {
-      limit,
+    return this.searchSimilarProducts(queryEmbedding, limit, {
       minSimilarity,
       excludeProductIds,
       category,
       brand
     });
+  }
 
-    return results;
+  /**
+   * Atlas vector search for products.
+   * Required by new RAG flow to replace brute-force in RAM.
+   *
+   * @param {number[]} queryVector
+   * @param {number} limit
+   * @param {object} options
+   */
+  async searchSimilarProducts(queryVector, limit = 10, options = {}) {
+    const {
+      minSimilarity = 0.35,
+      excludeProductIds = [],
+      category = null,
+      brand = null
+    } = options;
+
+    if (!Array.isArray(queryVector) || queryVector.length === 0) {
+      return [];
+    }
+
+    const filter = { status: 'completed' };
+    if (category) {
+      filter['metadata.category'] = category;
+    }
+    if (brand) {
+      filter['metadata.brand'] = brand;
+    }
+    if (excludeProductIds.length > 0) {
+      filter.product = {
+        $nin: excludeProductIds
+      };
+    }
+
+    try {
+      const numCandidates = Math.max(limit * 8, 50);
+      const hits = await ProductEmbedding.aggregate([
+        {
+          $vectorSearch: {
+            index: this.productIndexName,
+            path: 'embedding',
+            queryVector,
+            numCandidates,
+            limit,
+            filter
+          }
+        },
+        {
+          $project: {
+            product: 1,
+            metadata: 1,
+            similarity: { $meta: 'vectorSearchScore' }
+          }
+        }
+      ]);
+
+      const filtered = hits.filter((item) => (item.similarity || 0) >= minSimilarity);
+      const ids = filtered.map((item) => item.product).filter(Boolean);
+
+      const products = await Product.find({ _id: { $in: ids }, stock: { $gt: 0 } })
+        .select('name description brand category price salePrice image images rating reviewCount stock specifications')
+        .lean();
+
+      const byId = new Map(products.map((p) => [String(p._id), p]));
+
+      return filtered
+        .map((row) => {
+          const product = byId.get(String(row.product));
+          if (!product) {
+            return null;
+          }
+          return {
+            product,
+            score: row.similarity,
+            matchType: 'atlas-vector'
+          };
+        })
+        .filter(Boolean);
+    } catch (error) {
+      console.warn('Atlas product vector search failed, fallback to brute-force query:', error.message);
+      const fallback = await ProductEmbedding.findSimilarProducts(queryVector, {
+        limit,
+        minSimilarity,
+        excludeProductIds,
+        category,
+        brand
+      });
+
+      const ids = fallback.map((item) => item.product).filter(Boolean);
+      const products = await Product.find({ _id: { $in: ids }, stock: { $gt: 0 } })
+        .select('name description brand category price salePrice image images rating reviewCount stock specifications')
+        .lean();
+      const byId = new Map(products.map((p) => [String(p._id), p]));
+
+      return fallback
+        .map((row) => {
+          const product = byId.get(String(row.product));
+          if (!product) {
+            return null;
+          }
+          return {
+            product,
+            score: row.similarity,
+            matchType: 'fallback-cosine'
+          };
+        })
+        .filter(Boolean);
+    }
   }
 
   /**

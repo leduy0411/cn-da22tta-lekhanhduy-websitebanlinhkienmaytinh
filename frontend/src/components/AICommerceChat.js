@@ -2,6 +2,24 @@ import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import './AICommerceChat.css';
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
+
+const welcomeMessage = {
+  role: 'assistant',
+  content: [
+    'Xin chao! Minh la tro ly AI cua TechStore.',
+    '',
+    'Minh co the giup ban:',
+    '- Tim san pham theo ngan sach va nhu cau.',
+    '- So sanh linh kien va tu van cau hinh.',
+    '- Giai dap cau hoi cong nghe ngan gon, de hieu.',
+    '',
+    'Ban muon bat dau voi yeu cau nao?'
+  ].join('\n'),
+  timestamp: new Date()
+};
+
 const AICommerceChat = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -9,7 +27,9 @@ const AICommerceChat = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
+  const [lastIntent, setLastIntent] = useState('');
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     // Create session ID on mount
@@ -22,12 +42,7 @@ const AICommerceChat = () => {
       const newSessionId = uuidv4();
       setSessionId(newSessionId);
       localStorage.setItem('ai_chat_session', newSessionId);
-      // Add welcome message
-      setMessages([{
-        role: 'assistant',
-        content: '👋 **Xin chào!** Tôi là trợ lý AI của TechStore.\n\nTôi có thể giúp bạn:\n\n🔍 **Tìm sản phẩm** - "Laptop gaming dưới 30 triệu"\n\n💡 **Gợi ý** - "Tư vấn PC cho thiết kế"\n\n⚖️ **So sánh** - "RTX 4060 vs RTX 4070"\n\n🛠️ **Build PC** - "Cấu hình PC gaming 40 triệu"\n\n📚 **Hỏi đáp** - "SSD là gì?"\n\nBạn cần tôi giúp gì ạ? 😊',
-        timestamp: new Date()
-      }]);
+      setMessages([welcomeMessage]);
     }
   }, []);
 
@@ -41,21 +56,36 @@ const AICommerceChat = () => {
 
   const loadConversation = async (sessionId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/ai-assistant/conversation/${sessionId}`);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await fetch(`${API_BASE}/ai-assistant/conversation/${sessionId}`, { headers });
       const data = await response.json();
       
       if (data.success && data.conversation?.messages) {
-        setMessages(data.conversation.messages.map(msg => ({
+        const loadedMessages = data.conversation.messages.map(msg => ({
           role: msg.role,
           content: msg.content,
           timestamp: new Date(msg.timestamp),
           metadata: msg.metadata
-        })));
+        }));
+
+        setMessages(loadedMessages.length > 0 ? loadedMessages : [welcomeMessage]);
+      } else {
+        setMessages([welcomeMessage]);
       }
     } catch (error) {
       console.error('Load conversation error:', error);
+      setMessages([welcomeMessage]);
     }
   };
+
+  useEffect(() => {
+    if (!inputRef.current) {
+      return;
+    }
+    inputRef.current.style.height = 'auto';
+    inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 140)}px`;
+  }, [inputMessage]);
 
   const handleSend = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -71,10 +101,12 @@ const AICommerceChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai-assistant/chat', {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/ai-assistant/chat`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           message: inputMessage,
@@ -96,6 +128,8 @@ const AICommerceChat = () => {
           },
           products: data.products || []
         };
+
+        setLastIntent(data.metadata?.intent || '');
 
         setMessages(prev => [...prev, aiMessage]);
       } else {
@@ -127,60 +161,127 @@ const AICommerceChat = () => {
   const handleNewChat = () => {
     const newSessionId = uuidv4();
     setSessionId(newSessionId);
+    setLastIntent('');
     localStorage.setItem('ai_chat_session', newSessionId);
-    setMessages([{
-      role: 'assistant',
-      content: '👋 **Xin chào!** Tôi là trợ lý AI của TechStore.\n\nBạn cần tôi giúp gì ạ? 😊',
-      timestamp: new Date()
-    }]);
+    setMessages([welcomeMessage]);
+  };
+
+  const escapeHtml = (unsafeText) => unsafeText
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+  const formatInline = (text) => {
+    let formatted = text;
+    formatted = formatted.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    formatted = formatted.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    return formatted;
   };
 
   const formatMessage = (content) => {
-    // Basic markdown formatting
-    let formatted = content;
-    
-    // Bold
-    formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    
-    // Italic
-    formatted = formatted.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    
-    // Line breaks
-    formatted = formatted.replace(/\n/g, '<br/>');
-    
-    // Lists
-    formatted = formatted.replace(/^([•✅❌💡📚⚖️🛠️🔍])\s+(.+)$/gm, '<li>$1 $2</li>');
-    
-    return formatted;
+    const safeContent = escapeHtml(String(content || ''));
+    const lines = safeContent.split('\n');
+
+    return lines
+      .map((rawLine) => {
+        const line = rawLine.trim();
+
+        if (!line) {
+          return '<div class="msg-spacer"></div>';
+        }
+
+        if (/^###\s+/.test(line)) {
+          return `<div class="msg-heading msg-heading-3">${formatInline(line.replace(/^###\s+/, ''))}</div>`;
+        }
+
+        if (/^##\s+/.test(line)) {
+          return `<div class="msg-heading msg-heading-2">${formatInline(line.replace(/^##\s+/, ''))}</div>`;
+        }
+
+        if (/^#\s+/.test(line)) {
+          return `<div class="msg-heading msg-heading-1">${formatInline(line.replace(/^#\s+/, ''))}</div>`;
+        }
+
+        if (/^[-*]\s+/.test(line)) {
+          return `<div class="msg-list-item">${formatInline(line.replace(/^[-*]\s+/, ''))}</div>`;
+        }
+
+        if (/^\d+\.\s+/.test(line)) {
+          const match = line.match(/^(\d+)\.\s+(.+)$/);
+          if (match) {
+            return `<div class="msg-ordered-item"><span class="msg-order-index">${match[1]}.</span><span>${formatInline(match[2])}</span></div>`;
+          }
+        }
+
+        return `<div class="msg-line">${formatInline(line)}</div>`;
+      })
+      .join('');
   };
 
   const renderProductCard = (product) => (
     <div className="product-card" key={product._id}>
+      <div className="product-thumb-wrap">
+        <img
+          className="product-thumb"
+          src={getProductImageUrl(product)}
+          alt={product.name}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = 'https://via.placeholder.com/96x96?text=TechStore';
+          }}
+        />
+      </div>
       <div className="product-info">
         <h4>{product.name}</h4>
         <div className="product-details">
-          <span className="product-brand">🏷️ {product.brand}</span>
-          <span className="product-price">💰 {product.price?.toLocaleString('vi-VN')}₫</span>
-          <span className="product-rating">⭐ {product.rating} ({product.reviewCount || 0})</span>
+          <span className="product-brand">🏷️ {product.brand || 'TechStore'}</span>
+          <span className="product-price">💰 {Number(product.price || 0).toLocaleString('vi-VN')}₫</span>
+          <span className="product-rating">⭐ {Number(product.rating || 0).toFixed(1)} ({product.reviewCount || 0})</span>
           <span className={`product-stock ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
             {product.stock > 0 ? `✅ Còn ${product.stock} sản phẩm` : '❌ Hết hàng'}
           </span>
         </div>
+        <button 
+          className="view-product-btn"
+          onClick={() => window.open(`/products/${product._id}`, '_blank')}
+        >
+          Xem chi tiết →
+        </button>
       </div>
-      <button 
-        className="view-product-btn"
-        onClick={() => window.open(`/products/${product._id}`, '_blank')}
-      >
-        Xem chi tiết →
-      </button>
     </div>
   );
+
+  function getProductImageUrl(product) {
+    const imageCandidate = product?.images?.[0] || product?.image;
+    if (!imageCandidate) {
+      return 'https://via.placeholder.com/96x96?text=TechStore';
+    }
+
+    if (/^https?:\/\//i.test(imageCandidate)) {
+      return imageCandidate;
+    }
+
+    if (imageCandidate.startsWith('/')) {
+      return `${API_ORIGIN}${imageCandidate}`;
+    }
+
+    return `${API_ORIGIN}/${imageCandidate}`;
+  }
 
   const exampleQueries = [
     'Laptop gaming dưới 30 triệu',
     'So sánh RTX 4060 và RTX 4070',
     'Build PC gaming 40 triệu',
-    'SSD là gì?'
+    'RAM DDR4 và DDR5 khác nhau gì?'
+  ];
+
+  const quickActions = [
+    { label: 'Tim laptop', text: 'Tu van laptop cho sinh vien duoi 20 trieu' },
+    { label: 'Build PC', text: 'Goi y cau hinh PC gaming 30 trieu' },
+    { label: 'So sanh', text: 'So sanh RTX 4060 va RX 7700 XT' },
+    { label: 'Kien thuc', text: 'Giai thich su khac nhau giua SSD SATA va NVMe' }
   ];
 
   return (
@@ -193,55 +294,62 @@ const AICommerceChat = () => {
           title="Mở trợ lý AI"
         >
           <span className="chat-icon">🤖</span>
-          <span className="chat-badge">AI</span>
+          <span className="chat-badge">new</span>
         </button>
       )}
 
       {/* Chat Window */}
       {isOpen && (
-        <div className={`ai-chat-overlay ${isExpanded ? 'expanded' : ''}`}>
-      <div className={`ai-chat-container ${isExpanded ? 'expanded' : ''}`}>
+        <div className={`ai-chat-overlay ${isExpanded ? 'expanded' : ''}`} onClick={() => !isExpanded && setIsOpen(false)}>
+      <div className={`ai-chat-container ${isExpanded ? 'expanded' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="ai-chat-header">
           <div className="header-info">
             <div className="header-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="url(#botGrad)" opacity="0.15"/>
-                <path d="M9 11a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM15 11a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" fill="#fff"/>
-                <path d="M12 17c2.5 0 4-1.5 4-3H8c0 1.5 1.5 3 4 3z" fill="#fff"/>
-                <path d="M12 1v2M4.22 4.22l1.42 1.42M1 12h2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-                <defs><linearGradient id="botGrad" x1="2" y1="2" x2="22" y2="22"><stop stopColor="#a78bfa"/><stop offset="1" stopColor="#6366f1"/></linearGradient></defs>
-              </svg>
+              <span>AI</span>
             </div>
             <div className="header-text">
-              <h3>Trợ lý TechStore</h3>
+              <h3>TechStore Assistant</h3>
               <p className="header-status">
                 <span className="status-dot"></span>
-                Đang hoạt động
+                Online {lastIntent ? `• ${lastIntent}` : ''}
               </p>
             </div>
           </div>
           <div className="header-actions">
-            <button className="header-btn" onClick={handleNewChat} title="Cuộc hội thoại mới">
-              🔄
+            <button className="header-btn" onClick={handleNewChat} title="Cuoc hoi thoai moi">
+              New
             </button>
             <button 
               className="header-btn expand-btn" 
               onClick={() => setIsExpanded(!isExpanded)} 
-              title={isExpanded ? 'Thu nhỏ' : 'Mở rộng'}
+              title={isExpanded ? 'Thu nho' : 'Mo rong'}
             >
-              {isExpanded ? '⊖' : '⊕'}
+              {isExpanded ? '−' : '+'}
             </button>
-            <button className="header-btn close-btn" onClick={() => { setIsOpen(false); setIsExpanded(false); }} title="Đóng">
-              ✕
+            <button className="header-btn close-btn" onClick={() => { setIsOpen(false); setIsExpanded(false); }} title="Dong">
+              x
             </button>
           </div>
+        </div>
+
+        <div className="quick-actions-row">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              className="quick-action-btn"
+              onClick={() => handleExampleClick(action.text)}
+              type="button"
+            >
+              {action.label}
+            </button>
+          ))}
         </div>
 
         <div className="ai-chat-messages">
           {messages.map((msg, index) => (
             <div key={index} className={`message ${msg.role}`}>
               <div className="message-avatar">
-                {msg.role === 'assistant' ? '🤖' : '👤'}
+                {msg.role === 'assistant' ? 'AI' : 'You'}
               </div>
               <div className="message-content">
                 <div 
@@ -269,7 +377,7 @@ const AICommerceChat = () => {
           ))}
           {isLoading && (
             <div className="message assistant">
-              <div className="message-avatar">🤖</div>
+              <div className="message-avatar">AI</div>
               <div className="message-content">
                 <div className="typing-indicator">
                   <span></span>
@@ -282,9 +390,9 @@ const AICommerceChat = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {messages.length === 1 && (
+        {messages.length <= 1 && (
           <div className="example-queries">
-            <p className="example-label">💡 Gợi ý câu hỏi:</p>
+            <p className="example-label">Goi y cau hoi:</p>
             <div className="example-buttons">
               {exampleQueries.map((query, index) => (
                 <button
@@ -301,10 +409,11 @@ const AICommerceChat = () => {
 
         <div className="ai-chat-input">
           <textarea
+            ref={inputRef}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Nhập tin nhắn..."
+            placeholder="Nhap cau hoi cua ban..."
             disabled={isLoading}
             rows={1}
           />
@@ -313,7 +422,7 @@ const AICommerceChat = () => {
             onClick={handleSend}
             disabled={!inputMessage.trim() || isLoading}
           >
-            {isLoading ? '⏳' : '🚀'}
+            {isLoading ? '...' : 'Send'}
           </button>
         </div>
       </div>
