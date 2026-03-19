@@ -59,6 +59,7 @@ const reviewRoutes = require('./routes/reviews');
 const couponRoutes = require('./routes/coupons');
 const aiRoutes = require('./routes/ai');
 const recommendationV2Routes = require('./routes/v2/recommendations');
+const chatV3Routes = require('./routes/v3/chat');
 const videoReviewRoutes = require('./routes/videoReviews');
 const aiAssistantRoutes = require('./routes/aiAssistant');
 const knowledgeRoutes = require('./routes/knowledge');
@@ -77,6 +78,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/ai-assistant', aiAssistantRoutes); // New multi-agent system
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai/v2', recommendationV2Routes);
+app.use('/api/v3', chatV3Routes);
 app.use('/api/video-reviews', videoReviewRoutes);
 app.use('/api/knowledge', knowledgeRoutes); // RAG knowledge base
 

@@ -94,7 +94,28 @@ class ProductSearchAgent {
         products = rankResult.data;
       }
 
-      // Step 4: Generate AI response using Gemini
+      // Step 4: Align product type with user intent keywords to reduce irrelevant results.
+      // If strict type filter removes all results, run a fallback search by inferred type.
+      const inferredType = this._detectTargetType(String(message || '').toLowerCase());
+      products = this._filterProductsByQueryType(products, message);
+
+      if (products.length === 0 && inferredType) {
+        const fallbackSearch = await ToolSystem.execute('searchProducts', {
+          query: inferredType,
+          category: inferredType,
+          brand: entities.brand && entities.brand[0] ? entities.brand[0] : undefined,
+          minPrice: entities.price?.min,
+          maxPrice: entities.price?.max,
+          limit: 10,
+          sortBy: 'rating'
+        });
+
+        if (fallbackSearch.success && Array.isArray(fallbackSearch.data)) {
+          products = fallbackSearch.data.filter((p) => this._isProductMatchingType(p, inferredType));
+        }
+      }
+
+      // Step 5: Generate AI response using Gemini
       const aiResponse = await this._generateResponse(message, products, entities);
 
       return {
@@ -125,6 +146,96 @@ class ProductSearchAgent {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Filter products by inferred target type from user query.
+   * @private
+   */
+  _filterProductsByQueryType(products, query) {
+    if (!Array.isArray(products) || products.length === 0) {
+      return products;
+    }
+
+    const normalizedQuery = String(query || '').toLowerCase();
+    const targetType = this._detectTargetType(normalizedQuery);
+
+    if (!targetType) {
+      return products;
+    }
+
+    const filtered = products.filter((p) => this._isProductMatchingType(p, targetType));
+
+    // Prefer strict matching, but avoid hard-fail if candidate set has no typed matches.
+    return filtered.length > 0 ? filtered : products;
+  }
+
+  _detectTargetType(query) {
+    const typePatterns = {
+      laptop: [/\blaptop\b/, /\bnotebook\b/],
+      pc: [/\bpc\b/, /may\s*tinh\s*ban/, /desktop/],
+      cpu: [/\bcpu\b/, /\bvi xu ly\b/, /processor/],
+      gpu: [/\bgpu\b/, /\bvga\b/, /card\s*do\s*hoa/, /rtx/, /gtx/, /radeon/],
+      ram: [/\bram\b/, /ddr\d/],
+      storage: [/\bssd\b/, /\bhdd\b/, /o\s*cung/, /nvme/],
+      monitor: [/\bman\s*hinh\b/, /\bmonitor\b/],
+      keyboard: [/\bban\s*phim\b/, /\bkeyboard\b/],
+      mouse: [/\bchuot\b/, /\bmouse\b/],
+      headset: [/\btai\s*nghe\b/, /\bheadset\b/]
+    };
+
+    for (const [type, patterns] of Object.entries(typePatterns)) {
+      if (patterns.some((pattern) => pattern.test(query))) {
+        return type;
+      }
+    }
+
+    return null;
+  }
+
+  _isProductMatchingType(product, targetType) {
+    const primaryHaystack = [
+      product?.name,
+      product?.category,
+      product?.subcategory
+    ]
+      .flat()
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    const descriptionHaystack = String(product?.description || '').toLowerCase();
+
+    const matcherMap = {
+      laptop: /(laptop|notebook)/,
+      pc: /(pc|desktop|may\s*tinh\s*ban|mainboard|vo\s*cay)/,
+      cpu: /(cpu|processor|vi\s*xu\s*ly|intel\s*core|ryzen)/,
+      gpu: /(gpu|vga|rtx|gtx|radeon|card\s*do\s*hoa)/,
+      ram: /(ram|ddr\d)/,
+      storage: /(ssd|hdd|nvme|o\s*cung)/,
+      monitor: /(man\s*hinh|monitor|display)/,
+      keyboard: /(ban\s*phim|keyboard)/,
+      mouse: /(chuot|mouse)/,
+      headset: /(tai\s*nghe|headset|headphone)/
+    };
+
+    const matcher = matcherMap[targetType];
+    if (!matcher) {
+      return false;
+    }
+
+    // Strict first-pass match by product identity fields to avoid cross-sell noise.
+    if (matcher.test(primaryHaystack)) {
+      return true;
+    }
+
+    // Do not use description fallback for broad categories where accessories often mention them.
+    if (targetType === 'laptop' || targetType === 'pc') {
+      return false;
+    }
+
+    // Controlled fallback for narrower component types.
+    return matcher.test(descriptionHaystack);
   }
 
   /**

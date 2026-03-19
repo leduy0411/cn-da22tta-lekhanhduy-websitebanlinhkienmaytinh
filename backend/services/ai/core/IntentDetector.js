@@ -370,6 +370,10 @@ class IntentDetector {
     const normalizedMessage = message.toLowerCase();
 
     for (const [category, pattern] of Object.entries(this.entityPatterns.category)) {
+      // Reset lastIndex for global regex patterns to avoid intermittent false negatives.
+      if (typeof pattern.lastIndex === 'number') {
+        pattern.lastIndex = 0;
+      }
       if (pattern.test(normalizedMessage)) {
         categories.push(category);
       }
@@ -415,6 +419,10 @@ class IntentDetector {
     const normalizedMessage = message.toLowerCase();
 
     for (const [purpose, pattern] of Object.entries(this.entityPatterns.purpose)) {
+      // Reset lastIndex for global regex patterns to keep detection stable across requests.
+      if (typeof pattern.lastIndex === 'number') {
+        pattern.lastIndex = 0;
+      }
       if (pattern.test(normalizedMessage)) {
         return purpose;
       }

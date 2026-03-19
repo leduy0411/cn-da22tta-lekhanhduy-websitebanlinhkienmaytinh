@@ -1,644 +1,934 @@
 /**
- * Semantic Search Service
- * Tìm kiếm ngữ nghĩa sử dụng vector embeddings
- * 
- * @module services/ai/SemanticSearchService
- * @description AI Service cho Semantic Search với TF-IDF và Cosine Similarity
+ * Lean Semantic Search Service
+ * MongoDB Atlas only: pre-filter + BM25 keyword + vector kNN.
+ * No TF-IDF/Cosine logic in Node.js.
  */
 
-const mongoose = require('mongoose');
 const Product = require('../../models/Product');
-const ProductEmbedding = require('../../models/ProductEmbedding');
+const EmbeddingService = require('./rag/EmbeddingService');
 
 class SemanticSearchService {
   constructor() {
-    // Vocabulary cho TF-IDF
-    this.vocabulary = new Map();
-    this.idfValues = new Map();
-    this.documentCount = 0;
-    this.isInitialized = false;
-    
-    // Vietnamese stopwords
-    this.stopwords = new Set([
-      'và', 'của', 'có', 'là', 'cho', 'với', 'được', 'để', 'trong', 'này',
-      'các', 'một', 'những', 'không', 'theo', 'đến', 'từ', 'như', 'về', 'khi',
-      'tại', 'ra', 'trên', 'qua', 'bởi', 'hay', 'vào', 'sau', 'còn', 'cũng',
-      'nếu', 'nhưng', 'đã', 'đang', 'sẽ', 'rất', 'nhiều', 'hơn', 'ít', 'mỗi',
-      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-      'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
-      'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
-      'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'that', 'this',
-      'these', 'those', 'it', 'its'
-    ]);
-    
-    // Cache cho search results
-    this.searchCache = new Map();
-    this.cacheTTL = 5 * 60 * 1000; // 5 minutes
-  }
-
-  // ==================== TEXT PREPROCESSING ====================
-
-  /**
-   * Chuẩn hóa và tokenize text
-   */
-  tokenize(text) {
-    if (!text) return [];
-    
-    // Lowercase và remove special characters
-    const normalized = text
-      .toLowerCase()
-      .replace(/[^\w\sàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    // Tokenize
-    const tokens = normalized.split(' ').filter(token => 
-      token.length > 1 && !this.stopwords.has(token)
-    );
-    
-    return tokens;
+    this.searchIndex = process.env.MONGODB_PRODUCT_SEARCH_INDEX || 'products_search_index';
+    this.vectorPath = process.env.MONGODB_PRODUCT_VECTOR_PATH || 'embedding';
   }
 
   /**
-   * Tạo n-grams
+   * MODULE 2
+   * @param {Object} params
+   * @param {string} params.keyword
+   * @param {number[]|null} params.vector
+   * @param {Object} params.filters
+   * @param {number} params.limit
    */
-  generateNgrams(tokens, n = 2) {
-    const ngrams = [...tokens]; // Unigrams
-    
-    for (let i = 0; i <= tokens.length - n; i++) {
-      ngrams.push(tokens.slice(i, i + n).join('_'));
-    }
-    
-    return ngrams;
-  }
-
-  /**
-   * Tính Term Frequency
-   */
-  calculateTF(tokens) {
-    const tf = new Map();
-    const total = tokens.length;
-    
-    tokens.forEach(token => {
-      tf.set(token, (tf.get(token) || 0) + 1);
-    });
-    
-    // Normalize by document length
-    tf.forEach((count, token) => {
-      tf.set(token, count / total);
-    });
-    
-    return tf;
-  }
-
-  // ==================== TF-IDF IMPLEMENTATION ====================
-
-  /**
-   * Khởi tạo TF-IDF vocabulary từ tất cả products
-   */
-  async initializeTFIDF() {
-    console.log('Initializing TF-IDF vocabulary...');
-    
-    const products = await Product.find({})
-      .select('name description brand category specifications');
-    
-    this.documentCount = products.length;
-    const documentFrequency = new Map();
-    
-    // Tính document frequency
-    products.forEach(product => {
-      const text = this.createProductText(product);
-      const tokens = this.tokenize(text);
-      const uniqueTokens = new Set(tokens);
-      
-      uniqueTokens.forEach(token => {
-        documentFrequency.set(token, (documentFrequency.get(token) || 0) + 1);
-      });
-    });
-    
-    // Tính IDF
-    documentFrequency.forEach((df, token) => {
-      const idf = Math.log((this.documentCount + 1) / (df + 1)) + 1;
-      this.idfValues.set(token, idf);
-      this.vocabulary.set(token, this.vocabulary.size);
-    });
-    
-    this.isInitialized = true;
-    console.log(`TF-IDF initialized with ${this.vocabulary.size} terms`);
-    
-    return {
-      vocabularySize: this.vocabulary.size,
-      documentCount: this.documentCount
-    };
-  }
-
-  /**
-   * Tạo text đại diện cho product
-   */
-  createProductText(product) {
-    const parts = [
-      product.name || '',
-      product.description || '',
-      product.brand || '',
-      product.category || ''
-    ];
-    
-    // Thêm specifications nếu có
-    if (product.specifications) {
-      const specs = product.specifications;
-      if (specs instanceof Map) {
-        specs.forEach((value) => parts.push(String(value)));
-      } else if (typeof specs === 'object') {
-        Object.values(specs).forEach(value => parts.push(String(value)));
-      }
-    }
-    
-    return parts.join(' ');
-  }
-
-  /**
-   * Tính TF-IDF vector cho text
-   */
-  calculateTFIDFVector(text) {
-    const tokens = this.tokenize(text);
-    const tf = this.calculateTF(tokens);
-    
-    // Create sparse vector
-    const vector = new Array(this.vocabulary.size).fill(0);
-    
-    tf.forEach((tfValue, token) => {
-      const index = this.vocabulary.get(token);
-      const idf = this.idfValues.get(token) || 1;
-      
-      if (index !== undefined) {
-        vector[index] = tfValue * idf;
-      }
-    });
-    
-    return vector;
-  }
-
-  /**
-   * Tính cosine similarity
-   */
-  cosineSimilarity(vecA, vecB) {
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
-    
-    for (let i = 0; i < vecA.length; i++) {
-      dotProduct += vecA[i] * vecB[i];
-      normA += vecA[i] * vecA[i];
-      normB += vecB[i] * vecB[i];
-    }
-    
-    if (normA === 0 || normB === 0) return 0;
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-  }
-
-  // ==================== SEARCH METHODS ====================
-
-  /**
-   * Semantic search với TF-IDF
-   */
-  async searchTFIDF(query, options = {}) {
-    const { limit = 20, minScore = 0.1, category = null, brand = null } = options;
-    
-    // Check cache
-    const cacheKey = `tfidf:${query}:${category}:${brand}:${limit}`;
-    const cached = this.searchCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
-      return cached.results;
-    }
-    
-    // Initialize nếu chưa
-    if (!this.isInitialized) {
-      await this.initializeTFIDF();
-    }
-    
-    // Tính query vector
-    const queryVector = this.calculateTFIDFVector(query);
-    
-    // Build filter
-    const filter = { stock: { $gt: 0 } };
-    if (category) filter.category = category;
-    if (brand) filter.brand = brand;
-    
-    // Lấy products
-    const products = await Product.find(filter)
-      .select('name description brand category price salePrice image images rating stock specifications');
-    
-    // Tính similarity cho mỗi product
-    const results = products.map(product => {
-      const productText = this.createProductText(product);
-      const productVector = this.calculateTFIDFVector(productText);
-      const similarity = this.cosineSimilarity(queryVector, productVector);
-      
-      return {
-        product: product.toObject(),
-        score: similarity,
-        matchType: 'tfidf'
-      };
-    });
-    
-    // Filter và sort
-    const filteredResults = results
-      .filter(r => r.score >= minScore)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-    
-    // Cache results
-    this.searchCache.set(cacheKey, {
-      results: filteredResults,
-      timestamp: Date.now()
-    });
-    
-    return filteredResults;
-  }
-
-  /**
-   * Semantic search với pre-computed embeddings
-   */
-  async searchWithEmbeddings(query, options = {}) {
-    const { limit = 20, minScore = 0.3, category = null } = options;
-    
-    // Lấy query embedding (trong thực tế sẽ gọi external API hoặc model)
-    // Ở đây dùng TF-IDF như fallback
-    const queryVector = this.calculateTFIDFVector(query);
-    
-    // Tìm trong ProductEmbedding
-    const filter = { status: 'completed' };
-    if (category) filter['metadata.category'] = category;
-    
-    const embeddings = await ProductEmbedding.find(filter)
-      .select('product embedding metadata')
-      .lean();
-    
-    if (embeddings.length === 0) {
-      // Fallback to TF-IDF search
-      return this.searchTFIDF(query, options);
-    }
-    
-    // Tính similarity
-    const results = embeddings.map(emb => {
-      const similarity = this.cosineSimilarity(queryVector, emb.embedding);
-      return {
-        productId: emb.product,
-        score: similarity,
-        metadata: emb.metadata
-      };
-    });
-    
-    // Filter và sort
-    const topResults = results
-      .filter(r => r.score >= minScore)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-    
-    // Fetch product details
-    const productIds = topResults.map(r => r.productId);
-    const products = await Product.find({ _id: { $in: productIds } })
-      .select('name description brand category price salePrice image images rating stock');
-    
-    return topResults.map(r => {
-      const product = products.find(p => p._id.toString() === r.productId.toString());
-      return {
-        product: product?.toObject(),
-        score: r.score,
-        matchType: 'embedding'
-      };
-    }).filter(r => r.product);
-  }
-
-  /**
-   * Hybrid search: Kết hợp keyword và semantic search
-   */
-  async hybridSearch(query, options = {}) {
-    const { 
-      limit = 20, 
-      keywordWeight = 0.4, 
-      semanticWeight = 0.6,
-      category = null,
-      brand = null,
-      priceRange = null,
-      minPrice = null,
-      maxPrice = null
-    } = options;
-
-    // Build priceRange from minPrice/maxPrice if provided
-    let effectivePriceRange = priceRange;
-    if (minPrice !== null || maxPrice !== null) {
-      effectivePriceRange = {
-        min: minPrice || 0,
-        max: maxPrice || Number.MAX_VALUE
-      };
-    }
-
-    const results = new Map();
-
-    // 1. Keyword search (MongoDB text search)
+  async searchProducts({ keyword = '', vector = null, filters = {}, limit = 10 } = {}) {
     try {
-      const keywordResults = await this.keywordSearch(query, {
-        limit: limit * 2,
-        category,
-        brand,
-        priceRange: effectivePriceRange
-      });
-      
-      keywordResults.forEach((result, index) => {
-        const id = result.product._id.toString();
-        const positionScore = 1 / Math.log2(index + 2);
-        results.set(id, {
-          product: result.product,
-          keywordScore: result.score * positionScore,
-          semanticScore: 0
-        });
-      });
-    } catch (err) {
-      console.log('Keyword search error:', err.message);
-    }
+      const sanitizedLimit = Math.max(1, Math.min(Number(limit) || 10, 40));
+      const normalizedFilters = this._normalizeFilters(filters);
+      const hasStrictFilters = this._hasStrictFilters(normalizedFilters);
+      const inferredCategory = normalizedFilters.category || this._extractCategoryHint(keyword);
 
-    // 2. Semantic search (TF-IDF)
-    try {
-      const semanticResults = await this.searchTFIDF(query, {
-        limit: limit * 2,
-        category,
-        brand
-      });
-      
-      semanticResults.forEach((result, index) => {
-        const id = result.product._id.toString();
-        const positionScore = 1 / Math.log2(index + 2);
-        const existing = results.get(id);
-        
-        if (existing) {
-          existing.semanticScore = result.score * positionScore;
-        } else {
-          results.set(id, {
-            product: result.product,
-            keywordScore: 0,
-            semanticScore: result.score * positionScore
-          });
+      // Flexible keyword query first to avoid over-strict matching and exact-string misses.
+      const extractedKeyword = this._extractKeywordForRegex(keyword, normalizedFilters);
+      if (extractedKeyword) {
+        const regexMatched = await this._queryByFlexibleKeyword(extractedKeyword, normalizedFilters, sanitizedLimit);
+        if (regexMatched.length > 0) {
+          return {
+            exactMatch: true,
+            products: regexMatched,
+            appliedFilters: normalizedFilters,
+            mode: 'regex_flexible'
+          };
         }
-      });
-    } catch (err) {
-      console.log('Semantic search error:', err.message);
-    }
-
-    // Combine scores
-    let combinedResults = Array.from(results.values()).map(r => ({
-      product: r.product,
-      score: r.keywordScore * keywordWeight + r.semanticScore * semanticWeight,
-      keywordScore: r.keywordScore,
-      semanticScore: r.semanticScore,
-      matchType: 'hybrid'
-    }));
-
-    // Filter by price if specified
-    if (effectivePriceRange) {
-      combinedResults = combinedResults.filter(r => {
-        const price = r.product.salePrice || r.product.price;
-        return price >= effectivePriceRange.min && price <= effectivePriceRange.max;
-      });
-    }
-
-    // Sort và return
-    return combinedResults
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-  }
-
-  /**
-   * Main search method - alias for hybridSearch
-   * Used by ChatbotService
-   */
-  async search(query, options = {}) {
-    return this.hybridSearch(query, options);
-  }
-
-  /**
-   * Keyword search sử dụng MongoDB text index
-   */
-  async keywordSearch(query, options = {}) {
-    const { limit = 20, category = null, brand = null, priceRange = null } = options;
-    
-    const filter = {
-      $text: { $search: query },
-      stock: { $gt: 0 }
-    };
-    
-    if (category) filter.category = category;
-    if (brand) filter.brand = brand;
-    if (priceRange) {
-      filter.price = {
-        $gte: priceRange.min || 0,
-        $lte: priceRange.max || Number.MAX_VALUE
-      };
-    }
-    
-    const products = await Product.find(
-      filter,
-      { score: { $meta: 'textScore' } }
-    )
-    .sort({ score: { $meta: 'textScore' } })
-    .limit(limit)
-    .select('name description brand category price salePrice image images rating stock');
-    
-    return products.map(p => ({
-      product: p.toObject(),
-      score: p._doc.score || 1,
-      matchType: 'keyword'
-    }));
-  }
-
-  // ==================== AUTOCOMPLETE & SUGGESTIONS ====================
-
-  /**
-   * Autocomplete suggestions
-   */
-  async getAutocompleteSuggestions(prefix, options = {}) {
-    const { limit = 10 } = options;
-    
-    if (!prefix || prefix.length < 2) return [];
-    
-    const regex = new RegExp(`^${prefix}`, 'i');
-    
-    // Tìm trong product names
-    const products = await Product.find({
-      name: regex,
-      stock: { $gt: 0 }
-    })
-    .select('name category brand')
-    .limit(limit);
-    
-    // Tìm trong categories
-    const categories = await Product.distinct('category', {
-      category: regex
-    });
-    
-    // Tìm trong brands
-    const brands = await Product.distinct('brand', {
-      brand: regex
-    });
-    
-    return {
-      products: products.map(p => ({
-        type: 'product',
-        text: p.name,
-        category: p.category
-      })),
-      categories: categories.slice(0, 5).map(c => ({
-        type: 'category',
-        text: c
-      })),
-      brands: brands.slice(0, 5).map(b => ({
-        type: 'brand',
-        text: b
-      }))
-    };
-  }
-
-  /**
-   * Related searches suggestions
-   */
-  async getRelatedSearches(query, options = {}) {
-    const { limit = 5 } = options;
-    
-    const tokens = this.tokenize(query);
-    if (tokens.length === 0) return [];
-    
-    // Tìm products matching và extract related terms
-    const products = await Product.find({
-      $text: { $search: query }
-    })
-    .select('category brand name')
-    .limit(50);
-    
-    const relatedTerms = new Map();
-    
-    products.forEach(product => {
-      // Add category as related search
-      if (product.category) {
-        const key = `${tokens[0]} ${product.category}`.toLowerCase();
-        relatedTerms.set(key, (relatedTerms.get(key) || 0) + 1);
       }
-      
-      // Add brand as related search
-      if (product.brand) {
-        const key = `${product.brand} ${product.category || ''}`.toLowerCase().trim();
-        relatedTerms.set(key, (relatedTerms.get(key) || 0) + 1);
+
+      // If user asks category-level exploration without strict constraints,
+      // return featured products instead of marking as non-match.
+      if (!hasStrictFilters && inferredCategory) {
+        const featuredProducts = await this._fetchFeaturedByCategory(inferredCategory, Math.min(5, sanitizedLimit));
+        return {
+          exactMatch: true,
+          products: featuredProducts,
+          appliedFilters: normalizedFilters,
+          mode: 'featured_category'
+        };
       }
-    });
-    
-    // Sort by frequency
-    return Array.from(relatedTerms.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, limit)
-      .map(([term]) => term);
-  }
 
-  // ==================== EMBEDDING GENERATION ====================
+      const atlasFilter = this._buildAtlasFilter(normalizedFilters);
 
-  /**
-   * Tạo và lưu embedding cho product
-   */
-  async generateProductEmbedding(productId) {
-    const product = await Product.findById(productId);
-    if (!product) {
-      throw new Error('Product not found');
-    }
+      let queryVector = Array.isArray(vector) && vector.length > 0 ? vector : null;
+      if (!queryVector && keyword && keyword.trim()) {
+        queryVector = await EmbeddingService.embedText(keyword);
+      }
 
-    // Initialize TF-IDF nếu cần
-    if (!this.isInitialized) {
-      await this.initializeTFIDF();
-    }
+      const searchStage = this._buildHybridSearchStage({
+        keyword,
+        vector: queryVector,
+        filter: atlasFilter,
+        limit: sanitizedLimit
+      });
 
-    const productText = this.createProductText(product);
-    const embedding = this.calculateTFIDFVector(productText);
-
-    // Lưu embedding
-    const productEmbedding = await ProductEmbedding.findOneAndUpdate(
-      { product: productId },
-      {
-        product: productId,
-        sourceText: productText,
-        embedding,
-        dimension: embedding.length,
-        embeddingModel: 'tfidf',
-        normalizedEmbedding: this.normalizeVector(embedding),
-        metadata: {
-          productName: product.name,
-          category: product.category,
-          brand: product.brand,
-          priceRange: this.getPriceRange(product.price)
+      const pipeline = [
+        searchStage,
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            description: 1,
+            category: 1,
+            brand: 1,
+            color: 1,
+            price: 1,
+            salePrice: 1,
+            image: 1,
+            images: 1,
+            rating: 1,
+            stock: 1,
+            specifications: 1,
+            score: { $meta: 'searchScore' }
+          }
         },
-        status: 'completed',
-        version: 1
-      },
-      { upsert: true, new: true }
-    );
+        { $limit: sanitizedLimit }
+      ];
 
-    return productEmbedding;
+      const products = await Product.aggregate(pipeline);
+
+      if (products.length === 0 && (normalizedFilters.price_min !== null || normalizedFilters.price_max !== null)) {
+        const targetPrice = normalizedFilters.price_max ?? normalizedFilters.price_min;
+        const nearest = await this._fetchNearestPriceProducts({
+          category: normalizedFilters.category,
+          targetPrice,
+          limit: 3
+        });
+
+        if (nearest.length > 0) {
+          return {
+            exactMatch: true,
+            products: nearest,
+            appliedFilters: normalizedFilters,
+            mode: 'nearest_price'
+          };
+        }
+      }
+
+      return {
+        exactMatch: products.length > 0,
+        products,
+        appliedFilters: normalizedFilters
+      };
+    } catch (error) {
+      console.error('SemanticSearchService.searchProducts failed:', error.message);
+      return {
+        exactMatch: false,
+        products: [],
+        error: error.message,
+        appliedFilters: this._normalizeFilters(filters)
+      };
+    }
   }
 
   /**
-   * Batch generate embeddings cho tất cả products
+   * Smart Search Pipeline with 3 stages:
+   * 1) strict, 2) relaxed, 3) semantic_only
+   * @param {Object} extractedData
+   * @returns {Promise<{results:Array, match_level:'strict'|'relaxed'|'semantic_only'}>}
    */
-  async generateAllEmbeddings() {
-    const products = await Product.find({}).select('_id');
-    let processed = 0;
-    let failed = 0;
+  async smartHybridSearch(extractedData = {}, options = {}) {
+    const limit = Math.max(1, Math.min(Number(options.limit) || 8, 20));
+    const explicitFilters = this._normalizeExplicitFilters(extractedData.explicit_filters || {});
+    const semanticNeeds = String(extractedData.semantic_needs || '').trim();
+    const rawQuery = String(extractedData.raw_query || '').trim();
 
-    console.log(`Generating embeddings for ${products.length} products...`);
+    try {
+      const stage1 = await this._runHybridStage({
+        explicitFilters,
+        semanticNeeds,
+        rawQuery,
+        limit,
+        relaxed: false
+      });
 
-    // Initialize TF-IDF first
-    await this.initializeTFIDF();
-
-    for (const product of products) {
-      try {
-        await this.generateProductEmbedding(product._id);
-        processed++;
-        
-        if (processed % 100 === 0) {
-          console.log(`Processed ${processed}/${products.length} products`);
-        }
-      } catch (err) {
-        failed++;
-        console.error(`Failed to generate embedding for ${product._id}:`, err.message);
+      if (stage1.length > 0) {
+        return {
+          results: stage1,
+          match_level: 'strict'
+        };
       }
+
+      const relaxedFilters = this._relaxFilters(explicitFilters);
+      const stage2 = await this._runHybridStage({
+        explicitFilters: relaxedFilters,
+        semanticNeeds,
+        rawQuery,
+        limit,
+        relaxed: true
+      });
+
+      if (stage2.length > 0) {
+        return {
+          results: stage2,
+          match_level: 'relaxed'
+        };
+      }
+
+      const stage3 = await this._runSemanticOnlyStage({
+        semanticNeeds,
+        rawQuery,
+        category: explicitFilters.category,
+        limit: Math.min(limit, 3)
+      });
+
+      return {
+        results: stage3,
+        match_level: 'semantic_only'
+      };
+    } catch (error) {
+      // Never bubble search failures to chat route. Fall back to simple Mongo query.
+      console.error('SemanticSearchService.smartHybridSearch degraded:', error.message);
+      const fallbackResults = await this._fallbackBasicSearch({
+        explicitFilters,
+        rawQuery,
+        semanticNeeds,
+        limit
+      });
+
+      return {
+        results: fallbackResults,
+        match_level: 'semantic_only'
+      };
+    }
+  }
+
+  async _fallbackBasicSearch({ explicitFilters = {}, rawQuery = '', semanticNeeds = '', limit = 8 } = {}) {
+    try {
+      const queryText = String(rawQuery || semanticNeeds || '').trim();
+      const mongoFilter = {
+        stock: { $gt: 0 }
+      };
+
+      const extractedKeyword = this._extractKeywordForRegex(queryText, explicitFilters);
+      if (extractedKeyword) {
+        return this._queryByFlexibleKeyword(extractedKeyword, {
+          category: explicitFilters.category || null,
+          brand: explicitFilters.brand || null,
+          price_min: explicitFilters.minPrice ?? null,
+          price_max: explicitFilters.maxPrice ?? null
+        }, limit);
+      }
+
+      if (explicitFilters.category) {
+        mongoFilter.category = { $regex: explicitFilters.category, $options: 'i' };
+      }
+
+      if (explicitFilters.brand) {
+        mongoFilter.brand = { $regex: explicitFilters.brand, $options: 'i' };
+      }
+
+      if (explicitFilters.minPrice !== null || explicitFilters.maxPrice !== null) {
+        mongoFilter.price = {};
+        if (explicitFilters.minPrice !== null) {
+          mongoFilter.price.$gte = explicitFilters.minPrice;
+        }
+        if (explicitFilters.maxPrice !== null) {
+          mongoFilter.price.$lte = explicitFilters.maxPrice;
+        }
+      }
+
+      if (queryText) {
+        mongoFilter.$or = [
+          { name: { $regex: queryText, $options: 'i' } },
+          { description: { $regex: queryText, $options: 'i' } },
+          { category: { $regex: queryText, $options: 'i' } },
+          { brand: { $regex: queryText, $options: 'i' } }
+        ];
+      }
+
+      const products = await Product.find(mongoFilter)
+        .select('_id name description category brand color price salePrice image images rating stock specifications')
+        .sort({ rating: -1, sold: -1, createdAt: -1 })
+        .limit(limit)
+        .lean();
+
+      return Array.isArray(products) ? products : [];
+    } catch (error) {
+      console.error('SemanticSearchService._fallbackBasicSearch failed:', error.message);
+      return [];
+    }
+  }
+
+  _normalizeExplicitFilters(filters = {}) {
+    const toStringOrEmpty = (v) => (typeof v === 'string' ? v.trim() : '');
+    const toNumberOrNull = (v) => {
+      if (v === null || v === undefined || v === '') {
+        return null;
+      }
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : null;
+    };
+
+    let minPrice = toNumberOrNull(filters.minPrice ?? filters.price_min ?? null);
+    let maxPrice = toNumberOrNull(filters.maxPrice ?? filters.price_max ?? null);
+
+    if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+      const t = minPrice;
+      minPrice = maxPrice;
+      maxPrice = t;
     }
 
     return {
-      total: products.length,
-      processed,
-      failed
+      category: toStringOrEmpty(filters.category),
+      brand: toStringOrEmpty(filters.brand),
+      color: toStringOrEmpty(filters.color),
+      minPrice,
+      maxPrice
     };
   }
 
-  /**
-   * Normalize vector
-   */
-  normalizeVector(vector) {
-    const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-    if (norm === 0) return vector;
-    return vector.map(val => val / norm);
+  _relaxFilters(filters = {}) {
+    const relaxed = {
+      ...filters
+    };
+
+    if (relaxed.maxPrice !== null) {
+      relaxed.maxPrice = Math.round(relaxed.maxPrice * 1.15);
+    }
+
+    // Relax hardest constraints first.
+    relaxed.brand = '';
+    relaxed.color = '';
+
+    return relaxed;
+  }
+
+  async _runHybridStage({ explicitFilters = {}, semanticNeeds = '', rawQuery = '', limit = 8, relaxed = false } = {}) {
+    const semanticText = [semanticNeeds, rawQuery].filter(Boolean).join(' ').trim();
+    let vector = null;
+
+    if (semanticText) {
+      try {
+        vector = await EmbeddingService.embedText(semanticText);
+      } catch (error) {
+        vector = null;
+      }
+    }
+
+    const atlasFilter = this._buildAtlasFilterFromExplicit(explicitFilters);
+
+    const shouldClauses = [];
+    if (semanticText) {
+      shouldClauses.push({
+        text: {
+          path: ['name', 'description', 'category', 'brand', 'specifications'],
+          query: semanticText,
+          score: { boost: { value: relaxed ? 2 : 3 } }
+        }
+      });
+    }
+
+    if (Array.isArray(vector) && vector.length > 0) {
+      shouldClauses.push({
+        knnBeta: {
+          path: this.vectorPath,
+          vector,
+          k: Math.max(limit, 20),
+          score: { boost: { value: relaxed ? 3 : 2 } }
+        }
+      });
+    }
+
+    if (shouldClauses.length === 0) {
+      shouldClauses.push({
+        text: {
+          path: ['name', 'description'],
+          query: rawQuery || semanticNeeds || '*'
+        }
+      });
+    }
+
+    const pipeline = [
+      {
+        $search: {
+          index: this.searchIndex,
+          compound: {
+            filter: atlasFilter,
+            should: shouldClauses,
+            minimumShouldMatch: 1
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          category: 1,
+          brand: 1,
+          color: 1,
+          price: 1,
+          salePrice: 1,
+          image: 1,
+          images: 1,
+          rating: 1,
+          stock: 1,
+          specifications: 1,
+          score: { $meta: 'searchScore' }
+        }
+      },
+      { $limit: limit }
+    ];
+
+    return Product.aggregate(pipeline);
+  }
+
+  async _runSemanticOnlyStage({ semanticNeeds = '', rawQuery = '', category = '', limit = 3 } = {}) {
+    const semanticText = [semanticNeeds, rawQuery, category].filter(Boolean).join(' ').trim();
+    let vector = null;
+
+    if (semanticText) {
+      try {
+        vector = await EmbeddingService.embedText(semanticText);
+      } catch (error) {
+        vector = null;
+      }
+    }
+
+    const filter = [
+      {
+        range: {
+          path: 'stock',
+          gt: 0
+        }
+      }
+    ];
+
+    const should = [];
+    if (category) {
+      should.push({
+        text: {
+          path: ['category', 'name', 'description'],
+          query: category,
+          score: { boost: { value: 2 } }
+        }
+      });
+    }
+
+    if (semanticText) {
+      should.push({
+        text: {
+          path: ['name', 'description', 'specifications', 'category'],
+          query: semanticText,
+          score: { boost: { value: 3 } }
+        }
+      });
+    }
+
+    if (Array.isArray(vector) && vector.length > 0) {
+      should.push({
+        knnBeta: {
+          path: this.vectorPath,
+          vector,
+          k: Math.max(limit, 20),
+          score: { boost: { value: 3 } }
+        }
+      });
+    }
+
+    if (should.length === 0) {
+      should.push({
+        text: {
+          path: ['name', 'description'],
+          query: '*'
+        }
+      });
+    }
+
+    return Product.aggregate([
+      {
+        $search: {
+          index: this.searchIndex,
+          compound: {
+            filter,
+            should,
+            minimumShouldMatch: 1
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          category: 1,
+          brand: 1,
+          color: 1,
+          price: 1,
+          salePrice: 1,
+          image: 1,
+          images: 1,
+          rating: 1,
+          stock: 1,
+          specifications: 1,
+          score: { $meta: 'searchScore' }
+        }
+      },
+      { $limit: limit }
+    ]);
+  }
+
+  _buildAtlasFilterFromExplicit(filters = {}) {
+    const clauses = [
+      {
+        range: {
+          path: 'stock',
+          gt: 0
+        }
+      }
+    ];
+
+    if (filters.category) {
+      clauses.push({
+        text: {
+          path: 'category',
+          query: filters.category
+        }
+      });
+    }
+
+    if (filters.brand) {
+      clauses.push({
+        text: {
+          path: 'brand',
+          query: filters.brand
+        }
+      });
+    }
+
+    if (filters.color) {
+      clauses.push({
+        text: {
+          path: ['color', 'specifications.color', 'name', 'description'],
+          query: filters.color
+        }
+      });
+    }
+
+    if (filters.minPrice !== null || filters.maxPrice !== null) {
+      const range = { path: 'price' };
+      if (filters.minPrice !== null) {
+        range.gte = filters.minPrice;
+      }
+      if (filters.maxPrice !== null) {
+        range.lte = filters.maxPrice;
+      }
+      clauses.push({ range });
+    }
+
+    return clauses;
+  }
+
+  _hasStrictFilters(filters = {}) {
+    return Boolean(
+      filters.color
+      || filters.brand
+      || filters.price_min !== null
+      || filters.price_max !== null
+    );
+  }
+
+  _extractCategoryHint(keyword = '') {
+    const text = String(keyword || '').toLowerCase();
+    if (!text.trim()) {
+      return null;
+    }
+
+    const map = [
+      { key: 'laptop', pattern: /(laptop|notebook)/i },
+      { key: 'chuot', pattern: /(chuột|chuot|mouse)/i },
+      { key: 'ban phim', pattern: /(bàn\s*phím|ban\s*phim|keyboard)/i },
+      { key: 'man hinh', pattern: /(màn\s*hình|man\s*hinh|monitor)/i },
+      { key: 'ram', pattern: /\bram\b/i },
+      { key: 'ssd', pattern: /\bssd\b/i },
+      { key: 'hdd', pattern: /\bhdd\b/i },
+      { key: 'cpu', pattern: /\bcpu\b|intel\s*core|ryzen/i },
+      { key: 'vga', pattern: /\bvga\b|gpu|rtx|gtx|radeon/i },
+      { key: 'pc', pattern: /\bpc\b|desktop|máy\s*tính\s*bàn|may\s*tinh\s*ban/i },
+      { key: 'ghe', pattern: /(ghế|ghe|chair)/i }
+    ];
+
+    const found = map.find((item) => item.pattern.test(text));
+    return found ? found.key : null;
+  }
+
+  async _fetchFeaturedByCategory(category, limit = 5) {
+    const safeLimit = Math.max(3, Math.min(Number(limit) || 5, 5));
+
+    const products = await Product.aggregate([
+      {
+        $match: {
+          stock: { $gt: 0 },
+          category: { $regex: String(category), $options: 'i' }
+        }
+      },
+      {
+        $addFields: {
+          _popularityScore: {
+            $add: [
+              { $ifNull: ['$sold', 0] },
+              { $ifNull: ['$purchaseCount', 0] },
+              { $multiply: [{ $ifNull: ['$rating', 0] }, 100] },
+              { $ifNull: ['$reviewCount', 0] }
+            ]
+          }
+        }
+      },
+      { $sort: { _popularityScore: -1, rating: -1, createdAt: -1 } },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          category: 1,
+          brand: 1,
+          color: 1,
+          price: 1,
+          salePrice: 1,
+          image: 1,
+          images: 1,
+          rating: 1,
+          stock: 1,
+          specifications: 1
+        }
+      },
+      { $limit: safeLimit }
+    ]);
+
+    return products;
+  }
+
+  async _fetchNearestPriceProducts({ category = null, targetPrice = null, limit = 3 } = {}) {
+    if (!Number.isFinite(Number(targetPrice))) {
+      return [];
+    }
+
+    const safeTarget = Number(targetPrice);
+    const safeLimit = Math.max(1, Math.min(Number(limit) || 3, 5));
+    const match = {
+      stock: { $gt: 0 }
+    };
+
+    if (category) {
+      match.category = { $regex: String(category), $options: 'i' };
+    }
+
+    const products = await Product.aggregate([
+      { $match: match },
+      {
+        $addFields: {
+          _effectivePrice: {
+            $ifNull: ['$salePrice', '$price']
+          }
+        }
+      },
+      {
+        $addFields: {
+          _priceDistance: {
+            $abs: {
+              $subtract: ['$_effectivePrice', safeTarget]
+            }
+          }
+        }
+      },
+      { $sort: { _priceDistance: 1, rating: -1, createdAt: -1 } },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          category: 1,
+          brand: 1,
+          color: 1,
+          price: 1,
+          salePrice: 1,
+          image: 1,
+          images: 1,
+          rating: 1,
+          stock: 1,
+          specifications: 1
+        }
+      },
+      { $limit: safeLimit }
+    ]);
+
+    return products;
   }
 
   /**
-   * Get price range label
+   * Compatibility wrapper for existing callers.
    */
-  getPriceRange(price) {
-    if (price < 1000000) return 'budget';
-    if (price < 5000000) return 'mid-range';
-    if (price < 20000000) return 'high-end';
-    return 'premium';
+  async searchWithMetadataFilters(query, options = {}) {
+    const { limit = 10, category = null, filters = {} } = options;
+    const merged = {
+      ...filters,
+      category: category || filters.category || null
+    };
+
+    return this.searchProducts({
+      keyword: query,
+      vector: null,
+      filters: merged,
+      limit
+    });
   }
 
-  /**
-   * Clear cache
-   */
-  clearCache() {
-    this.searchCache.clear();
+  _normalizeFilters(filters = {}) {
+    const toNullableString = (value) => {
+      if (typeof value !== 'string') return null;
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    };
+
+    const toNullableNumber = (value) => {
+      if (value === null || value === undefined || value === '') return null;
+      const n = Number(value);
+      return Number.isFinite(n) && n > 0 ? n : null;
+    };
+
+    let min = toNullableNumber(filters.price_min ?? filters.minPrice ?? null);
+    let max = toNullableNumber(filters.price_max ?? filters.maxPrice ?? null);
+
+    if (min !== null && max !== null && min > max) {
+      const tmp = min;
+      min = max;
+      max = tmp;
+    }
+
+    return {
+      category: toNullableString(filters.category),
+      color: toNullableString(filters.color),
+      brand: toNullableString(filters.brand),
+      price_min: min,
+      price_max: max
+    };
+  }
+
+  _extractKeywordForRegex(rawKeyword = '', filters = {}) {
+    const preferred = String(filters?.category || '').trim();
+    if (preferred) {
+      return preferred;
+    }
+
+    const query = String(rawKeyword || '').trim();
+    if (!query) {
+      return '';
+    }
+
+    const stopWords = new Set([
+      'tu', 'van', 'tư', 'vấn', 'tim', 'tìm', 'kiem', 'kiếm', 'mua', 'cho', 'toi', 'tôi',
+      'can', 'cần', 'muon', 'muốn', 'shop', 'giup', 'giúp', 'voi', 'với', 've', 'về'
+    ]);
+
+    const tokens = query
+      .split(/\s+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length > 1 && !stopWords.has(t.toLowerCase()));
+
+    if (tokens.length === 0) {
+      return query;
+    }
+
+    return tokens[tokens.length - 1];
+  }
+
+  async _queryByFlexibleKeyword(extractedKeyword, filters = {}, limit = 10) {
+    const keywordRegex = new RegExp(extractedKeyword, 'i');
+    const safeLimit = Math.max(1, Number(limit) || 10);
+    const minPrice = filters.price_min ?? filters.minPrice ?? null;
+    const maxPrice = filters.price_max ?? filters.maxPrice ?? null;
+    const baseQuery = {
+      stock: { $gt: 0 }
+    };
+
+    if (filters.brand) {
+      baseQuery.brand = { $regex: String(filters.brand), $options: 'i' };
+    }
+
+    if (minPrice !== null || maxPrice !== null) {
+      baseQuery.price = {};
+      if (minPrice !== null) {
+        baseQuery.price.$gte = Number(minPrice);
+      }
+      if (maxPrice !== null) {
+        baseQuery.price.$lte = Number(maxPrice);
+      }
+    }
+
+    const canonicalCategory = this._extractCategoryHint(extractedKeyword);
+
+    // Step 1: for core categories (e.g., laptop/pc), prefer category-first matching to avoid accessory noise.
+    if (canonicalCategory) {
+      const primaryCategoryRegex = this._buildCoreCategoryRegex(canonicalCategory);
+      const categoryOnlyQuery = {
+        ...baseQuery,
+        category: primaryCategoryRegex
+      };
+
+      const strictCategoryResults = await Product.find(categoryOnlyQuery)
+        .select('_id name description category brand color price salePrice image images rating stock specifications sold createdAt')
+        .sort({ rating: -1, sold: -1, createdAt: -1 })
+        .limit(safeLimit)
+        .lean();
+
+      if (strictCategoryResults.length > 0) {
+        return strictCategoryResults;
+      }
+    }
+
+    // Step 2 (required flexible behavior): fallback to regex across category or name.
+    const query = {
+      ...baseQuery
+    };
+    query.$or = [{ category: keywordRegex }, { name: keywordRegex }];
+
+    const broadResults = await Product.find(query)
+      .select('_id name description category brand color price salePrice image images rating stock specifications sold createdAt')
+      .sort({ rating: -1, sold: -1, createdAt: -1 })
+      .limit(safeLimit * 2)
+      .lean();
+
+    if (!canonicalCategory) {
+      return broadResults.slice(0, safeLimit);
+    }
+
+    const filtered = broadResults.filter((item) => {
+      const categoryText = String(item?.category || '').toLowerCase();
+      const nameText = String(item?.name || '').toLowerCase();
+
+      if (canonicalCategory === 'laptop') {
+        const isLikelyAccessory = /(de tan nhiet|gia do|stand|coolpad|phu kien|tui|balo|sac|chuot|ban phim)/i.test(nameText);
+        const isLaptopCategory = /(laptop|notebook)/i.test(categoryText);
+        return isLaptopCategory && !isLikelyAccessory;
+      }
+
+      return true;
+    });
+
+    return (filtered.length > 0 ? filtered : broadResults).slice(0, safeLimit);
+  }
+
+  _buildCoreCategoryRegex(canonicalCategory = '') {
+    switch (canonicalCategory) {
+      case 'laptop':
+        return /(laptop|notebook)/i;
+      case 'pc':
+        return /(pc|desktop|may\s*tinh\s*ban|máy\s*tính\s*bàn)/i;
+      case 'man hinh':
+        return /(man\s*hinh|màn\s*hình|monitor)/i;
+      default:
+        return new RegExp(canonicalCategory, 'i');
+    }
+  }
+
+  _buildAtlasFilter(filters) {
+    const clauses = [
+      {
+        range: {
+          path: 'stock',
+          gt: 0
+        }
+      }
+    ];
+
+    if (filters.category) {
+      clauses.push({
+        text: {
+          path: 'category',
+          query: filters.category
+        }
+      });
+    }
+
+    if (filters.color) {
+      clauses.push({
+        text: {
+          path: ['color', 'specifications.color', 'name', 'description'],
+          query: filters.color
+        }
+      });
+    }
+
+    if (filters.brand) {
+      clauses.push({
+        text: {
+          path: 'brand',
+          query: filters.brand
+        }
+      });
+    }
+
+    if (filters.price_min !== null || filters.price_max !== null) {
+      const range = {
+        path: 'price'
+      };
+
+      if (filters.price_min !== null) {
+        range.gte = filters.price_min;
+      }
+      if (filters.price_max !== null) {
+        range.lte = filters.price_max;
+      }
+
+      clauses.push({ range });
+    }
+
+    return clauses;
+  }
+
+  _buildHybridSearchStage({ keyword, vector, filter, limit }) {
+    const hasKeyword = typeof keyword === 'string' && keyword.trim().length > 0;
+    const hasVector = Array.isArray(vector) && vector.length > 0;
+
+    const shouldClauses = [];
+
+    if (hasKeyword) {
+      shouldClauses.push({
+        text: {
+          path: ['name', 'description', 'category', 'brand', 'specifications'],
+          query: keyword,
+          score: { boost: { value: 3 } }
+        }
+      });
+    }
+
+    if (hasVector) {
+      shouldClauses.push({
+        knnBeta: {
+          path: this.vectorPath,
+          vector,
+          k: Math.max(limit, 20),
+          score: { boost: { value: 2 } }
+        }
+      });
+    }
+
+    if (shouldClauses.length === 0) {
+      shouldClauses.push({
+        text: {
+          path: ['name', 'description'],
+          query: '*'
+        }
+      });
+    }
+
+    return {
+      $search: {
+        index: this.searchIndex,
+        compound: {
+          filter,
+          should: shouldClauses,
+          minimumShouldMatch: 1
+        }
+      }
+    };
   }
 }
 

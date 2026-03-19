@@ -15,7 +15,7 @@ async function run() {
 
   const compatible = await ToolSystem.execute('pcCompatibilityCheck', {
     cpu: { name: 'Intel Core i5-13600K', socket: 'LGA1700' },
-    motherboard: { name: 'MSI B760', socket: 'LGA 1700', supportedRamBus: [4800, 5600, 6000] },
+    mainboard: { name: 'MSI B760', socket: 'LGA 1700', supportedRamBus: [4800, 5600, 6000] },
     ram: { name: 'Corsair DDR5', bus: 5600 }
   });
 
@@ -24,7 +24,7 @@ async function run() {
 
   const incompatibleSocket = await ToolSystem.execute('pcCompatibilityCheck', {
     cpu: { name: 'AMD Ryzen 5 7600', socket: 'AM5' },
-    motherboard: { name: 'ASUS Z790', socket: 'LGA1700', supportedRamBus: [5600] },
+    mainboard: { name: 'ASUS Z790', socket: 'LGA1700', supportedRamBus: [5600] },
     ram: { name: 'Kingston DDR5', bus: 5600 }
   });
 
@@ -37,7 +37,7 @@ async function run() {
 
   const incompatibleBus = await ToolSystem.execute('pcCompatibilityCheck', {
     cpu: { name: 'Intel Core i7', socket: 'LGA1700' },
-    motherboard: { name: 'Gigabyte B760', socket: 'LGA1700', supportedRamBus: ['4800', '5600'] },
+    mainboard: { name: 'Gigabyte B760', socket: 'LGA1700', supportedRamBus: ['4800', '5600'] },
     ram: { name: 'G.Skill DDR5', bus: 6400 }
   });
 

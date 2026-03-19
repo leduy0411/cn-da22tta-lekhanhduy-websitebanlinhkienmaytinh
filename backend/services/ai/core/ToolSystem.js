@@ -10,6 +10,8 @@ const Product = require('../../../models/Product');
 const ProductEmbedding = require('../../../models/ProductEmbedding');
 const UserInteraction = require('../../../models/UserInteraction');
 const Order = require('../../../models/Order');
+const SemanticSearchService = require('../SemanticSearchService');
+const PCBuildTool = require('../tools/PCBuildTool');
 
 class ToolSystem {
   constructor() {
@@ -142,7 +144,8 @@ class ToolSystem {
       description: 'Rule-based CPU/Mainboard/RAM compatibility validator',
       parameters: {
         cpu: { type: 'object', required: true, description: 'CPU specs {name, socket}' },
-        motherboard: { type: 'object', required: true, description: 'Mainboard specs {name, socket, supportedRamBus[]}' },
+        mainboard: { type: 'object', required: false, description: 'Mainboard specs {name, socket, supportedRamBus[]}' },
+        motherboard: { type: 'object', required: false, description: 'Legacy alias for mainboard' },
         ram: { type: 'object', required: true, description: 'RAM specs {name, bus}' }
       },
       execute: this._pcCompatibilityCheck.bind(this)
@@ -390,50 +393,29 @@ class ToolSystem {
   async _searchProducts(params) {
     const { query, category, brand, minPrice, maxPrice, limit = 10, sortBy = 'relevance' } = params;
 
-    console.log('🔍 _searchProducts called with:', JSON.stringify(params, null, 2));
+    const result = await SemanticSearchService.searchProducts({
+      keyword: query || '',
+      vector: null,
+      filters: {
+        category: category || null,
+        brand: brand || null,
+        price_min: minPrice ?? null,
+        price_max: maxPrice ?? null
+      },
+      limit
+    });
 
-    const filter = {};
+    let products = Array.isArray(result.products) ? [...result.products] : [];
 
-    if (category) {
-      filter.category = new RegExp(category, 'i');
-    }
-
-    if (brand) {
-      filter.brand = new RegExp(brand, 'i');
-    }
-
-    if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = minPrice;
-      if (maxPrice) filter.price.$lte = maxPrice;
-    }
-
-    filter.stock = { $gt: 0 };
-
-    // Text search if query provided
-    if (query) {
-      filter.$text = { $search: query };
-    }
-
-    console.log('📋 Filter:', JSON.stringify(filter, null, 2));
-
-    let products = await Product.find(filter)
-      .select('name description price originalPrice brand category image rating stock specifications')
-      .limit(limit * 2) // Get more for ranking
-      .lean();
-
-    console.log(`✅ Found ${products.length} products`);
-
-    // Sort by relevance, rating, or price
     if (sortBy === 'price_asc') {
-      products.sort((a, b) => a.price - b.price);
+      products.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
     } else if (sortBy === 'price_desc') {
-      products.sort((a, b) => b.price - a.price);
+      products.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
     } else if (sortBy === 'rating') {
-      products.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      products.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
     }
 
-    return products.slice(0, limit);
+    return products.slice(0, Math.max(1, Number(limit) || 10));
   }
 
   /**
@@ -714,32 +696,37 @@ class ToolSystem {
   async _pcCompatibilityCheck(params) {
     try {
       const cpu = params?.cpu || {};
-      const motherboard = params?.motherboard || {};
+      const mainboard = params?.mainboard || params?.motherboard || {};
       const ram = params?.ram || {};
 
+      const socketResult = PCBuildTool.checkSocketCompatibility(cpu, mainboard);
+      const ramBusResult = PCBuildTool.checkRamBus(cpu, mainboard, ram);
+
       const reasons = [];
-      const warnings = [];
-
-      // Rule 1: CPU socket must match motherboard socket.
-      const cpuSocket = this._normalizeSocket(cpu.socket);
-      const mbSocket = this._normalizeSocket(motherboard.socket);
-
-      if (!cpuSocket || !mbSocket) {
-        reasons.push('Thiếu thông tin socket của CPU hoặc Mainboard.');
-      } else if (cpuSocket !== mbSocket) {
-        reasons.push(`Socket không tương thích: CPU=${cpuSocket}, Mainboard=${mbSocket}.`);
+      if (!socketResult.compatible) {
+        const socketDetail = socketResult.details || {};
+        if (String(socketResult.reason || '').toLowerCase().includes('missing')) {
+          reasons.push('Thiếu thông tin socket của CPU hoặc Mainboard.');
+        } else {
+          reasons.push(`Socket không tương thích: CPU=${socketDetail.cpuSocket || 'N/A'}, Mainboard=${socketDetail.mainboardSocket || 'N/A'}.`);
+        }
+      }
+      if (!ramBusResult.compatible) {
+        const ramDetail = ramBusResult.details || {};
+        if (String(ramBusResult.reason || '').toLowerCase().includes('missing')) {
+          reasons.push('Thiếu thông tin bus RAM hoặc danh sách bus hỗ trợ của Mainboard.');
+        } else {
+          const supported = Array.isArray(ramDetail.boardSupported) ? ramDetail.boardSupported.join(', ') : 'N/A';
+          reasons.push(`Bus RAM không tương thích: RAM=${ramDetail.ramBus || 'N/A'}MHz, Mainboard hỗ trợ=${supported}MHz.`);
+        }
       }
 
-      // Rule 2: Mainboard must support RAM bus.
-      const ramBus = this._normalizeBusValue(ram.bus);
-      const mbSupportedBus = this._normalizeBusList(motherboard.supportedRamBus);
-
-      if (!ramBus) {
-        warnings.push('Không xác định được bus RAM, bỏ qua kiểm tra bus.');
-      } else if (mbSupportedBus.length === 0) {
-        warnings.push('Mainboard chưa có danh sách bus RAM hỗ trợ, bỏ qua kiểm tra bus.');
-      } else if (!mbSupportedBus.includes(ramBus)) {
-        reasons.push(`Bus RAM không tương thích: RAM=${ramBus}MHz, Mainboard hỗ trợ=${mbSupportedBus.join(', ')}MHz.`);
+      const warnings = [];
+      if (String(socketResult.reason || '').toLowerCase().includes('missing')) {
+        warnings.push(socketResult.reason);
+      }
+      if (String(ramBusResult.reason || '').toLowerCase().includes('missing')) {
+        warnings.push(ramBusResult.reason);
       }
 
       return {
@@ -747,16 +734,13 @@ class ToolSystem {
         reasons,
         warnings,
         checked: {
-          cpu: { name: cpu.name || 'N/A', socket: cpuSocket || null },
-          motherboard: {
-            name: motherboard.name || 'N/A',
-            socket: mbSocket || null,
-            supportedRamBus: mbSupportedBus
+          cpu: socketResult.details?.cpuSocket ? { name: cpu.name || 'N/A', socket: socketResult.details.cpuSocket } : { name: cpu.name || 'N/A', socket: null },
+          mainboard: {
+            name: mainboard.name || 'N/A',
+            socket: socketResult.details?.mainboardSocket || null,
+            supportedRamBus: ramBusResult.details?.boardSupported || []
           },
-          ram: {
-            name: ram.name || 'N/A',
-            bus: ramBus || null
-          }
+          ram: { name: ram.name || 'N/A', bus: ramBusResult.details?.ramBus || null }
         }
       };
     } catch (error) {
@@ -783,54 +767,7 @@ class ToolSystem {
   }
 
   getPCToolSchema() {
-    return {
-      name: 'pcCompatibilityCheck',
-      description: 'Validate hardware compatibility by deterministic rules (socket + RAM bus).',
-      jsonSchema: {
-        type: 'object',
-        required: ['cpu', 'motherboard', 'ram'],
-        properties: {
-          cpu: {
-            type: 'object',
-            required: ['name', 'socket'],
-            properties: {
-              name: { type: 'string' },
-              socket: { type: 'string' }
-            }
-          },
-          motherboard: {
-            type: 'object',
-            required: ['name', 'socket', 'supportedRamBus'],
-            properties: {
-              name: { type: 'string' },
-              socket: { type: 'string' },
-              supportedRamBus: {
-                type: 'array',
-                items: {
-                  anyOf: [{ type: 'number' }, { type: 'string' }]
-                }
-              }
-            }
-          },
-          ram: {
-            type: 'object',
-            required: ['name', 'bus'],
-            properties: {
-              name: { type: 'string' },
-              bus: {
-                anyOf: [{ type: 'number' }, { type: 'string' }]
-              }
-            }
-          }
-        }
-      },
-      resultShape: {
-        compatible: 'boolean',
-        reasons: 'string[]',
-        warnings: 'string[]',
-        checked: 'object|null'
-      }
-    };
+    return PCBuildTool.TOOL_SCHEMA;
   }
 
   _normalizeSocket(value) {
