@@ -4,11 +4,19 @@ const crypto = require('crypto');
 const router = express.Router();
 
 const AIRouter = require('../../services/ai/core/AIRouter');
-const AICommerceAssistant = require('../../services/ai/AICommerceAssistant');
 const ConversationMemoryService = require('../../services/ai/ConversationMemoryService');
 const { optionalAuth } = require('../../middleware/auth');
 
 const SESSION_INACTIVITY_RESET_MS = 30 * 60 * 1000;
+const CHAT_RATE_LIMIT_WINDOW_MS = Number(process.env.CHAT_RATE_LIMIT_WINDOW_MS || 15000);
+const CHAT_RATE_LIMIT_MAX_REQUESTS = Number(process.env.CHAT_RATE_LIMIT_MAX_REQUESTS || 6);
+const REQUEST_RATE_STORE = new Map();
+const PHASE_TIMEOUTS = {
+  ensureSessionMs: Number(process.env.CHAT_TIMEOUT_ENSURE_SESSION_MS || 5000),
+  historyLoadMs: Number(process.env.CHAT_TIMEOUT_HISTORY_LOAD_MS || 4000),
+  aiExecutionMs: Number(process.env.CHAT_TIMEOUT_AI_EXECUTION_MS || 20000),
+  saveMessageMs: Number(process.env.CHAT_TIMEOUT_SAVE_MESSAGE_MS || 3000)
+};
 
 function createGuestSessionId() {
   return `guest_${crypto.randomBytes(32).toString('hex')}`;
@@ -78,9 +86,29 @@ function classifyAIProviderFailure(errorMessage = '') {
     || text.includes('too many requests')
     || text.includes('quota exceeded')
     || text.includes('rate limit');
+  const isTimeout = text.includes('timeout')
+    || text.includes('timed out')
+    || text.includes('etimedout')
+    || text.includes('econnaborted');
+  const isAuthFailure = text.includes('401')
+    || text.includes('403')
+    || text.includes('unauthorized')
+    || text.includes('forbidden')
+    || text.includes('invalid api key');
+  const isNetworkFailure = text.includes('enotfound')
+    || text.includes('econnreset')
+    || text.includes('econnrefused')
+    || text.includes('socket hang up')
+    || text.includes('network error');
   const isCircuitOpen = text.includes('circuit is open');
   const isMissingProviderKey = text.includes('groq_api_key is missing') || text.includes('api key missing');
-  const isProviderFailure = text.includes('all providers failed') || isRateLimit || isCircuitOpen || isMissingProviderKey;
+  const isProviderFailure = text.includes('all providers failed')
+    || isRateLimit
+    || isTimeout
+    || isAuthFailure
+    || isNetworkFailure
+    || isCircuitOpen
+    || isMissingProviderKey;
   const retryAfterSeconds = isRateLimit ? extractRetryAfterSeconds(errorMessage) : null;
 
   if (!isProviderFailure) {
@@ -108,8 +136,118 @@ function getLastUserMessageAt(conversation) {
   return null;
 }
 
+function normalizeHistoryMessages(history = [], maxItems = 8) {
+  const safe = Array.isArray(history) ? history : [];
+  return safe
+    .filter((item) => item && typeof item.content === 'string')
+    .map((item) => {
+      const roleRaw = String(item.role || '').toLowerCase();
+      const role = roleRaw === 'assistant' || roleRaw === 'system' ? roleRaw : 'user';
+      return {
+        role,
+        content: String(item.content || '').trim()
+      };
+    })
+    .filter((item) => item.content.length > 0)
+    .slice(-Math.max(1, Number(maxItems) || 8));
+}
+
+function checkRateLimit(key) {
+  const now = Date.now();
+  const bucket = REQUEST_RATE_STORE.get(key) || { timestamps: [] };
+  bucket.timestamps = bucket.timestamps.filter((ts) => now - ts <= CHAT_RATE_LIMIT_WINDOW_MS);
+
+  if (bucket.timestamps.length >= CHAT_RATE_LIMIT_MAX_REQUESTS) {
+    const oldest = bucket.timestamps[0] || now;
+    const retryAfterMs = Math.max(0, CHAT_RATE_LIMIT_WINDOW_MS - (now - oldest));
+    REQUEST_RATE_STORE.set(key, bucket);
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil(retryAfterMs / 1000))
+    };
+  }
+
+  bucket.timestamps.push(now);
+  REQUEST_RATE_STORE.set(key, bucket);
+
+  if (REQUEST_RATE_STORE.size > 5000) {
+    const oldestKey = REQUEST_RATE_STORE.keys().next().value;
+    if (oldestKey) {
+      REQUEST_RATE_STORE.delete(oldestKey);
+    }
+  }
+
+  return {
+    allowed: true,
+    retryAfterSeconds: null
+  };
+}
+
+async function withTimeout(task, timeoutMs, phaseName) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        reject(new Error(`${phaseName} timed out after ${timeoutMs}ms`));
+      }
+    }, timeoutMs);
+
+    Promise.resolve()
+      .then(task)
+      .then((result) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          resolve(result);
+        }
+      })
+      .catch((error) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(error);
+        }
+      });
+  });
+}
+
+router.get('/chat/health', async (req, res) => {
+  try {
+    const now = Date.now();
+    let activeRateLimitBuckets = 0;
+
+    for (const bucket of REQUEST_RATE_STORE.values()) {
+      const activeCount = (bucket?.timestamps || []).filter((ts) => now - ts <= CHAT_RATE_LIMIT_WINDOW_MS).length;
+      if (activeCount > 0) {
+        activeRateLimitBuckets += 1;
+      }
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        router: AIRouter.getHealthDetails(),
+        rateLimit: {
+          windowMs: CHAT_RATE_LIMIT_WINDOW_MS,
+          maxRequests: CHAT_RATE_LIMIT_MAX_REQUESTS,
+          trackedBuckets: REQUEST_RATE_STORE.size,
+          activeBuckets: activeRateLimitBuckets
+        },
+        timeouts: PHASE_TIMEOUTS
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 router.post('/chat', optionalAuth, async (req, res) => {
   const requestId = `v3_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+  const requestStartedAt = Date.now();
 
   try {
     console.log(`[${requestId}] [STEP 1] POST /api/v3/chat received`);
@@ -181,17 +319,42 @@ router.post('/chat', optionalAuth, async (req, res) => {
       }
     }
 
+    const rateLimitKey = userId ? `user:${userId}` : `session:${effectiveSessionId}`;
+    const rateLimitResult = checkRateLimit(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      res.set('Retry-After', String(rateLimitResult.retryAfterSeconds));
+      return res.status(429).json({
+        success: false,
+        debugId: requestId,
+        data: {
+          text: `Bạn gửi tin nhắn quá nhanh. Vui lòng thử lại sau khoảng ${rateLimitResult.retryAfterSeconds} giây.`,
+          sources: [],
+          meta: {
+            provider: 'rate-limit-guard',
+            mode: 'throttled',
+            degraded: true
+          }
+        }
+      });
+    }
+
+    const ensureSessionStartedAt = Date.now();
     console.log(`[${requestId}] [STEP 5] ensuring session`, {
       effectiveSessionIdPreview: effectiveSessionId.slice(0, 18)
     });
-    const ensuredSession = await ConversationMemoryService.ensureSession(effectiveSessionId, userId, {
-      channel: 'api_v3_chat'
-    });
+    const ensuredSession = await withTimeout(
+      () => ConversationMemoryService.ensureSession(effectiveSessionId, userId, {
+        channel: 'api_v3_chat'
+      }),
+      PHASE_TIMEOUTS.ensureSessionMs,
+      'ensure_session'
+    );
 
     if (!ensuredSession.success) {
       throw new Error(ensuredSession.error || 'Không thể khởi tạo hội thoại');
     }
     console.log(`[${requestId}] [STEP 5.1] session ensured`);
+    const ensureSessionMs = Date.now() - ensureSessionStartedAt;
 
     const lastUserMessageAt = getLastUserMessageAt(ensuredSession.conversation);
     const isInactiveTooLong = Boolean(lastUserMessageAt)
@@ -225,32 +388,38 @@ router.post('/chat', optionalAuth, async (req, res) => {
       }
     }
 
-    if (!AICommerceAssistant.initialized) {
-      console.log(`[${requestId}] [STEP 6] initializing AI assistant`);
-      await AICommerceAssistant.initialize();
-      console.log(`[${requestId}] [STEP 6.1] AI assistant initialized`);
-    }
-
+    const historyStartedAt = Date.now();
     console.log(`[${requestId}] [STEP 7] loading conversation history`);
-    const historyResult = await ConversationMemoryService.getOptimizedHistory(effectiveSessionId, 4);
+    const historyResult = await withTimeout(
+      () => ConversationMemoryService.getOptimizedHistory(effectiveSessionId, 8),
+      PHASE_TIMEOUTS.historyLoadMs,
+      'history_load'
+    );
     const history = historyResult.success ? historyResult.recentHistory : [];
     const summary = historyResult.success ? historyResult.summary : '';
+    const normalizedRecentHistory = normalizeHistoryMessages(history, 8);
     const historyForRouter = summary
-      ? [{ role: 'system', content: `Ngữ cảnh cũ đã tóm tắt: ${summary}` }, ...history]
-      : history;
+      ? [{ role: 'system', content: `Ngữ cảnh cũ đã tóm tắt: ${summary}` }, ...normalizedRecentHistory]
+      : normalizedRecentHistory;
     console.log(`[${requestId}] [STEP 7.1] history loaded`, {
       historySuccess: historyResult.success,
       historyCount: Array.isArray(history) ? history.length : 0,
       hasSummary: Boolean(summary)
     });
+    const historyLoadMs = Date.now() - historyStartedAt;
 
+    const aiStartedAt = Date.now();
     console.log(`[${requestId}] [STEP 8] routing to AI engine`);
-    const aiResult = await AIRouter.routeAndProcess({
-      userMessage: message,
-      history: historyForRouter,
-      sessionId: effectiveSessionId,
-      userId
-    });
+    const aiResult = await withTimeout(
+      () => AIRouter.routeAndProcess({
+        userMessage: message,
+        history: historyForRouter,
+        sessionId: effectiveSessionId,
+        userId
+      }),
+      PHASE_TIMEOUTS.aiExecutionMs,
+      'ai_execution'
+    );
 
     if (!aiResult || typeof aiResult.text !== 'string') {
       throw new Error('AIRouter.routeAndProcess returned invalid response shape');
@@ -261,25 +430,36 @@ router.post('/chat', optionalAuth, async (req, res) => {
       textLength: aiResult.text.length,
       sourcesCount: Array.isArray(aiResult.sources) ? aiResult.sources.length : 0
     });
+    const aiExecutionMs = Date.now() - aiStartedAt;
 
+    const saveStartedAt = Date.now();
     console.log(`[${requestId}] [STEP 9] saving user message`);
-    await ConversationMemoryService.saveMessage(effectiveSessionId, {
-      role: 'user',
-      content: message,
-      metadata: { source: 'api_v3_chat' }
-    });
+    await withTimeout(
+      () => ConversationMemoryService.saveMessage(effectiveSessionId, {
+        role: 'user',
+        content: message,
+        metadata: { source: 'api_v3_chat' }
+      }),
+      PHASE_TIMEOUTS.saveMessageMs,
+      'save_user_message'
+    );
     console.log(`[${requestId}] [STEP 9.1] user message saved`);
 
     console.log(`[${requestId}] [STEP 10] saving assistant message`);
-    await ConversationMemoryService.saveMessage(effectiveSessionId, {
-      role: 'assistant',
-      content: aiResult.text,
-      metadata: {
-        source: 'api_v3_chat',
-        sources: aiResult.sources || []
-      }
-    });
+    await withTimeout(
+      () => ConversationMemoryService.saveMessage(effectiveSessionId, {
+        role: 'assistant',
+        content: aiResult.text,
+        metadata: {
+          source: 'api_v3_chat',
+          sources: aiResult.sources || []
+        }
+      }),
+      PHASE_TIMEOUTS.saveMessageMs,
+      'save_assistant_message'
+    );
     console.log(`[${requestId}] [STEP 10.1] assistant message saved`);
+    const saveMessagesMs = Date.now() - saveStartedAt;
 
     console.log(`[${requestId}] [STEP 11] sending success response`);
 
@@ -289,6 +469,8 @@ router.post('/chat', optionalAuth, async (req, res) => {
     const responseProvider = aiResult.raw?.result?.provider || 'unknown';
     const responseMode = responseProvider === 'local-fallback' ? 'fallback' : 'normal';
     const degraded = responseMode === 'fallback';
+    const cacheHit = Boolean(aiResult.raw?.result?.cacheHit);
+    const totalMs = Date.now() - requestStartedAt;
     const products = routedProducts
       .map((item) => mapProductForChat(req, item))
       .filter(Boolean)
@@ -304,7 +486,15 @@ router.post('/chat', optionalAuth, async (req, res) => {
         meta: {
           provider: responseProvider,
           mode: responseMode,
-          degraded
+          degraded,
+          cacheHit,
+          performance: {
+            totalMs,
+            ensureSessionMs,
+            historyLoadMs,
+            aiExecutionMs,
+            saveMessagesMs
+          }
         }
       }
     });

@@ -108,6 +108,68 @@ class GeminiChatService {
   }
 
   /**
+   * Generate grounded answer from RAG context blocks.
+   *
+   * @param {Object} params
+   * @param {string} params.systemPrompt
+   * @param {string} params.userQuestion
+   * @param {Array} params.contextBlocks
+   * @param {Array} params.conversationHistory
+   * @returns {Promise<Object>}
+   */
+  async generateRagAnswer({ systemPrompt, userQuestion, contextBlocks = [], conversationHistory = [] }) {
+    if (!this.isReady()) {
+      throw new Error('Gemini service not initialized');
+    }
+
+    try {
+      const contextText = contextBlocks
+        .map((block, idx) => {
+          const source = block?.metadata?.source || 'unknown_source';
+          return `[Context ${idx + 1} | ${source}]\n${block?.content || ''}`;
+        })
+        .join('\n\n');
+
+      const historyText = (conversationHistory || [])
+        .slice(-6)
+        .map((item) => `${item.role === 'assistant' ? 'Assistant' : 'User'}: ${item.content || ''}`)
+        .join('\n');
+
+      const prompt = [
+        systemPrompt || 'Bạn là trợ lý AI của TechStore.',
+        '',
+        '=== NGỮ CẢNH TRUY XUẤT (RAG) ===',
+        contextText || 'Không có ngữ cảnh truy xuất.',
+        '',
+        '=== LỊCH SỬ HỘI THOẠI GẦN ĐÂY ===',
+        historyText || 'Không có.',
+        '',
+        '=== CÂU HỎI KHÁCH HÀNG ===',
+        userQuestion,
+        '',
+        'Hãy trả lời dựa trên ngữ cảnh ở trên. Nếu thiếu dữ liệu thì nêu rõ phần thiếu, không suy diễn.'
+      ].join('\n');
+
+      const result = await this.model.generateContent(prompt);
+      const answer = result.response.text();
+
+      return {
+        success: true,
+        answer: (answer || '').trim(),
+        source: 'gemini_local_chroma_rag'
+      };
+    } catch (error) {
+      console.error('❌ Gemini RAG answer error:', error);
+      return {
+        success: false,
+        answer: this._getFallbackResponse(userQuestion, []),
+        source: 'fallback',
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Generate streaming response (for real-time typing effect)
    * 
    * @param {string} userMessage 

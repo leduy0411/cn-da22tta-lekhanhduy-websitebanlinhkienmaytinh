@@ -160,10 +160,60 @@
 }
 
 .ts-chat-bubble {
-  white-space: pre-wrap;
+  white-space: normal;
   line-height: 1.58;
   font-size: 14px;
+  letter-spacing: 0;
   color: #162739;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ts-chat-markdown {
+  margin: 0;
+  font-family: "Be Vietnam Pro", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.62;
+  color: #162739;
+}
+
+.ts-chat-markdown > *:first-child {
+  margin-top: 0;
+}
+
+.ts-chat-markdown > *:last-child {
+  margin-bottom: 0;
+}
+
+.ts-chat-markdown p {
+  margin: 0 0 8px;
+}
+
+.ts-chat-markdown strong {
+  font-weight: 700;
+}
+
+.ts-chat-markdown ul,
+.ts-chat-markdown ol {
+  margin: 6px 0 10px 20px;
+  padding: 0;
+}
+
+.ts-chat-markdown li {
+  margin: 4px 0;
+}
+
+.ts-chat-markdown li > p {
+  margin: 0;
+}
+
+.ts-chat-markdown h1,
+.ts-chat-markdown h2,
+.ts-chat-markdown h3,
+.ts-chat-markdown h4 {
+  margin: 0 0 8px;
+  line-height: 1.35;
+  font-weight: 700;
 }
 
 .ts-chat-bubble-ai {

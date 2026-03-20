@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MessageCircle, X, Sparkles, ImageIcon, Mic, Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import './GeminiChatUI.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -7,9 +8,14 @@ const SESSION_KEY = 'techstore_chat_session';
 const LAST_USER_MESSAGE_AT_KEY = 'techstore_chat_last_user_message_at';
 const SESSION_INACTIVITY_RESET_MS = 30 * 60 * 1000;
 const normalizedApiBase = API_BASE.replace(/\/$/, '');
-const CHAT_ENDPOINT = normalizedApiBase.endsWith('/api')
-  ? `${normalizedApiBase}/v3/chat`
-  : `${normalizedApiBase}/api/v3/chat`;
+const CHAT_MODE = (process.env.REACT_APP_CHAT_MODE || 'v3').toLowerCase();
+const CHAT_ENDPOINT = CHAT_MODE === 'rag-local'
+  ? (normalizedApiBase.endsWith('/api')
+    ? `${normalizedApiBase}/ai/rag-local/chat`
+    : `${normalizedApiBase}/api/ai/rag-local/chat`)
+  : (normalizedApiBase.endsWith('/api')
+    ? `${normalizedApiBase}/v3/chat`
+    : `${normalizedApiBase}/api/v3/chat`);
 
 const WELCOME_MESSAGE = {
   id: 1,
@@ -147,6 +153,12 @@ export default function ChatWidget() {
         },
         body: JSON.stringify({
           message: trimmed,
+          topK: 4,
+          candidateK: 8,
+          history: messages.slice(-6).map((m) => ({
+            role: m.role === 'ai' ? 'assistant' : 'user',
+            content: m.text
+          })),
           sessionId: outboundSessionId || undefined,
           newChat: shouldRotateByInactivity
         })
@@ -170,9 +182,9 @@ export default function ChatWidget() {
         {
           id: Date.now() + 1,
           role: 'ai',
-          text: payload?.data?.text || 'Xin lỗi, mình chưa có phản hồi phù hợp.',
+          text: payload?.data?.text || payload?.answer || 'Xin lỗi, mình chưa có phản hồi phù hợp.',
           products: Array.isArray(payload?.data?.products) ? payload.data.products : [],
-          mode: payload?.data?.meta?.mode || 'normal',
+          mode: payload?.data?.meta?.mode || (CHAT_MODE === 'rag-local' ? 'rag-local' : 'normal'),
           provider: payload?.data?.meta?.provider || '',
           degraded: Boolean(payload?.data?.meta?.degraded)
         }
@@ -242,7 +254,11 @@ export default function ChatWidget() {
                         <Sparkles size={14} color="#ffffff" />
                       </div>
                       <div className="ts-chat-bubble ts-chat-bubble-ai">
-                        {msg.text}
+                        <div className="ts-chat-markdown">
+                          <ReactMarkdown>
+                            {msg.text || ''}
+                          </ReactMarkdown>
+                        </div>
                         {Array.isArray(msg.products) && msg.products.length > 0 && (
                           <div className="ts-chat-product-list">
                             {msg.products.map((product) => (

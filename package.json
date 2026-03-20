@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "docker:up": "powershell -ExecutionPolicy Bypass -File ./start-docker.ps1",
+    "docker:down": "docker compose -f docker-compose.local.yml down"
+  },
   "dependencies": {
     "@react-oauth/google": "^0.13.4"
   }

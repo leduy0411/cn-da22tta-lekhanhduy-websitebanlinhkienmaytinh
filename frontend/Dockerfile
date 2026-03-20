@@ -11,6 +11,8 @@ WORKDIR /app
 # Build-time environment variable for React
 ARG REACT_APP_API_URL=http://localhost:5000/api
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ARG REACT_APP_CHAT_MODE=v3
+ENV REACT_APP_CHAT_MODE=$REACT_APP_CHAT_MODE
 
 COPY package*.json ./
 RUN npm install

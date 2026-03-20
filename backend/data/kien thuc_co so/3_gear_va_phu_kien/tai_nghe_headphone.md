@@ -21,7 +21,7 @@
 ## 4. CHUẨN KẾT NỐI VÀ ĐỘ TRỄ (LATENCY)
 - **Wired (3.5mm / USB):** Không có độ trễ, chất lượng âm thanh ổn định nhất.
 - **Wireless 2.4GHz (Dongle):** Tiêu chuẩn vàng cho Gaming không dây. Độ trễ cực thấp (dưới 20ms), gần như không thể phân biệt với có dây.
-- **Bluetooth 5.3+:** Tiện lợi cho điện thoại/laptop. 
+- **Bluetooth 5.3+:** Tiện lợi cho điện thoại/laptop.
     - *Các Codec cao cấp cần biết:* **aptX Adaptive, LDAC, LHDC** (Hỗ trợ nghe nhạc chất lượng cao không dây).
     - **LE Audio (LC3 Codec):** Công nghệ mới 2026, giúp giảm độ trễ Bluetooth xuống mức chơi game được và cực kỳ tiết kiệm pin.
 

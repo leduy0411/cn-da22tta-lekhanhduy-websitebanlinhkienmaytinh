@@ -101,6 +101,48 @@ Try these example queries:
 - "Build PC gaming 40 triệu"
 - "SSD là gì?"
 
+### Local RAG Mode (ChromaDB)
+
+Backend scripts:
+
+```bash
+cd backend
+
+# 1) Ingest markdown knowledge into local ChromaDB
+npm run rag:ingest
+
+# 2) Test one query quickly
+npm run rag:query -- --question "Nguon 750W co du cho RTX 4070 khong?" --top-k 4
+
+# 3) Test endpoint with multiple real questions
+npm run rag:test-api
+
+# 4) Preview markdown normalization (safe dry-run)
+npm run knowledge:normalize
+```
+
+Frontend switch to local RAG endpoint by setting:
+
+```env
+REACT_APP_CHAT_MODE=rag-local
+```
+
+If not set, chat widget keeps using existing `v3/chat` flow.
+
+### One-command Docker (Local)
+
+This project now includes a local compose file (backend + frontend only):
+
+```bash
+npm run docker:up
+```
+
+Stop containers:
+
+```bash
+npm run docker:down
+```
+
 ## 📚 Documentation
 
 | Document | Description |

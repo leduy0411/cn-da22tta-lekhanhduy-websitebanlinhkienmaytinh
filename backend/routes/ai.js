@@ -19,6 +19,50 @@ const {
 
 // Import new Gemini chat service
 const geminiChatService = require('../services/GeminiChatService');
+const localRAGPythonBridge = require('../services/ai/rag/LocalRAGPythonBridge');
+
+function tokenizeVietnamese(text = '') {
+  return String(text)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((token) => token.length > 1);
+}
+
+function computeKeywordOverlapScore(question, content) {
+  const qTokens = new Set(tokenizeVietnamese(question));
+  if (!qTokens.size) {
+    return 0;
+  }
+
+  const cTokens = new Set(tokenizeVietnamese(content));
+  let overlap = 0;
+  for (const token of qTokens) {
+    if (cTokens.has(token)) {
+      overlap += 1;
+    }
+  }
+
+  return overlap / qTokens.size;
+}
+
+function rerankChunks(question, chunks = []) {
+  return chunks
+    .map((chunk) => {
+      const distance = Number.isFinite(chunk?.distance) ? chunk.distance : 1;
+      const semanticScore = Math.max(0, 1 - distance);
+      const lexicalScore = computeKeywordOverlapScore(question, chunk?.content || '');
+      const score = semanticScore * 0.75 + lexicalScore * 0.25;
+
+      return {
+        ...chunk,
+        _score: score,
+      };
+    })
+    .sort((a, b) => b._score - a._score);
+}
 
 // ==================== GEMINI AI STATUS ====================
 
@@ -83,6 +127,68 @@ router.post('/gemini/chat', auth, async (req, res) => {
   } catch (error) {
     console.error('Gemini chat error:', error);
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @route POST /api/ai/rag-local/chat
+ * @desc Local ChromaDB RAG chat (top-4 chunks)
+ * @access Public
+ */
+router.post('/rag-local/chat', optionalAuth, async (req, res) => {
+  try {
+    const { message, topK = 4, history = [], candidateK } = req.body;
+
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ success: false, message: 'Message is required' });
+    }
+
+    const safeTopK = Math.max(2, Math.min(8, Number(topK) || 4));
+    const safeCandidateK = Math.max(safeTopK, Math.min(12, Number(candidateK) || safeTopK + 4));
+
+    const ragResult = await localRAGPythonBridge.retrieveTopChunks(message, safeCandidateK);
+    const rawChunks = Array.isArray(ragResult.chunks) ? ragResult.chunks : [];
+    const rerankedChunks = rerankChunks(message, rawChunks);
+    const chunks = rerankedChunks.slice(0, safeTopK);
+
+    const systemPrompt = [
+      'Bạn là trợ lý kỹ thuật của TechStore.',
+      'Nhiệm vụ: trả lời ngắn gọn, chính xác, ưu tiên thông tin từ kho tri thức được cung cấp.',
+      'Nếu dữ liệu ngữ cảnh không đủ chắc chắn, phải nói rõ giới hạn và đề xuất khách liên hệ nhân viên.',
+      'Không bịa thông số kỹ thuật.',
+      'Trả lời bằng tiếng Việt, giọng chuyên nghiệp và thân thiện.'
+    ].join('\n');
+
+    const llmResult = await geminiChatService.generateRagAnswer({
+      systemPrompt,
+      userQuestion: message,
+      contextBlocks: chunks,
+      conversationHistory: Array.isArray(history) ? history.slice(-6) : []
+    });
+
+    return res.json({
+      success: llmResult.success,
+      answer: llmResult.answer,
+      retrieval: {
+        topK: safeTopK,
+        candidateK: safeCandidateK,
+        count: chunks.length,
+        chunks: chunks.map((chunk) => ({
+          content: chunk.content,
+          source: chunk.metadata?.source || null,
+          category: chunk.metadata?.category || null,
+          distance: chunk.distance ?? null,
+          score: chunk._score ?? null
+        }))
+      },
+      source: llmResult.source
+    });
+  } catch (error) {
+    console.error('Local RAG chat error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Local RAG chat failed'
+    });
   }
 });
 

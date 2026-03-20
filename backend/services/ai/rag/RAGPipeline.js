@@ -89,17 +89,7 @@ class RAGPipeline {
       };
     } catch (error) {
       console.error('RAGPipeline.query failed:', error.message);
-      return {
-        answer: 'Xin lỗi, hệ thống AI đang lỗi tạm thời. Vui lòng thử lại sau.',
-        sourceProvider: 'none',
-        sourceModel: 'none',
-        sources: [],
-        products: [],
-        knowledgeDocsUsed: 0,
-        productsUsed: 0,
-        pipeline,
-        error: error.message
-      };
+      throw error;
     }
   }
 
