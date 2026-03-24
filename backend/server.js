@@ -77,6 +77,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai/v2', recommendationV2Routes);
 app.use('/api/v3', chatV3Routes);
+app.use('/api', chatV3Routes); // Alias: exposes /api/chat/* alongside /api/v3/chat/*
 app.use('/api/video-reviews', videoReviewRoutes);
 app.use('/api/knowledge', knowledgeRoutes); // RAG knowledge base
 

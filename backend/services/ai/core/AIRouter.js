@@ -5,6 +5,7 @@
  */
 
 const GroqChatService = require('./GroqChatService');
+const crypto = require('crypto');
 
 class AIRouter {
   constructor() {
@@ -82,6 +83,7 @@ class AIRouter {
   async routeAndProcess(params = {}) {
     const {
       userMessage = '',
+      imageBase64 = undefined,
       history = [],
       sessionId = null,
       userId = null
@@ -90,6 +92,7 @@ class AIRouter {
     const routed = await this.route(userMessage, {
       sessionId,
       userId,
+      imageBase64,
       conversationHistory: Array.isArray(history) ? history : []
     });
 
@@ -153,8 +156,13 @@ class AIRouter {
   async _handleUnifiedFlow(userMessage, context = {}) {
     const normalizedMessage = String(userMessage || '').trim();
     const conversationHistory = Array.isArray(context.conversationHistory) ? context.conversationHistory : [];
+    const imageBase64 = typeof context?.imageBase64 === 'string' ? context.imageBase64.trim() : '';
     const sessionKey = String(context?.sessionId || 'anonymous');
-    const cacheKey = `${sessionKey}::${normalizedMessage.toLowerCase()}`;
+    const imageHash = imageBase64
+      ? crypto.createHash('sha1').update(imageBase64).digest('hex').slice(0, 24)
+      : 'none';
+    const imageKey = `::img:${imageHash}`;
+    const cacheKey = `${sessionKey}::${normalizedMessage.toLowerCase()}${imageKey}`;
 
     if (this.cacheEnabled) {
       const cached = this.responseCache.get(cacheKey);
@@ -170,7 +178,9 @@ class AIRouter {
       throw new Error('User message is empty');
     }
 
-    const agentResult = await GroqChatService.chatWithAgent(normalizedMessage, conversationHistory);
+    const agentResult = await GroqChatService.chatWithAgent(normalizedMessage, conversationHistory, {
+      imageBase64
+    });
 
     this._logUnifiedFlowDebug({
       userMessage: normalizedMessage,
@@ -275,8 +285,19 @@ class AIRouter {
         totalEntries: this.responseCache.size,
         freshEntries: freshCacheEntries
       },
+      provider: this.getProviderDiagnostics(),
       routing: this.getStats(),
       timestamp: new Date().toISOString()
+    };
+  }
+
+  getProviderDiagnostics() {
+    if (typeof GroqChatService.getProviderDiagnostics === 'function') {
+      return GroqChatService.getProviderDiagnostics();
+    }
+
+    return {
+      status: 'unavailable'
     };
   }
 

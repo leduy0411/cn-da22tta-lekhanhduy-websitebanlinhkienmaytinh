@@ -736,11 +736,17 @@ class SemanticSearchService {
       return query;
     }
 
-    return tokens[tokens.length - 1];
+    // Keep the full meaningful phrase (not only the last token) to avoid
+    // matching by brand-only words such as "MSI".
+    return tokens.join(' ');
   }
 
   async _queryByFlexibleKeyword(extractedKeyword, filters = {}, limit = 10) {
-    const keywordRegex = new RegExp(extractedKeyword, 'i');
+    const keywordText = String(extractedKeyword || '').trim();
+    if (!keywordText) {
+      return [];
+    }
+
     const safeLimit = Math.max(1, Number(limit) || 10);
     const minPrice = filters.price_min ?? filters.minPrice ?? null;
     const maxPrice = filters.price_max ?? filters.maxPrice ?? null;
@@ -762,14 +768,79 @@ class SemanticSearchService {
       }
     }
 
-    const canonicalCategory = this._extractCategoryHint(extractedKeyword);
+    const canonicalCategory = this._extractCategoryHint(filters.category || keywordText);
+    const categoryRegex = canonicalCategory ? this._buildCoreCategoryRegex(canonicalCategory) : null;
+
+    const searchTokens = keywordText
+      .split(/\s+/)
+      .map((token) => token.trim())
+      .filter((token) => token.length > 1);
+
+    const categoryTokens = this._categoryAliasTokens(canonicalCategory);
+    const meaningfulTokens = searchTokens.filter((token) => !categoryTokens.has(token.toLowerCase()));
+
+    // Phrase-first: for multi-word intent (e.g., "laptop msi"), require phrase in name/category/brand.
+    const phraseRegex = new RegExp(this._escapeRegex(keywordText), 'i');
+    const phraseQuery = {
+      ...baseQuery,
+      $or: [
+        { name: phraseRegex },
+        { category: phraseRegex },
+        { brand: phraseRegex }
+      ]
+    };
+
+    if (categoryRegex) {
+      phraseQuery.category = categoryRegex;
+    }
+
+    const phraseResults = await Product.find(phraseQuery)
+      .select('_id name description category brand color price salePrice image images rating stock specifications sold createdAt')
+      .sort({ rating: -1, sold: -1, createdAt: -1 })
+      .limit(safeLimit)
+      .lean();
+
+    if (phraseResults.length > 0) {
+      return phraseResults;
+    }
+
+    // AND token matching: every token must appear in at least one searchable field.
+    const andClauses = meaningfulTokens.map((token) => {
+      const tokenRegex = new RegExp(this._escapeRegex(token), 'i');
+      return {
+        $or: [
+          { name: tokenRegex },
+          { description: tokenRegex },
+          { brand: tokenRegex },
+          { category: tokenRegex }
+        ]
+      };
+    });
+
+    const strictAndQuery = {
+      ...baseQuery,
+      ...(andClauses.length > 0 ? { $and: andClauses } : {})
+    };
+
+    if (categoryRegex) {
+      strictAndQuery.category = categoryRegex;
+    }
+
+    const strictAndResults = await Product.find(strictAndQuery)
+      .select('_id name description category brand color price salePrice image images rating stock specifications sold createdAt')
+      .sort({ rating: -1, sold: -1, createdAt: -1 })
+      .limit(safeLimit)
+      .lean();
+
+    if (strictAndResults.length > 0) {
+      return strictAndResults;
+    }
 
     // Step 1: for core categories (e.g., laptop/pc), prefer category-first matching to avoid accessory noise.
-    if (canonicalCategory) {
-      const primaryCategoryRegex = this._buildCoreCategoryRegex(canonicalCategory);
+    if (categoryRegex) {
       const categoryOnlyQuery = {
         ...baseQuery,
-        category: primaryCategoryRegex
+        category: categoryRegex
       };
 
       const strictCategoryResults = await Product.find(categoryOnlyQuery)
@@ -783,11 +854,16 @@ class SemanticSearchService {
       }
     }
 
-    // Step 2 (required flexible behavior): fallback to regex across category or name.
+    // Final fallback: keep broad behavior but still avoid cross-category drift when category is inferred.
+    const keywordRegex = new RegExp(this._escapeRegex(keywordText), 'i');
     const query = {
       ...baseQuery
     };
     query.$or = [{ category: keywordRegex }, { name: keywordRegex }];
+
+    if (categoryRegex) {
+      query.category = categoryRegex;
+    }
 
     const broadResults = await Product.find(query)
       .select('_id name description category brand color price salePrice image images rating stock specifications sold createdAt')
@@ -813,6 +889,28 @@ class SemanticSearchService {
     });
 
     return (filtered.length > 0 ? filtered : broadResults).slice(0, safeLimit);
+  }
+
+  _escapeRegex(input = '') {
+    return String(input).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  _categoryAliasTokens(canonicalCategory = null) {
+    const aliases = {
+      laptop: ['laptop', 'notebook'],
+      chuot: ['chuot', 'chuột', 'mouse'],
+      'ban phim': ['ban', 'phim', 'bàn', 'phím', 'keyboard'],
+      'man hinh': ['man', 'hinh', 'màn', 'hình', 'monitor'],
+      ram: ['ram'],
+      ssd: ['ssd'],
+      hdd: ['hdd'],
+      cpu: ['cpu', 'intel', 'core', 'ryzen'],
+      vga: ['vga', 'gpu', 'rtx', 'gtx', 'radeon'],
+      pc: ['pc', 'desktop'],
+      ghe: ['ghe', 'ghế', 'chair']
+    };
+
+    return new Set((aliases[canonicalCategory] || []).map((item) => item.toLowerCase()));
   }
 
   _buildCoreCategoryRegex(canonicalCategory = '') {

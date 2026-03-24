@@ -73,6 +73,14 @@ const messageSchema = new mongoose.Schema({
     model: String,
     fallbackUsed: { type: Boolean, default: false }
   },
+  // Runtime metadata for API v3 persistence (image uploads, retrieved products, source tags)
+  metadata: {
+    source: String,
+    hasImagePayload: { type: Boolean, default: false },
+    image: String,
+    sources: [String],
+    products: [mongoose.Schema.Types.Mixed]
+  },
   // Feedback từ user
   feedback: {
     helpful: { type: Boolean, default: null },

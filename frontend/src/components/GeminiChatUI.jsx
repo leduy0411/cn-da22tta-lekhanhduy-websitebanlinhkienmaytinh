@@ -16,6 +16,9 @@ const CHAT_ENDPOINT = CHAT_MODE === 'rag-local'
   : (normalizedApiBase.endsWith('/api')
     ? `${normalizedApiBase}/v3/chat`
     : `${normalizedApiBase}/api/v3/chat`);
+const CHAT_HISTORY_ENDPOINT = normalizedApiBase.endsWith('/api')
+  ? `${normalizedApiBase}/v3/chat/history`
+  : `${normalizedApiBase}/api/v3/chat/history`;
 
 const WELCOME_MESSAGE = {
   id: 1,
@@ -85,6 +88,36 @@ function resolveAssetUrl(rawUrl) {
   return `${assetBase}/${normalized}`;
 }
 
+function decodeJwtPayload(token) {
+  try {
+    const payload = String(token || '').split('.')[1];
+    if (!payload) {
+      return null;
+    }
+
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    return JSON.parse(window.atob(padded));
+  } catch (error) {
+    return null;
+  }
+}
+
+function getUserIdFromToken(token) {
+  const payload = decodeJwtPayload(token);
+  const userId = payload?.userId || payload?._id || payload?.id || null;
+  return userId ? String(userId) : '';
+}
+
+function createClientSessionId(userId = '') {
+  if (userId) {
+    return `user_${userId}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  const randomHex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  return `guest_${randomHex}`;
+}
+
 function ProductImage({ src, alt }) {
   const [failed, setFailed] = useState(false);
   const safeSrc = resolveAssetUrl(src);
@@ -146,12 +179,76 @@ export default function ChatWidget() {
   const [selectedImageBase64, setSelectedImageBase64] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(() => localStorage.getItem(SESSION_KEY) || '');
+  const [forceNewChat, setForceNewChat] = useState(false);
 
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadChatHistory = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          return;
+        }
+
+        const userId = getUserIdFromToken(token);
+        if (!userId) {
+          return;
+        }
+
+        const response = await fetch(`${CHAT_HISTORY_ENDPOINT}/${encodeURIComponent(userId)}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const payload = await parseChatResponse(response);
+        if (!response.ok || !payload?.success) {
+          return;
+        }
+
+        const historyMessages = Array.isArray(payload?.data?.messages)
+          ? payload.data.messages
+          : [];
+
+        if (!isMounted) {
+          return;
+        }
+
+        const mappedMessages = historyMessages
+          .map((msg, index) => ({
+            id: msg.id || `${Date.now()}_${index}`,
+            role: msg.role === 'user' ? 'user' : 'ai',
+            text: String(msg.text || '').trim(),
+            image: msg.image || null,
+            products: Array.isArray(msg.products) ? msg.products : []
+          }))
+          .filter((msg) => msg.text || msg.image || (Array.isArray(msg.products) && msg.products.length > 0));
+
+        setMessages(mappedMessages.length > 0 ? mappedMessages : [WELCOME_MESSAGE]);
+
+        const restoredSessionId = String(payload?.data?.sessionId || '').trim();
+        if (restoredSessionId) {
+          setSessionId(restoredSessionId);
+          localStorage.setItem(SESSION_KEY, restoredSessionId);
+        }
+      } catch (error) {
+        // Keep default welcome state when history loading fails.
+      }
+    };
+
+    loadChatHistory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!textareaRef.current) return;
@@ -195,7 +292,15 @@ export default function ChatWidget() {
   };
 
   const handleNewChat = () => {
-    resetChatSession();
+    const token = localStorage.getItem('token');
+    const userId = getUserIdFromToken(token);
+    const newSessionId = createClientSessionId(userId);
+
+    setSessionId(newSessionId);
+    localStorage.setItem(SESSION_KEY, newSessionId);
+    localStorage.removeItem(LAST_USER_MESSAGE_AT_KEY);
+
+    setForceNewChat(true);
     setSelectedImageBase64(null);
     setMessages([WELCOME_MESSAGE]);
   };
@@ -308,6 +413,44 @@ export default function ChatWidget() {
     }
   };
 
+  const handlePaste = async (e) => {
+    if (isLoading) {
+      return;
+    }
+
+    const items = Array.from(e?.clipboardData?.items || []);
+    const imageItem = items.find((item) => String(item?.type || '').startsWith('image/'));
+
+    if (!imageItem) {
+      return;
+    }
+
+    e.preventDefault();
+
+    try {
+      const pastedFile = imageItem.getAsFile();
+      if (!pastedFile) {
+        throw new Error('Không thể đọc ảnh từ clipboard.');
+      }
+
+      const compressedBase64DataUrl = await compressImageFileToBase64(pastedFile, {
+        maxWidth: 800,
+        quality: 0.7
+      });
+
+      setSelectedImageBase64(compressedBase64DataUrl);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          role: 'ai',
+          text: error?.message || 'Không thể xử lý ảnh dán từ clipboard. Vui lòng thử lại.'
+        }
+      ]);
+    }
+  };
+
   const handleRemoveSelectedImage = () => {
     setSelectedImageBase64(null);
     if (fileInputRef.current) {
@@ -333,6 +476,10 @@ export default function ChatWidget() {
       }
     ]);
     setInputText('');
+    setSelectedImageBase64(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     setIsLoading(true);
 
     try {
@@ -347,6 +494,15 @@ export default function ChatWidget() {
       if (shouldRotateByInactivity) {
         outboundSessionId = '';
         resetChatSession();
+      }
+
+      if (forceNewChat && !outboundSessionId) {
+        const token = localStorage.getItem('token');
+        const userId = getUserIdFromToken(token);
+        const generatedSessionId = createClientSessionId(userId);
+        outboundSessionId = generatedSessionId;
+        setSessionId(generatedSessionId);
+        localStorage.setItem(SESSION_KEY, generatedSessionId);
       }
 
       const token = localStorage.getItem('token');
@@ -366,7 +522,7 @@ export default function ChatWidget() {
             content: m.text
           })),
           sessionId: outboundSessionId || undefined,
-          newChat: shouldRotateByInactivity
+          newChat: shouldRotateByInactivity || forceNewChat
         })
       });
 
@@ -381,9 +537,8 @@ export default function ChatWidget() {
         localStorage.setItem(SESSION_KEY, payload.sessionId);
       }
 
-      setSelectedImageBase64(null);
-
       localStorage.setItem(LAST_USER_MESSAGE_AT_KEY, String(now));
+      setForceNewChat(false);
 
       const aiText = payload?.data?.text || payload?.answer || 'Xin lỗi, mình chưa có phản hồi phù hợp.';
       const apiProducts = Array.isArray(payload?.data?.products) ? payload.data.products : [];
@@ -410,6 +565,7 @@ export default function ChatWidget() {
         })()
       ]);
     } catch (error) {
+      setForceNewChat(false);
       setMessages((prev) => [
         ...prev,
         {
@@ -522,11 +678,11 @@ export default function ChatWidget() {
                   )}
 
                   {msg.role === 'user' && (
-                    <div className="ts-chat-bubble ts-chat-bubble-user">
+                    <div className={`ts-chat-bubble ${msg.image ? 'ts-chat-bubble-user-media' : 'ts-chat-bubble-user'}`}>
                       {msg.image && (
                         <img
                           src={msg.image}
-                          className="max-w-xs rounded-lg mb-2 object-cover"
+                          className="max-w-xs rounded-2xl mb-2 object-cover overflow-hidden"
                           alt="User upload"
                         />
                       )}
@@ -600,6 +756,7 @@ export default function ChatWidget() {
                 ref={textareaRef}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
+                onPaste={handlePaste}
                 onKeyDown={handleTextareaKeyDown}
                 placeholder="Hỏi AI tư vấn..."
                 className="ts-chat-textarea"

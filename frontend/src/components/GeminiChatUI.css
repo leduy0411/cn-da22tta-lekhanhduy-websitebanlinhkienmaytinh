@@ -234,12 +234,20 @@
   border-radius: 0.5rem;
 }
 
+.rounded-2xl {
+  border-radius: 1rem;
+}
+
 .mb-2 {
   margin-bottom: 0.5rem;
 }
 
 .object-cover {
   object-fit: cover;
+}
+
+.overflow-hidden {
+  overflow: hidden;
 }
 
 .ts-chat-markdown h1,
@@ -352,6 +360,13 @@
   border: 1px solid #c9dbee;
   border-radius: 999px;
   padding: 10px 15px;
+}
+
+.ts-chat-bubble-user-media {
+  max-width: 85%;
+  background: transparent;
+  border: 0;
+  padding: 0;
 }
 
 .ts-chat-typing {

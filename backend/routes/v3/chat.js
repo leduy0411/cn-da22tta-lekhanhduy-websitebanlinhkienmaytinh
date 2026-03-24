@@ -6,6 +6,7 @@ const router = express.Router();
 const AIRouter = require('../../services/ai/core/AIRouter');
 const ConversationMemoryService = require('../../services/ai/ConversationMemoryService');
 const SemanticSearchService = require('../../services/ai/SemanticSearchService');
+const ChatbotConversation = require('../../models/ChatbotConversation');
 const { optionalAuth } = require('../../middleware/auth');
 
 const SESSION_INACTIVITY_RESET_MS = 30 * 60 * 1000;
@@ -38,8 +39,20 @@ function createGuestSessionId() {
   return `guest_${crypto.randomBytes(32).toString('hex')}`;
 }
 
+function createUserSessionId(userId) {
+  return `user_${userId}_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
+}
+
 function isValidGuestSessionId(value) {
   return typeof value === 'string' && /^guest_[a-f0-9]{64}$/.test(value);
+}
+
+function isValidOwnedUserSessionId(value, userId) {
+  if (typeof value !== 'string' || typeof userId !== 'string' || !userId.trim()) {
+    return false;
+  }
+
+  return value.startsWith(`user_${userId}_`);
 }
 
 function resolveAbsoluteAssetUrl(req, assetPath) {
@@ -242,8 +255,14 @@ function isImageFollowUpRequest(message = '') {
 }
 
 async function buildLocalFallbackResponse(req, message = '') {
+  const normalizedMessage = String(message || '').trim();
+  const genericNeedPattern = /^(toi can tim|m(i|ì)nh can tim|can tim|tim giup|tim san pham|nhu vay|nhu nay|giong nhu|san pham nhu)/i;
+  const effectiveKeyword = genericNeedPattern.test(normalizedMessage)
+    ? ''
+    : normalizedMessage;
+
   const searchResult = await SemanticSearchService.searchProducts({
-    keyword: String(message || '').trim(),
+    keyword: effectiveKeyword,
     filters: {},
     limit: 5
   });
@@ -255,7 +274,7 @@ async function buildLocalFallbackResponse(req, message = '') {
 
   if (products.length === 0) {
     return {
-      text: 'Hệ thống AI đang quá tải tạm thời, nhưng em vẫn có thể hỗ trợ ngay nếu anh/chị cho em biết rõ hơn nhu cầu (ví dụ: tai nghe gaming dưới 2 triệu, có mic, kết nối Bluetooth).',
+      text: 'Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.',
       products: []
     };
   }
@@ -268,7 +287,7 @@ async function buildLocalFallbackResponse(req, message = '') {
     .join('\n');
 
   return {
-    text: `Hệ thống AI đang quá tải tạm thời, em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo:\n\n${bullets}`,
+    text: `Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo:\n\n${bullets}`,
     products
   };
 }
@@ -313,13 +332,18 @@ function classifyAIProviderFailure(errorMessage = '') {
     || text.includes('network error');
   const isCircuitOpen = text.includes('circuit is open');
   const isMissingProviderKey = text.includes('groq_api_key is missing') || text.includes('api key missing');
+  const isGroqProviderFailure = text.includes('groq request failed')
+    || text.includes('groq vision request failed')
+    || text.includes('groq circuit is open')
+    || text.includes('groq circuit is open or api key missing');
   const isProviderFailure = text.includes('all providers failed')
     || isRateLimit
     || isTimeout
     || isAuthFailure
     || isNetworkFailure
     || isCircuitOpen
-    || isMissingProviderKey;
+    || isMissingProviderKey
+    || isGroqProviderFailure;
   const retryAfterSeconds = isRateLimit ? extractRetryAfterSeconds(errorMessage) : null;
 
   if (!isProviderFailure) {
@@ -477,6 +501,41 @@ router.get('/chat/observability', async (req, res) => {
   }
 });
 
+router.get('/chat/provider-debug', optionalAuth, async (req, res) => {
+  try {
+    const debugToken = String(process.env.CHAT_PROVIDER_DEBUG_TOKEN || '').trim();
+    const providedToken = String(req.headers['x-debug-token'] || '').trim();
+    const isLocal = req.ip === '::1' || req.ip === '127.0.0.1' || req.ip === '::ffff:127.0.0.1';
+
+    if (debugToken) {
+      if (!providedToken || providedToken !== debugToken) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: invalid debug token'
+        });
+      }
+    } else if (!isLocal) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: provider debug endpoint only allowed from localhost when no token is configured'
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        provider: AIRouter.getProviderDiagnostics(),
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 router.post('/chat/health/reset', optionalAuth, async (req, res) => {
   try {
     const resetToken = String(process.env.CHAT_HEALTH_RESET_TOKEN || '').trim();
@@ -513,6 +572,86 @@ router.post('/chat/health/reset', optionalAuth, async (req, res) => {
   }
 });
 
+router.get('/chat/history/:userId', optionalAuth, async (req, res) => {
+  try {
+    const requestedUserId = String(req.params.userId || '').trim();
+    const authenticatedUserId = req.user?._id?.toString() || req.user?.id || null;
+    const role = String(req.user?.role || '').toLowerCase();
+    const isPrivileged = role === 'admin' || role === 'staff';
+
+    if (!requestedUserId) {
+      return res.status(400).json({
+        success: false,
+        message: 'userId là bắt buộc.'
+      });
+    }
+
+    if (!authenticatedUserId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Vui lòng đăng nhập để xem lịch sử chat.'
+      });
+    }
+
+    if (!isPrivileged && authenticatedUserId !== requestedUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền xem lịch sử chat của người dùng này.'
+      });
+    }
+
+    const latestConversation = await ChatbotConversation.findOne({
+      user: requestedUserId,
+      status: 'active'
+    })
+      .sort({ 'metadata.lastMessageAt': -1, updatedAt: -1 })
+      .lean();
+
+    if (!latestConversation) {
+      return res.json({
+        success: true,
+        data: {
+          sessionId: null,
+          messages: []
+        }
+      });
+    }
+
+    const messages = (Array.isArray(latestConversation.messages) ? latestConversation.messages : [])
+      .map((item, index) => {
+        const role = item?.role === 'assistant' ? 'ai' : 'user';
+        const text = String(item?.content || '').trim();
+        const image = role === 'user' ? String(item?.metadata?.image || '').trim() : '';
+        const products = role === 'ai' && Array.isArray(item?.metadata?.products)
+          ? item.metadata.products
+          : [];
+
+        return {
+          id: `${latestConversation.sessionId}_${index}_${new Date(item?.timestamp || Date.now()).getTime()}`,
+          role,
+          text,
+          image: image || null,
+          products,
+          timestamp: item?.timestamp || null
+        };
+      })
+      .filter((item) => item.text || item.image || (Array.isArray(item.products) && item.products.length > 0));
+
+    return res.json({
+      success: true,
+      data: {
+        sessionId: latestConversation.sessionId,
+        messages
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 router.post('/chat', optionalAuth, async (req, res) => {
   const requestId = `v3_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 
@@ -521,23 +660,29 @@ router.post('/chat', optionalAuth, async (req, res) => {
 
     const {
       message,
+      imageBase64,
       sessionId: clientSessionId,
       newChat: newChatRequested = false
     } = req.body || {};
+    const normalizedMessage = typeof message === 'string' ? message.trim() : '';
+    const normalizedImageBase64 = typeof imageBase64 === 'string' ? imageBase64.trim() : '';
+    const hasImagePayload = /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(normalizedImageBase64);
+    const effectiveMessage = normalizedMessage || (hasImagePayload ? 'Tìm sản phẩm từ hình ảnh này' : '');
     console.log(`[${requestId}] [STEP 2] payload parsed`, {
       hasMessage: typeof message === 'string',
       messageLength: typeof message === 'string' ? message.length : 0,
+      hasImagePayload,
       hasClientSessionId: Boolean(clientSessionId),
       newChatRequested: Boolean(newChatRequested),
       clientSessionIdPreview: typeof clientSessionId === 'string' ? clientSessionId.slice(0, 18) : null
     });
 
-    if (!message || typeof message !== 'string' || !message.trim()) {
+    if (!effectiveMessage) {
       console.warn(`[${requestId}] [STEP 2.1] invalid message payload`);
       return res.status(400).json({
         success: false,
         data: {
-          text: 'Tin nhắn không hợp lệ. Vui lòng nhập nội dung cần hỏi.',
+          text: 'Yêu cầu không hợp lệ. Vui lòng nhập nội dung hoặc tải ảnh cần tìm kiếm.',
           products: []
         }
       });
@@ -550,16 +695,44 @@ router.post('/chat', optionalAuth, async (req, res) => {
     });
 
     // Security-first session policy:
-    // - Authenticated users always use server-owned session key by user id.
+    // - Authenticated users can reuse owned session ids, otherwise fallback to latest active session.
     // - Guests only reuse strong server-issued guest ids that point to guest conversations.
-    let effectiveSessionId = userId ? `user_${userId}` : null;
+    let effectiveSessionId = null;
     console.log(`[${requestId}] [STEP 4] session bootstrap`, {
       mode: userId ? 'user' : 'guest',
       effectiveSessionId
     });
 
+    if (userId && !newChatRequested) {
+      const canUseClientSession = isValidOwnedUserSessionId(clientSessionId, userId);
+
+      if (canUseClientSession) {
+        const ownedSession = await ConversationMemoryService.getSession(clientSessionId, {
+          includeMessages: false
+        });
+
+        if (ownedSession.success && ownedSession.conversation?.user?.toString?.() === userId) {
+          effectiveSessionId = clientSessionId;
+        }
+      }
+
+      if (!effectiveSessionId) {
+        const latestOwnedConversation = await ChatbotConversation.findOne({
+          user: userId,
+          status: 'active'
+        })
+          .sort({ 'metadata.lastMessageAt': -1, updatedAt: -1 })
+          .select('sessionId')
+          .lean();
+
+        if (latestOwnedConversation?.sessionId) {
+          effectiveSessionId = latestOwnedConversation.sessionId;
+        }
+      }
+    }
+
     if (!effectiveSessionId) {
-      if (isValidGuestSessionId(clientSessionId)) {
+      if (!userId && isValidGuestSessionId(clientSessionId)) {
         console.log(`[${requestId}] [STEP 4.1] validating guest session`, {
           clientSessionIdPreview: clientSessionId.slice(0, 18)
         });
@@ -579,7 +752,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
       }
 
       if (!effectiveSessionId) {
-        effectiveSessionId = createGuestSessionId();
+        effectiveSessionId = userId ? createUserSessionId(userId) : createGuestSessionId();
         console.log(`[${requestId}] [STEP 4.3] generated new guest session`, {
           effectiveSessionIdPreview: effectiveSessionId.slice(0, 18)
         });
@@ -624,27 +797,17 @@ router.post('/chat', optionalAuth, async (req, res) => {
     if (shouldStartFreshSession) {
       console.log(`[${requestId}] [STEP 5.2] resetting session scope`, {
         reason: newChatRequested ? 'new_chat_requested' : 'inactive_over_30m',
-        mode: userId ? 'clear_user_memory' : 'rotate_guest_session'
+        mode: userId ? 'rotate_user_session' : 'rotate_guest_session'
       });
 
-      if (userId) {
-        const clearResult = await ConversationMemoryService.clearSessionHistory(effectiveSessionId, {
-          reason: newChatRequested ? 'new_chat_requested' : 'inactive_over_30m'
-        });
+      effectiveSessionId = userId ? createUserSessionId(userId) : createGuestSessionId();
+      const freshSession = await ConversationMemoryService.ensureSession(effectiveSessionId, userId, {
+        channel: 'api_v3_chat',
+        refreshedBy: newChatRequested ? 'new_chat_requested' : 'inactive_over_30m'
+      });
 
-        if (!clearResult.success) {
-          throw new Error(clearResult.error || 'Không thể reset phiên chat người dùng');
-        }
-      } else {
-        effectiveSessionId = createGuestSessionId();
-        const freshGuestSession = await ConversationMemoryService.ensureSession(effectiveSessionId, userId, {
-          channel: 'api_v3_chat',
-          refreshedBy: newChatRequested ? 'new_chat_requested' : 'inactive_over_30m'
-        });
-
-        if (!freshGuestSession.success) {
-          throw new Error(freshGuestSession.error || 'Không thể tạo phiên chat mới cho guest');
-        }
+      if (!freshSession.success) {
+        throw new Error(freshSession.error || 'Không thể tạo phiên chat mới');
       }
     }
 
@@ -669,7 +832,8 @@ router.post('/chat', optionalAuth, async (req, res) => {
     console.log(`[${requestId}] [STEP 8] routing to AI engine`);
     const aiResult = await withTimeout(
       () => AIRouter.routeAndProcess({
-        userMessage: message,
+        userMessage: effectiveMessage,
+        imageBase64: hasImagePayload ? normalizedImageBase64 : undefined,
         history: historyForRouter,
         sessionId: effectiveSessionId,
         userId
@@ -706,8 +870,12 @@ router.post('/chat', optionalAuth, async (req, res) => {
     await withTimeout(
       () => ConversationMemoryService.saveMessage(effectiveSessionId, {
         role: 'user',
-        content: message,
-        metadata: { source: 'api_v3_chat' }
+        content: effectiveMessage,
+        metadata: {
+          source: 'api_v3_chat',
+          hasImagePayload,
+          image: hasImagePayload ? normalizedImageBase64 : null
+        }
       }),
       PHASE_TIMEOUTS.saveMessageMs,
       'save_user_message'
@@ -721,7 +889,8 @@ router.post('/chat', optionalAuth, async (req, res) => {
         content: cleanMessage,
         metadata: {
           source: 'api_v3_chat',
-          sources: aiResult.sources || []
+          sources: aiResult.sources || [],
+          products: finalizedProducts
         }
       }),
       PHASE_TIMEOUTS.saveMessageMs,
@@ -780,11 +949,9 @@ router.post('/chat', optionalAuth, async (req, res) => {
         fallbackPayload = await buildLocalFallbackResponse(req, req.body?.message || '');
       } catch (fallbackError) {
         fallbackPayload = {
-          text: providerFailure.isMissingProviderKey
-            ? 'AI chưa được cấu hình API key cho router. Hệ thống đang chạy chế độ dự phòng, vui lòng thử lại sau hoặc cấu hình GROQ_API_KEY.'
-            : providerFailure.retryAfterSeconds
-              ? `AI đang quá tải hoặc chạm giới hạn quota. Vui lòng thử lại sau khoảng ${providerFailure.retryAfterSeconds} giây.`
-              : 'AI đang quá tải hoặc tạm thời không khả dụng. Vui lòng thử lại sau vài giây.',
+          text: providerFailure.retryAfterSeconds
+            ? `Em đang xử lý hơi chậm ở bước phân tích. Anh/chị thử lại sau khoảng ${providerFailure.retryAfterSeconds} giây giúp em nhé.`
+            : 'Em chưa xử lý trọn vẹn yêu cầu ở lần này. Anh/chị gửi lại nhu cầu ngắn gọn hơn (loại sản phẩm, ngân sách) để em trả kết quả nhanh hơn nhé.',
           products: []
         };
       }

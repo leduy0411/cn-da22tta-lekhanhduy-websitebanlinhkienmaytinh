@@ -13,6 +13,43 @@ const VectorSearchService = require('../rag/VectorSearchService');
 const PRODUCT_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/400x400.png?text=TechStore+Chua+Co+Anh';
 const IMAGE_CARD_ONLY_REPLY = 'Dạ mời anh/chị xem chi tiết ở các thẻ sản phẩm bên dưới nhé!';
 const SALES_CLOSING_LINE = 'Dạ, chi tiết và hình ảnh em đã hiển thị bên dưới ạ.';
+const VISION_SYSTEM_PROMPT = `Nhiệm vụ: Bạn là hệ thống trích xuất từ khóa E-commerce thông minh. Hãy nhìn vào ảnh và gọi đích danh món đồ đó.
+BẮT BUỘC trả về kết quả bằng TIẾNG VIỆT theo cấu trúc: [Tên loại thiết bị cụ thể] + [Thương hiệu/Model (nếu thấy)].
+
+QUY TẮC TỐI THƯỢNG:
+1. KHÔNG GIỚI HẠN DANH MỤC: Nhận diện bất cứ thứ gì trong ảnh (Webcam, Micro, Loa, Cáp sạc, Giá đỡ, Balo laptop, Hub USB...).
+2. CẤM DÙNG TỪ CHUNG CHUNG: Tuyệt đối không dùng các từ như 'thiết bị công nghệ', 'đồ điện tử', 'phụ kiện'. Phải gọi đúng tên gốc của món đồ.
+3. CẤM LẢM NHẢM: Chỉ trả về DUY NHẤT cụm từ tìm kiếm. Không giải thích, không chấm phẩy.
+4. LỌC RÁC: Nếu ảnh là người, chó mèo, đồ ăn, phong cảnh... trả về 'NOT_TECH'.
+5. CHUẨN HÓA TỪ VỰNG: BẮT BUỘC dùng từ khóa ngắn gọn, phổ thông của dân IT.
+- BẮT BUỘC dùng 'UPS' hoặc 'Bộ lưu điện'. TUYỆT ĐỐI KHÔNG dùng 'Bộ nguồn liên tục'.
+- BẮT BUỘC dùng 'Mainboard'. KHÔNG dùng 'Bo mạch chủ'.
+- Bỏ qua tên tập đoàn mẹ nếu đã có tên hãng chính (VD: Thấy APC thì bỏ chữ Schneider Electric).
+- CHỈ XUẤT RA TỐI ĐA 2-3 TỪ (Ví dụ chuẩn: 'UPS APC', 'Laptop MSI', 'Chuột Asus'). Cấm xuất ra câu dài.
+
+Ví dụ mô phỏng:
+- Ảnh cái loa hãng JBL -> Loa Bluetooth JBL
+- Ảnh sợi dây cáp Type-C -> Cáp sạc Type-C
+- Ảnh cục phát wifi TP-Link -> Router Wifi TP-Link
+- Ảnh đế tản nhiệt CoolerMaster -> Đế tản nhiệt CoolerMaster
+- Ảnh tay cầm chơi game PS5 -> Tay cầm chơi game PS5`;
+
+const VISION_CATEGORY_TO_STORE = {
+  LAPTOPS: 'laptop',
+  MICE: 'chuot',
+  KEYBOARDS: 'ban phim',
+  MONITORS: 'man hinh',
+  AUDIO: 'tai nghe'
+};
+
+const VISION_CATEGORY_TO_VI = {
+  LAPTOPS: 'laptop',
+  MICE: 'chuột',
+  KEYBOARDS: 'bàn phím',
+  MONITORS: 'màn hình',
+  AUDIO: 'thiết bị âm thanh',
+  OTHER: 'thiết bị công nghệ'
+};
 let lastSearchedProducts = [];
 
 const MASTER_SYSTEM_PROMPT = `[MASTER SYSTEM PROMPT]
@@ -55,13 +92,20 @@ class GroqChatService {
   constructor() {
     this.groqBaseUrl = process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
     this.groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+    this.groqVisionModel = process.env.GROQ_VISION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
     this.groqApiKey = process.env.GROQ_API_KEY || '';
     this.publicBaseUrl = (process.env.PUBLIC_BASE_URL || process.env.API_BASE_URL || 'http://localhost:5000').replace(/\/$/, '');
     this.assetBaseUrl = this.publicBaseUrl.replace(/\/api$/i, '');
 
-    this.geminiModelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    this.geminiModelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     this.geminiApiKey = process.env.GEMINI_API_KEY || '';
     this.geminiModel = null;
+    this.geminiFallbackCandidates = [
+      this.geminiModelName,
+      'gemini-2.5-flash',
+      'gemini-2.0-flash-exp',
+      'gemini-2.0-flash'
+    ];
 
     // Circuit breaker state
     this.breaker = {
@@ -74,15 +118,55 @@ class GroqChatService {
 
     this.maxRetries = Number(process.env.GROQ_MAX_RETRIES || 1);
     this.retryDelayMs = Number(process.env.GROQ_RETRY_DELAY_MS || 450);
+    this.lastProviderError = null;
+    this.lastProviderSuccess = null;
 
     if (this.geminiApiKey) {
-      try {
-        const gemini = new GoogleGenerativeAI(this.geminiApiKey);
-        this.geminiModel = gemini.getGenerativeModel({ model: this.geminiModelName });
-      } catch (error) {
-        console.error('Gemini fallback init failed:', error.message);
+      this._initGeminiModel(this.geminiModelName);
+    }
+  }
+
+  _initGeminiModel(modelName) {
+    if (!this.geminiApiKey || !modelName) {
+      return false;
+    }
+
+    try {
+      const gemini = new GoogleGenerativeAI(this.geminiApiKey);
+      this.geminiModel = gemini.getGenerativeModel({ model: modelName });
+      this.geminiModelName = modelName;
+      return true;
+    } catch (error) {
+      console.error('Gemini fallback init failed:', error.message);
+      return false;
+    }
+  }
+
+  _isGeminiModelNotFoundError(error) {
+    const text = String(error?.message || '').toLowerCase();
+    return text.includes('404') && (text.includes('model') || text.includes('models/')) && text.includes('not found');
+  }
+
+  _nextGeminiCandidate(currentModel) {
+    const uniqueCandidates = [];
+    const seen = new Set();
+
+    for (const item of this.geminiFallbackCandidates) {
+      const normalized = String(item || '').trim();
+      if (!normalized || seen.has(normalized)) {
+        continue;
+      }
+      seen.add(normalized);
+      uniqueCandidates.push(normalized);
+    }
+
+    for (const candidate of uniqueCandidates) {
+      if (candidate !== currentModel) {
+        return candidate;
       }
     }
+
+    return null;
   }
 
   isGroqAvailable() {
@@ -131,6 +215,53 @@ class GroqChatService {
     const status = error?.response?.status || error?.status || 0;
     const code = String(error?.code || '').toUpperCase();
     return status === 429 || status >= 500 || code === 'ECONNABORTED' || code === 'ETIMEDOUT' || code === 'ECONNRESET';
+  }
+
+  _recordProviderError(source, error, metadata = {}) {
+    const status = error?.response?.status || error?.status || null;
+    const code = error?.code || null;
+    const providerMessage = error?.response?.data?.error?.message || error?.message || 'unknown_error';
+
+    this.lastProviderError = {
+      source,
+      message: String(providerMessage),
+      status,
+      code,
+      breakerState: this.breaker.state,
+      failureCount: this.breaker.failureCount,
+      timestamp: new Date().toISOString(),
+      metadata: metadata && typeof metadata === 'object' ? metadata : {}
+    };
+  }
+
+  _recordProviderSuccess(source, metadata = {}) {
+    this.lastProviderSuccess = {
+      source,
+      breakerState: this.breaker.state,
+      timestamp: new Date().toISOString(),
+      metadata: metadata && typeof metadata === 'object' ? metadata : {}
+    };
+  }
+
+  getProviderDiagnostics() {
+    return {
+      breaker: {
+        state: this.breaker.state,
+        failureCount: this.breaker.failureCount,
+        failureThreshold: this.breaker.failureThreshold,
+        openTimeoutMs: this.breaker.openTimeoutMs,
+        nextTryAt: this.breaker.nextTryAt || 0
+      },
+      providers: {
+        groqConfigured: Boolean(this.groqApiKey),
+        groqModel: this.groqModel,
+        geminiConfigured: Boolean(this.geminiModel),
+        geminiModel: this.geminiModelName
+      },
+      lastError: this.lastProviderError,
+      lastSuccess: this.lastProviderSuccess,
+      timestamp: new Date().toISOString()
+    };
   }
 
   async _sleep(ms) {
@@ -223,11 +354,15 @@ class GroqChatService {
 
   _sanitizeResponseText(text = '') {
     const responseText = String(text || '');
+    const refusalSignal = /(xin\s*l[oô]i[^\n]{0,140}(kh[oô]ng\s*th[eể]|chua\s*th[eể])\s*(?:ti[eế]p\s*t[uụ]c\s*)?t[iì]m\s*ki[eế]m)|(kh[oô]ng\s*th[eể]\s*t[iì]m\s*th[aấ]y[^\n]{0,120}(ph[uù]\s*h[oợ]p|y[eê]u\s*c[aầ]u))/i;
+    const safeRecovery = 'Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm ngân sách và loại sản phẩm để em lọc chính xác hơn nhé.';
     const cleanMessage = responseText
       .replace(/<function[^>]*>[\s\S]*?(?:<\/function>|$)/gi, ' ')
       .replace(/<tool_call[^>]*>[\s\S]*?(?:<\/tool_call>|$)/gi, ' ')
       .trim();
-    let cleaned = String(cleanMessage || '').trim();
+    let cleanText = cleanMessage.replace(/^(assistant\s*:?\s*)/i, '').trim();
+    cleanText = cleanText.replace(/^(Here is the info.*?:\s*)/i, '').trim();
+    let cleaned = String(cleanText || '').trim();
 
     // Guardrail: remove any markdown image hallucination and bare image URLs from model text.
     cleaned = cleaned
@@ -247,11 +382,133 @@ class GroqChatService {
     cleaned = cleaned
       .replace(/^\s*Tôi\s+không\s+(?:thể\s+)?tìm\s+thấy\s+thông\s+tin\s+cụ\s+thể[^.?!]*[.?!]\s*/i, '')
       .replace(/^\s*Mình\s+không\s+(?:thể\s+)?tìm\s+thấy\s+thông\s+tin\s+cụ\s+thể[^.?!]*[.?!]\s*/i, '')
+      .replace(/^\s*Xin\s*lỗi,?\s*nhưng\s*tôi\s*không\s*thể\s*tiếp\s*tục\s*tìm\s*kiếm[^.?!]*[.?!]\s*/i, '')
+      .replace(/^\s*Xin\s*lỗi,?\s*nhưng\s*mình\s*không\s*thể\s*tiếp\s*tục\s*tìm\s*kiếm[^.?!]*[.?!]\s*/i, '')
+      .replace(/^\s*Xin\s*lỗi,?\s*nhưng\s*tôi\s*không\s*thể\s*tìm\s*thấy[^.?!]*[.?!]\s*/i, '')
+      .replace(/^\s*Xin\s*lỗi,?\s*nhưng\s*mình\s*không\s*thể\s*tìm\s*thấy[^.?!]*[.?!]\s*/i, '')
       .replace(/^\s*Hiện\s+tại\s+tôi\s+chưa\s+có\s+đủ\s+dữ\s+liệu[^.?!]*[.?!]\s*/i, '')
       .replace(/^\s*Tôi\s+xin\s+lỗi[^.?!]*[.?!]\s*/i, '')
       .trim();
 
+    if (!cleaned && refusalSignal.test(responseText)) {
+      return safeRecovery;
+    }
+
+    if (refusalSignal.test(cleaned)) {
+      return safeRecovery;
+    }
+
     return cleaned || cleanMessage || responseText.trim();
+  }
+
+  _normalizeVisionLabel(raw = '') {
+    const rawText = String(raw || '').trim();
+    if (!rawText) {
+      return '';
+    }
+
+    let label = rawText
+      .replace(/^(assistant\s*:?\s*)/i, '')
+      .replace(/^\s*(ten\s*san\s*pham|t[eê]n\s*s[aả]n\s*ph[aẩ]m|product\s*name|s[aả]n\s*ph[aẩ]m)\s*[:\-]\s*/i, '')
+      .split(/\r?\n/)[0]
+      .replace(/["'`]/g, '')
+      .trim();
+
+    label = label
+      .replace(/^(day\s*la|đây\s*là|la|là)\s+/i, '')
+      .replace(/[.?!]+$/g, '')
+      .trim();
+
+    if (!label) {
+      return '';
+    }
+
+    const compact = label.split(/\s+/).slice(0, 12).join(' ').trim();
+    return compact.slice(0, 120);
+  }
+
+  _parseVisionStageOutput(raw = '') {
+    const text = String(raw || '').trim();
+    if (!text) {
+      return {
+        categoryTag: 'OTHER',
+        categoryVi: VISION_CATEGORY_TO_VI.OTHER,
+        categoryStore: null,
+        brand: '',
+        query: '',
+        stage5Message: ''
+      };
+    }
+
+    if (/\bNOT_TECH\b/i.test(text)) {
+      return {
+        categoryTag: 'OTHER',
+        categoryVi: VISION_CATEGORY_TO_VI.OTHER,
+        categoryStore: null,
+        brand: '',
+        query: 'NOT_TECH',
+        stage5Message: ''
+      };
+    }
+
+    const categoryMatches = [...text.matchAll(/\[(LAPTOPS|MICE|KEYBOARDS|MONITORS|AUDIO|OTHER)\]/gi)];
+    const hasStructuredStages = /STAGE\s*1/i.test(text) || /STAGE\s*2/i.test(text) || /STAGE\s*3/i.test(text);
+    const categoryTag = String(categoryMatches.length > 0
+      ? categoryMatches[categoryMatches.length - 1]?.[1]
+      : 'OTHER').toUpperCase();
+
+    let query = '';
+    if (hasStructuredStages) {
+      const stage3Block = text.match(/STAGE\s*3[\s\S]*?(?=STAGE\s*4|$)/i)?.[0] || '';
+      const quotedQueryMatch = stage3Block.match(/['"]([^'"\n]{4,160})['"]/);
+      const labelledQueryMatch = stage3Block.match(/(?:query|search\s*query)\s*[:\-]\s*([^\n]{3,160})/i);
+      query = String(quotedQueryMatch?.[1] || labelledQueryMatch?.[1] || '').trim();
+    } else {
+      query = this._normalizeVisionLabel(text);
+    }
+
+    const stage2Block = text.match(/STAGE\s*2[\s\S]*?(?=STAGE\s*3|$)/i)?.[0] || text;
+    const brandMatch = stage2Block.match(/(?:brand|thuong\s*hieu|thương\s*hiệu)\s*[:\-]\s*([A-Za-z0-9][A-Za-z0-9\-\s]{0,40})/i)
+      || stage2Block.match(/\b(Asus|ASUS|Logitech|Razer|MSI|Dell|HP|Lenovo|Acer|Gigabyte|Corsair|Sony|JBL|SteelSeries|HyperX|TP-Link|CoolerMaster)\b/i);
+    const brand = String(brandMatch?.[1] || '').trim();
+
+    const stage5Message = hasStructuredStages
+      ? String((text.match(/STAGE\s*5[\s\S]*$/i)?.[0] || text).match(/Dạ[^\n]*/i)?.[0] || '').trim()
+      : '';
+
+    return {
+      categoryTag,
+      categoryVi: VISION_CATEGORY_TO_VI[categoryTag] || VISION_CATEGORY_TO_VI.OTHER,
+      categoryStore: VISION_CATEGORY_TO_STORE[categoryTag] || null,
+      brand,
+      query,
+      stage5Message
+    };
+  }
+
+  _buildVisionStage5Message({ recognizedLabel = '', brand = '', categoryVi = '', found = false, stage5Message = '' } = {}) {
+    const cleaned = String(stage5Message || '').trim();
+    if (cleaned) {
+      return cleaned;
+    }
+
+    const recognized = String(recognizedLabel || '').trim();
+    if (recognized) {
+      if (found) {
+        return `Dạ, em nhận diện được hình ảnh là ${recognized} và đây là các sản phẩm phù hợp:`;
+      }
+
+      return `Dạ, em nhận diện được hình ảnh là ${recognized}, tuy nhiên hiện tại cửa hàng không có sản phẩm này trong kho ạ.`;
+    }
+
+    const safeBrand = String(brand || '').trim() || 'một';
+    const safeCategory = String(categoryVi || '').trim() || 'sản phẩm công nghệ';
+
+    if (found) {
+      return `Dạ, em nhận diện được hình ảnh là một ${safeBrand} ${safeCategory} và đây là các sản phẩm phù hợp:`;
+    }
+
+    return `Dạ, em nhận diện được hình ảnh là một ${safeBrand} ${safeCategory}, tuy nhiên hiện tại cửa hàng không có sản phẩm này trong kho ạ.`;
   }
 
   _setLastSearchedProducts(products = []) {
@@ -338,6 +595,15 @@ class GroqChatService {
     }
 
     return /(muon mua|can mua|mua|tu van|goi y|de xuat|tham khao|tim san pham|tim pc|tim laptop|tam gia|ngan sach|duoi\s*\d+|tren\s*\d+|bao nhieu tien)/.test(value);
+  }
+
+  _isTechnicalSupportIntent(text = '') {
+    const value = this._normalizeTextForMatch(text);
+    if (!value) {
+      return false;
+    }
+
+    return /(khong len|man hinh xanh|treo may|nong may|qua nhiet|loi wifi|khong ket noi|mat mang|sua loi|khac phuc|chan doan|bao hanh|khong nhan|khong hoat dong|khong sac)/.test(value);
   }
 
   _isGlobalCatalogIntent(text = '') {
@@ -638,7 +904,12 @@ class GroqChatService {
 
   async _callGroq(messages, options = {}) {
     if (!this._canUseGroq()) {
-      throw new Error('Groq circuit is OPEN or API key missing');
+      const circuitError = new Error('Groq circuit is OPEN or API key missing');
+      this._recordProviderError('groq_chat', circuitError, {
+        stage: 'preflight',
+        reason: 'circuit_or_key'
+      });
+      throw circuitError;
     }
 
     let lastError = null;
@@ -674,6 +945,9 @@ class GroqChatService {
         }
 
         this._onGroqSuccess();
+        this._recordProviderSuccess('groq_chat', {
+          model: options.model || this.groqModel
+        });
         return {
           provider: 'groq',
           model: options.model || this.groqModel,
@@ -682,6 +956,11 @@ class GroqChatService {
       } catch (error) {
         lastError = error;
         this._onGroqFailure(error);
+        this._recordProviderError('groq_chat', error, {
+          stage: 'request',
+          attempt,
+          maxAttempts
+        });
 
         const shouldRetry = attempt < maxAttempts && this._isRetryableGroqError(error);
         if (!shouldRetry) {
@@ -696,31 +975,88 @@ class GroqChatService {
     const providerMessage = lastError?.response?.data?.error?.message || lastError?.message || 'Groq request failed';
     const enriched = new Error(`Groq request failed${status ? ` (${status})` : ''}: ${providerMessage}`);
     enriched.status = status;
+    this._recordProviderError('groq_chat', enriched, {
+      stage: 'final',
+      maxAttempts
+    });
     throw enriched;
   }
 
   async _callGeminiFallback(prompt, options = {}) {
     if (!this.geminiModel) {
-      throw new Error('Gemini fallback is not configured');
+      const missingGemini = new Error('Gemini fallback is not configured');
+      this._recordProviderError('gemini_fallback', missingGemini, {
+        stage: 'preflight',
+        reason: 'missing_model'
+      });
+      throw missingGemini;
     }
 
-    const result = await this.geminiModel.generateContent(prompt);
-    const text = result?.response?.text?.()?.trim();
+    try {
+      const result = await this.geminiModel.generateContent(prompt);
+      const text = result?.response?.text?.()?.trim();
 
-    if (!text) {
-      throw new Error('Gemini fallback returned empty response');
+      if (!text) {
+        throw new Error('Gemini fallback returned empty response');
+      }
+
+      this._recordProviderSuccess('gemini_fallback', {
+        model: this.geminiModelName,
+        maxTokens: options.maxTokens || null
+      });
+
+      return {
+        provider: 'gemini-fallback',
+        model: this.geminiModelName,
+        text: this._sanitizeResponseText(this._sanitizeFallbackPrefix(text))
+      };
+    } catch (error) {
+      if (this._isGeminiModelNotFoundError(error)) {
+        const candidate = this._nextGeminiCandidate(this.geminiModelName);
+        if (candidate && this._initGeminiModel(candidate)) {
+          try {
+            const retryResult = await this.geminiModel.generateContent(prompt);
+            const retryText = retryResult?.response?.text?.()?.trim();
+            if (!retryText) {
+              throw new Error('Gemini fallback returned empty response after model switch');
+            }
+
+            this._recordProviderSuccess('gemini_fallback', {
+              model: this.geminiModelName,
+              switchedFromModelNotFound: true,
+              maxTokens: options.maxTokens || null
+            });
+
+            return {
+              provider: 'gemini-fallback',
+              model: this.geminiModelName,
+              text: this._sanitizeResponseText(this._sanitizeFallbackPrefix(retryText))
+            };
+          } catch (retryError) {
+            this._recordProviderError('gemini_fallback', retryError, {
+              stage: 'request_retry_after_model_switch',
+              switchedTo: this.geminiModelName
+            });
+            throw retryError;
+          }
+        }
+      }
+
+      this._recordProviderError('gemini_fallback', error, {
+        stage: 'request'
+      });
+      throw error;
     }
-
-    return {
-      provider: 'gemini-fallback',
-      model: this.geminiModelName,
-      text: this._sanitizeResponseText(this._sanitizeFallbackPrefix(text))
-    };
   }
 
   async _callGroqWithTools(messages, options = {}) {
     if (!this._canUseGroq()) {
-      throw new Error('Groq circuit is OPEN or API key missing');
+      const circuitError = new Error('Groq circuit is OPEN or API key missing');
+      this._recordProviderError('groq_tool_call', circuitError, {
+        stage: 'preflight',
+        reason: 'circuit_or_key'
+      });
+      throw circuitError;
     }
 
     let lastError = null;
@@ -753,6 +1089,9 @@ class GroqChatService {
         );
 
         this._onGroqSuccess();
+        this._recordProviderSuccess('groq_tool_call', {
+          model: options.model || this.groqModel
+        });
         return {
           provider: 'groq',
           model: options.model || this.groqModel,
@@ -761,6 +1100,11 @@ class GroqChatService {
       } catch (error) {
         lastError = error;
         this._onGroqFailure(error);
+        this._recordProviderError('groq_tool_call', error, {
+          stage: 'request',
+          attempt,
+          maxAttempts
+        });
 
         const shouldRetry = attempt < maxAttempts && this._isRetryableGroqError(error);
         if (!shouldRetry) {
@@ -775,7 +1119,248 @@ class GroqChatService {
     const providerMessage = lastError?.response?.data?.error?.message || lastError?.message || 'Groq request failed';
     const enriched = new Error(`Groq tool-call request failed${status ? ` (${status})` : ''}: ${providerMessage}`);
     enriched.status = status;
+    this._recordProviderError('groq_tool_call', enriched, {
+      stage: 'final',
+      maxAttempts
+    });
     throw enriched;
+  }
+
+  async _callGroqVision(messages, options = {}) {
+    if (!this._canUseGroq()) {
+      const circuitError = new Error('Groq circuit is OPEN or API key missing');
+      this._recordProviderError('groq_vision', circuitError, {
+        stage: 'preflight',
+        reason: 'circuit_or_key'
+      });
+      throw circuitError;
+    }
+
+    let lastError = null;
+    const maxAttempts = Math.max(1, this.maxRetries + 1);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const response = await axios.post(
+          `${this.groqBaseUrl}/chat/completions`,
+          {
+            model: options.model || this.groqVisionModel,
+            temperature: options.temperature ?? 0,
+            max_tokens: Math.min(options.maxTokens ?? 80, Number(process.env.GROQ_VISION_MAX_OUTPUT_TOKENS || 80)),
+            messages
+          },
+          {
+            timeout: options.timeoutMs || 20000,
+            headers: {
+              Authorization: `Bearer ${this.groqApiKey}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        const text = response?.data?.choices?.[0]?.message?.content?.trim();
+        if (!text) {
+          throw new Error('Groq vision returned empty response');
+        }
+
+        this._onGroqSuccess();
+        this._recordProviderSuccess('groq_vision', {
+          model: options.model || this.groqVisionModel
+        });
+        return {
+          provider: 'groq-vision',
+          model: options.model || this.groqVisionModel,
+          text
+        };
+      } catch (error) {
+        lastError = error;
+        this._onGroqFailure(error);
+        this._recordProviderError('groq_vision', error, {
+          stage: 'request',
+          attempt,
+          maxAttempts
+        });
+
+        const shouldRetry = attempt < maxAttempts && this._isRetryableGroqError(error);
+        if (!shouldRetry) {
+          break;
+        }
+
+        await this._sleep(this.retryDelayMs * attempt);
+      }
+    }
+
+    const status = lastError?.response?.status || lastError?.status;
+    const providerMessage = lastError?.response?.data?.error?.message || lastError?.message || 'Groq vision request failed';
+    const enriched = new Error(`Groq vision request failed${status ? ` (${status})` : ''}: ${providerMessage}`);
+    enriched.status = status;
+    this._recordProviderError('groq_vision', enriched, {
+      stage: 'final',
+      maxAttempts
+    });
+    throw enriched;
+  }
+
+  async _runAgentFallbackWithoutGroq({ userMessage = '', aggregatedProducts = [], aggregatedSources = [], toolTrace = [], reason = '' } = {}) {
+    const products = Array.isArray(aggregatedProducts) ? [...aggregatedProducts] : [];
+    const sources = Array.isArray(aggregatedSources) ? [...aggregatedSources] : [];
+    const trace = Array.isArray(toolTrace) ? [...toolTrace] : [];
+
+    if (products.length === 0 && this._isProductShoppingIntent(userMessage)) {
+      try {
+        const productTool = await this._executeAgentTool('search_products', {
+          keywords: userMessage,
+          sort_by: 'relevance'
+        });
+
+        if (Array.isArray(productTool?.data) && productTool.data.length > 0) {
+          products.push(...productTool.data);
+        }
+
+        trace.push({
+          name: 'search_products',
+          args: { keywords: userMessage, sort_by: 'relevance', failoverMode: true },
+          total: productTool?.total || 0,
+          found: Boolean(productTool?.found)
+        });
+      } catch (error) {
+        trace.push({
+          name: 'search_products',
+          args: { keywords: userMessage, sort_by: 'relevance', failoverMode: true },
+          total: 0,
+          found: false
+        });
+      }
+    }
+
+    if (sources.length === 0 && this._isTechnicalSupportIntent(userMessage)) {
+      try {
+        const technicalTool = await this._executeAgentTool('search_technical_knowledge', {
+          topic: userMessage,
+          error_symptoms: userMessage
+        });
+
+        if (Array.isArray(technicalTool?.data) && technicalTool.data.length > 0) {
+          sources.push(...technicalTool.data);
+        }
+
+        trace.push({
+          name: 'search_technical_knowledge',
+          args: { topic: userMessage, error_symptoms: userMessage, failoverMode: true },
+          total: technicalTool?.total || 0,
+          found: Boolean(technicalTool?.found)
+        });
+      } catch (error) {
+        trace.push({
+          name: 'search_technical_knowledge',
+          args: { topic: userMessage, error_symptoms: userMessage, failoverMode: true },
+          total: 0,
+          found: false
+        });
+      }
+    }
+
+    const topProducts = products.slice(0, 10);
+    const topSources = sources.slice(0, 6);
+    if (topProducts.length > 0) {
+      this._setLastSearchedProducts(topProducts);
+    }
+
+    const fallbackPrompt = [
+      'Bạn là Trợ lý AI TechStore. Trả lời bằng tiếng Việt, ngắn gọn, tự nhiên, tuyệt đối không nhắc đến lỗi hệ thống nội bộ.',
+      `Yêu cầu người dùng: ${String(userMessage || '').trim()}`,
+      `Lý do failover: ${String(reason || 'provider_unavailable').slice(0, 250)}`,
+      `Dữ liệu sản phẩm (JSON): ${JSON.stringify(topProducts)}`,
+      `Dữ liệu kỹ thuật (JSON): ${JSON.stringify(topSources)}`,
+      'Chỉ dùng dữ liệu ở trên. Nếu dữ liệu ít, hãy hỏi lại nhu cầu chi tiết hơn để lọc chính xác.'
+    ].join('\n\n');
+
+    try {
+      const fallbackByGemini = await this._callGeminiFallback(fallbackPrompt, {
+        maxTokens: 420
+      });
+
+      const finalText = this._ensureSalesClosingLine(fallbackByGemini.text, topProducts);
+      return {
+        provider: fallbackByGemini.provider,
+        model: fallbackByGemini.model,
+        text: this._sanitizeResponseText(finalText),
+        products: topProducts,
+        sources: topSources,
+        toolTrace: trace
+      };
+    } catch (fallbackError) {
+      const bulletProducts = topProducts
+        .slice(0, 4)
+        .map((item) => {
+          const price = Number(item?.price || 0);
+          const priceText = Number.isFinite(price) && price > 0 ? `: ${price.toLocaleString('vi-VN')} VND` : '';
+          return `- ${item?.name || 'Sản phẩm'}${priceText}`;
+        })
+        .join('\n');
+
+      const localText = topProducts.length > 0
+        ? `Em gửi nhanh vài gợi ý phù hợp để anh/chị tham khảo:\n\n${bulletProducts}`
+        : 'Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm ngân sách và loại sản phẩm để em lọc chính xác hơn nhé.';
+
+      return {
+        provider: 'agent-fallback-local',
+        model: 'rule-based',
+        text: this._sanitizeResponseText(localText),
+        products: topProducts,
+        sources: topSources,
+        toolTrace: trace
+      };
+    }
+  }
+
+  async _classifyImageWithVision(imageBase64 = '') {
+    const encodedImage = String(imageBase64 || '').trim();
+    if (!/^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(encodedImage)) {
+      throw new Error('Invalid image payload for vision classification');
+    }
+
+    const visionMessages = [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: `${VISION_SYSTEM_PROMPT}\n\nAnalyze this image now and follow STAGE 1 to STAGE 5 exactly.`
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: encodedImage
+            }
+          }
+        ]
+      }
+    ];
+
+    const visionResult = await this._callGroqVision(visionMessages, {
+      model: this.groqVisionModel,
+      temperature: 0,
+      maxTokens: 600,
+      timeoutMs: 20000
+    });
+
+    const normalized = String(visionResult?.text || '').trim();
+    const parsed = this._parseVisionStageOutput(normalized);
+    const normalizedLabel = parsed.query || this._normalizeVisionLabel(normalized);
+    const inferredNotTech = !normalizedLabel && parsed.categoryTag === 'OTHER';
+
+    return {
+      notTech: inferredNotTech,
+      label: normalizedLabel,
+      category: parsed.categoryStore,
+      categoryTag: parsed.categoryTag,
+      categoryVi: parsed.categoryVi,
+      brand: parsed.brand,
+      stage5Message: parsed.stage5Message,
+      provider: visionResult.provider,
+      model: visionResult.model
+    };
   }
 
   _getAgentTools() {
@@ -967,28 +1552,178 @@ class GroqChatService {
     };
   }
 
-  async chatWithAgent(userMessage, conversationHistory = []) {
+  async chatWithAgent(userMessage, conversationHistory = [], options = {}) {
     const trimmedUserMessage = String(userMessage || '').trim();
+    const imageBase64 = typeof options?.imageBase64 === 'string' ? options.imageBase64.trim() : '';
+    console.log('Image Base64 Received:', !!imageBase64);
+    const cleanFinalText = (value = '') => this._sanitizeResponseText(value);
+    let effectiveUserMessage = trimmedUserMessage;
+    let visionTrace = null;
+    let visionQuery = '';
+
+    if (imageBase64) {
+      console.log('--> Đang gọi model Vision...');
+      try {
+        const visionMessages = [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `${VISION_SYSTEM_PROMPT}\n\nAnalyze this image now and follow STAGE 1 to STAGE 5 exactly.`
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: imageBase64
+                }
+              }
+            ]
+          }
+        ];
+
+        let visionResult;
+        try {
+          visionResult = await this._callGroqVision(visionMessages, {
+            model: 'llama-3.2-11b-vision-preview',
+            temperature: 0,
+            maxTokens: 600,
+            timeoutMs: 20000
+          });
+        } catch (visionModelError) {
+          const shouldFallbackVisionModel = /decommissioned|not supported|model/i.test(String(visionModelError?.message || ''));
+          if (!shouldFallbackVisionModel || !this.groqVisionModel || this.groqVisionModel === 'llama-3.2-11b-vision-preview') {
+            throw visionModelError;
+          }
+
+          visionResult = await this._callGroqVision(visionMessages, {
+            model: this.groqVisionModel,
+            temperature: 0,
+            maxTokens: 600,
+            timeoutMs: 20000
+          });
+        }
+
+        const visionRaw = String(visionResult?.text || '').trim();
+        const parsedVision = this._parseVisionStageOutput(visionRaw);
+        visionQuery = parsedVision.query || this._normalizeVisionLabel(visionRaw);
+        console.log('--> Kết quả Vision:', visionQuery || '[empty]');
+
+        const visionQueryText = String(visionQuery || '').trim();
+        let finalVisionQuery = visionQueryText.toLowerCase();
+        finalVisionQuery = finalVisionQuery.replace(/bộ nguồn liên tục/g, 'ups');
+        finalVisionQuery = finalVisionQuery.replace(/schneider electric/g, '');
+        finalVisionQuery = finalVisionQuery.replace(/bo mạch chủ/g, 'mainboard');
+        finalVisionQuery = finalVisionQuery.replace(/\s{2,}/g, ' ').trim();
+        console.log('=== TỪ KHÓA ĐÃ LỌC ĐỂ SEARCH DB ===> ', finalVisionQuery);
+
+        if (finalVisionQuery) {
+          visionQuery = finalVisionQuery;
+        }
+
+        visionTrace = {
+          name: 'vision_classification',
+          raw: visionRaw,
+          label: visionQuery,
+          categoryTag: parsedVision.categoryTag,
+          category: parsedVision.categoryStore,
+          brand: parsedVision.brand,
+          stage5Message: parsedVision.stage5Message,
+          notTech: !visionQuery && parsedVision.categoryTag === 'OTHER'
+        };
+
+        if ((!visionQuery || visionQuery.toUpperCase() === 'NOT_TECH') && parsedVision.categoryTag === 'OTHER') {
+          return {
+            provider: visionResult?.provider || 'groq-vision',
+            model: visionResult?.model || 'llama-3.2-11b-vision-preview',
+            text: cleanFinalText('Dạ, hình ảnh này có vẻ không phải là sản phẩm công nghệ bên em đang kinh doanh ạ.'),
+            products: [],
+            sources: [],
+            toolTrace: [visionTrace]
+          };
+        }
+
+        const directSearch = await this._executeAgentTool('search_products', {
+          category: parsedVision.categoryStore || undefined,
+          keywords: visionQuery,
+          sort_by: 'relevance'
+        });
+
+        const directProducts = Array.isArray(directSearch?.data)
+          ? directSearch.data.slice(0, 10)
+          : [];
+
+        if (directProducts.length > 0) {
+          this._setLastSearchedProducts(directProducts);
+        }
+
+        const stage5Reply = this._buildVisionStage5Message({
+          recognizedLabel: visionQuery,
+          brand: parsedVision.brand,
+          categoryVi: parsedVision.categoryVi,
+          found: directProducts.length > 0,
+          stage5Message: parsedVision.stage5Message
+        });
+
+        return {
+          provider: 'vision-db-bypass',
+          model: visionResult?.model || 'llama-3.2-11b-vision-preview',
+          text: cleanFinalText(stage5Reply),
+          products: directProducts,
+          sources: [],
+          toolTrace: [
+            visionTrace,
+            {
+              name: 'search_products',
+              args: {
+                category: parsedVision.categoryStore || undefined,
+                keywords: visionQuery,
+                sort_by: 'relevance',
+                bypassLLM: true
+              },
+              total: directProducts.length,
+              found: directProducts.length > 0
+            }
+          ]
+        };
+      } catch (visionError) {
+        console.error('--> Vision step failed:', visionError?.message || 'unknown_error');
+        visionTrace = {
+          name: 'vision_classification',
+          failed: true,
+          reason: visionError?.message || 'unknown_error'
+        };
+
+        return {
+          provider: 'groq-vision',
+          model: 'llama-3.2-11b-vision-preview',
+          text: cleanFinalText('Em chưa phân tích được ảnh ở lần này. Anh/chị thử gửi lại ảnh rõ hơn giúp em nhé.'),
+          products: [],
+          sources: [],
+          toolTrace: [visionTrace]
+        };
+      }
+    }
 
     // Bắt các câu đòi xem ảnh
-    const isAskingForImage = /^(có hình không|đâu|hình đâu|cho xem hình|xem ảnh|hình ảnh đâu|đâu rồi|xem hình)$/i.test(userMessage.trim());
+    const isAskingForImage = /^(có hình không|đâu|hình đâu|cho xem hình|xem ảnh|hình ảnh đâu|đâu rồi|xem hình)$/i.test(effectiveUserMessage.trim());
 
     if (isAskingForImage) {
       if (typeof lastSearchedProducts !== 'undefined' && lastSearchedProducts.length > 0) {
         // TRẢ VỀ LUÔN, KHÔNG GỌI GROQ API ĐỂ TRÁNH LỖI!
         return {
-          text: 'Dạ, hình ảnh và thông tin chi tiết các sản phẩm anh/chị vừa hỏi đây ạ!',
+          text: cleanFinalText('Dạ, hình ảnh và thông tin chi tiết các sản phẩm anh/chị vừa hỏi đây ạ!'),
           products: lastSearchedProducts
         };
       }
 
       return {
-        text: 'Dạ anh/chị muốn tìm sản phẩm nào ạ? Em sẽ hiển thị hình ảnh ngay cho anh/chị xem.',
+        text: cleanFinalText('Dạ anh/chị muốn tìm sản phẩm nào ạ? Em sẽ hiển thị hình ảnh ngay cho anh/chị xem.'),
         products: []
       };
     }
 
-    const isSmallTalk = /^(xin chào|chào|hi|hello|alo|dạ|vâng|cảm ơn|bye)$/i.test(trimmedUserMessage);
+    const isSmallTalk = /^(xin chào|chào|hi|hello|alo|dạ|vâng|cảm ơn|bye)$/i.test(effectiveUserMessage);
     if (isSmallTalk) {
       lastSearchedProducts = [];
     }
@@ -1002,30 +1737,54 @@ class GroqChatService {
       }))
       .filter((item) => item.content);
 
+    const shouldIsolateImageContext = false;
+    const normalizedHistory = shouldIsolateImageContext ? [] : boundedHistory;
+    const step2VisionSystemPrompt = shouldIsolateImageContext
+      ? `Hệ thống Vision vừa nhận diện khách hàng muốn tìm: ${effectiveUserMessage}. LỆNH ÉP BUỘC: Bạn phải gọi tool search_products ngay lập tức với từ khóa này. TUYỆT ĐỐI KHÔNG chào hỏi, KHÔNG yêu cầu khách hàng cung cấp thêm chi tiết.`
+      : '';
+    const finalUserInstruction = shouldIsolateImageContext
+      ? `User vừa upload một hình ảnh. BẮT BUỘC gọi tool search_products ngay lập tức để tìm kiếm sản phẩm phù hợp, không được dùng lịch sử cũ.`
+      : effectiveUserMessage;
+    const step2ToolChoice = shouldIsolateImageContext
+      ? 'required'
+      : 'auto';
+
     const messages = [
       {
         role: 'system',
         content: MASTER_SYSTEM_PROMPT
       },
-      ...boundedHistory,
+      ...(step2VisionSystemPrompt ? [{ role: 'system', content: step2VisionSystemPrompt }] : []),
+      ...normalizedHistory,
       {
         role: 'user',
-        content: String(userMessage || '').trim()
+        content: finalUserInstruction
       }
     ];
 
     const aggregatedProducts = [];
     const aggregatedSources = [];
-    const toolTrace = [];
+    const toolTrace = visionTrace ? [visionTrace] : [];
     const maxIterations = Number(process.env.AGENT_MAX_ITERATIONS || 6);
 
     for (let step = 1; step <= maxIterations; step += 1) {
-      const turn = await this._callGroqWithTools(messages, {
-        tools,
-        temperature: 0.2,
-        maxTokens: 900,
-        toolChoice: 'auto'
-      });
+      let turn;
+      try {
+        turn = await this._callGroqWithTools(messages, {
+          tools,
+          temperature: 0.2,
+          maxTokens: 900,
+          toolChoice: step2ToolChoice
+        });
+      } catch (groqToolError) {
+        return this._runAgentFallbackWithoutGroq({
+          userMessage: effectiveUserMessage,
+          aggregatedProducts,
+          aggregatedSources,
+          toolTrace,
+          reason: groqToolError?.message || 'groq_tool_call_failed'
+        });
+      }
 
       const choice = turn?.raw?.choices?.[0] || {};
       const assistantMessage = choice?.message || {};
@@ -1034,16 +1793,17 @@ class GroqChatService {
 
       if (toolCalls.length === 0 && finishReason === 'stop') {
         const responseText = String(assistantMessage?.content || '').trim();
-        const sanitized = this._sanitizeResponseText(responseText);
+        const cleanText = responseText.replace(/^(assistant\s*:?\s*)/i, '').trim();
+        const sanitized = this._sanitizeResponseText(cleanText);
         const hasFreshProducts = Array.isArray(aggregatedProducts) && aggregatedProducts.length > 0;
         let activeProductsList = hasFreshProducts
           ? aggregatedProducts.slice(0, 10)
           : [];
 
-        if (!hasFreshProducts && this._isProductShoppingIntent(trimmedUserMessage)) {
+        if (!hasFreshProducts && this._isProductShoppingIntent(effectiveUserMessage)) {
           try {
             const fallbackProductSearch = await this._executeAgentTool('search_products', {
-              keywords: trimmedUserMessage,
+              keywords: effectiveUserMessage,
               sort_by: 'relevance'
             });
 
@@ -1055,7 +1815,7 @@ class GroqChatService {
               activeProductsList = fallbackProducts;
               toolTrace.push({
                 name: 'search_products',
-                args: { keywords: trimmedUserMessage, sort_by: 'relevance', autoFallback: true },
+                args: { keywords: effectiveUserMessage, sort_by: 'relevance', autoFallback: true },
                 total: fallbackProducts.length,
                 found: true
               });
@@ -1063,7 +1823,7 @@ class GroqChatService {
           } catch (fallbackError) {
             toolTrace.push({
               name: 'search_products',
-              args: { keywords: trimmedUserMessage, sort_by: 'relevance', autoFallback: true },
+              args: { keywords: effectiveUserMessage, sort_by: 'relevance', autoFallback: true },
               total: 0,
               found: false
             });
@@ -1075,7 +1835,7 @@ class GroqChatService {
         }
 
         let cleanMessage = sanitized;
-        if (this._shouldForceImageCardReply(userMessage) && activeProductsList.length > 0) {
+        if (this._shouldForceImageCardReply(effectiveUserMessage) && activeProductsList.length > 0) {
           cleanMessage = IMAGE_CARD_ONLY_REPLY;
         } else {
           cleanMessage = this._ensureSalesClosingLine(cleanMessage, activeProductsList);
@@ -1091,7 +1851,7 @@ class GroqChatService {
         return {
           provider: turn.provider,
           model: turn.model,
-          text: final_llm_text,
+          text: cleanFinalText(final_llm_text),
           products: final_products,
           sources: aggregatedSources.slice(0, 10),
           toolTrace
