@@ -23,6 +23,34 @@ const WELCOME_MESSAGE = {
   text: 'Chào bạn, mình là trợ lý AI của TechStore. Mình có thể giúp gì cho bạn hôm nay?'
 };
 
+function normalizeForMatch(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function shouldRecoverProductsFromHistory(text) {
+  const normalized = normalizeForMatch(text);
+  return /xem\s+(hinh|anh)|the\s+san\s+pham\s+ben\s+duoi|xem\s+chi\s+tiet\s+o\s+cac\s+the/.test(normalized);
+}
+
+function isImageFollowUpUserMessage(text) {
+  const normalized = normalizeForMatch(text);
+  return /^(co\s+hinh\s+khong|dau|hinh\s+dau|cho\s+xem\s+hinh|xem\s+anh|hinh\s+anh\s+dau|dau\s+roi|xem\s+hinh)$/.test(normalized);
+}
+
+function getLatestProductsFromHistory(messages = []) {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const candidate = messages[i];
+    if (Array.isArray(candidate?.products) && candidate.products.length > 0) {
+      return candidate.products.slice(0, 5);
+    }
+  }
+
+  return [];
+}
+
 function normalizeImageUrl(rawUrl) {
   if (!rawUrl || typeof rawUrl !== 'string') {
     return '';
@@ -35,9 +63,31 @@ function normalizeImageUrl(rawUrl) {
   }
 }
 
+function resolveAssetUrl(rawUrl) {
+  const normalized = normalizeImageUrl(rawUrl);
+  if (!normalized) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(normalized)) {
+    return normalized;
+  }
+
+  if (normalized.startsWith('//')) {
+    return `https:${normalized}`;
+  }
+
+  const assetBase = normalizedApiBase.replace(/\/api$/i, '');
+  if (normalized.startsWith('/')) {
+    return `${assetBase}${normalized}`;
+  }
+
+  return `${assetBase}/${normalized}`;
+}
+
 function ProductImage({ src, alt }) {
   const [failed, setFailed] = useState(false);
-  const safeSrc = normalizeImageUrl(src);
+  const safeSrc = resolveAssetUrl(src);
 
   useEffect(() => {
     setFailed(false);
@@ -62,14 +112,44 @@ function ProductImage({ src, alt }) {
   );
 }
 
+function MarkdownImage({ src, alt }) {
+  const [failed, setFailed] = useState(false);
+  const safeSrc = resolveAssetUrl(src);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [safeSrc]);
+
+  if (!safeSrc || failed) {
+    return (
+      <span className="ts-chat-inline-image-fallback">
+        [Khong the tai hinh anh]
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={safeSrc}
+      alt={alt || 'Hinh anh san pham'}
+      className="ts-chat-inline-image"
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState('');
+  const [selectedImageBase64, setSelectedImageBase64] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(() => localStorage.getItem(SESSION_KEY) || '');
 
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
 
@@ -116,16 +196,141 @@ export default function ChatWidget() {
 
   const handleNewChat = () => {
     resetChatSession();
+    setSelectedImageBase64(null);
     setMessages([WELCOME_MESSAGE]);
+  };
+
+  const compressImageFileToBase64 = (file, options = {}) => new Promise((resolve, reject) => {
+    const maxWidth = Number(options.maxWidth) || 800;
+    const quality = Number(options.quality) || 0.7;
+
+    let objectUrl = '';
+
+    try {
+      objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          const originalWidth = Number(img.naturalWidth || img.width || 0);
+          const originalHeight = Number(img.naturalHeight || img.height || 0);
+
+          if (!originalWidth || !originalHeight) {
+            reject(new Error('Kích thước ảnh không hợp lệ.'));
+            return;
+          }
+
+          const scale = Math.min(1, maxWidth / originalWidth);
+          const targetWidth = Math.max(1, Math.round(originalWidth * scale));
+          const targetHeight = Math.max(1, Math.round(originalHeight * scale));
+
+          const canvas = document.createElement('canvas');
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+
+          const ctx = canvas.getContext('2d', { alpha: false });
+          if (!ctx) {
+            reject(new Error('Không thể khởi tạo bộ nén ảnh.'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+
+          if (!compressedBase64 || !compressedBase64.startsWith('data:image/')) {
+            reject(new Error('Không thể nén ảnh đã chọn.'));
+            return;
+          }
+
+          resolve(compressedBase64);
+        } catch (error) {
+          reject(error);
+        } finally {
+          if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+          }
+        }
+      };
+
+      img.onerror = () => {
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+        }
+        reject(new Error('Không thể tải ảnh để nén.'));
+      };
+
+      img.src = objectUrl;
+    } catch (error) {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      reject(error);
+    }
+  });
+
+  const handlePickImageClick = () => {
+    if (isLoading) return;
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleImageSelected = async (event) => {
+    try {
+      const file = event?.target?.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      if (!file.type || !file.type.startsWith('image/')) {
+        throw new Error('Vui lòng chọn đúng file hình ảnh.');
+      }
+
+      const compressedBase64DataUrl = await compressImageFileToBase64(file, {
+        maxWidth: 800,
+        quality: 0.7
+      });
+
+      setSelectedImageBase64(compressedBase64DataUrl);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          role: 'ai',
+          text: error?.message || 'Không thể xử lý ảnh đã chọn. Vui lòng thử lại.'
+        }
+      ]);
+    } finally {
+      if (event?.target) {
+        event.target.value = '';
+      }
+    }
+  };
+
+  const handleRemoveSelectedImage = () => {
+    setSelectedImageBase64(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSendMessage = async () => {
     const trimmed = inputText.trim();
-    if (!trimmed || isLoading) return;
+    const hasImage = Boolean(selectedImageBase64);
+    if ((!trimmed && !hasImage) || isLoading) return;
+
+    const outgoingMessage = trimmed;
+    const outgoingImageBase64 = selectedImageBase64;
 
     setMessages((prev) => [
       ...prev,
-      { id: Date.now(), role: 'user', text: trimmed }
+      {
+        id: Date.now(),
+        role: 'user',
+        text: outgoingMessage || 'Đã gửi 1 ảnh để tìm kiếm trực quan.',
+        image: outgoingImageBase64 || null
+      }
     ]);
     setInputText('');
     setIsLoading(true);
@@ -152,7 +357,8 @@ export default function ChatWidget() {
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
-          message: trimmed,
+          message: outgoingMessage,
+          imageBase64: outgoingImageBase64,
           topK: 4,
           candidateK: 8,
           history: messages.slice(-6).map((m) => ({
@@ -175,19 +381,33 @@ export default function ChatWidget() {
         localStorage.setItem(SESSION_KEY, payload.sessionId);
       }
 
+      setSelectedImageBase64(null);
+
       localStorage.setItem(LAST_USER_MESSAGE_AT_KEY, String(now));
+
+      const aiText = payload?.data?.text || payload?.answer || 'Xin lỗi, mình chưa có phản hồi phù hợp.';
+      const apiProducts = Array.isArray(payload?.data?.products) ? payload.data.products : [];
 
       setMessages((prev) => [
         ...prev,
-        {
-          id: Date.now() + 1,
-          role: 'ai',
-          text: payload?.data?.text || payload?.answer || 'Xin lỗi, mình chưa có phản hồi phù hợp.',
-          products: Array.isArray(payload?.data?.products) ? payload.data.products : [],
-          mode: payload?.data?.meta?.mode || (CHAT_MODE === 'rag-local' ? 'rag-local' : 'normal'),
-          provider: payload?.data?.meta?.provider || '',
-          degraded: Boolean(payload?.data?.meta?.degraded)
-        }
+        (() => {
+          const fallbackProducts = getLatestProductsFromHistory(prev);
+          const recoveredProducts = (apiProducts.length === 0
+            && shouldRecoverProductsFromHistory(aiText)
+            && isImageFollowUpUserMessage(outgoingMessage))
+            ? fallbackProducts
+            : apiProducts;
+
+          return {
+            id: Date.now() + 1,
+            role: 'ai',
+            text: aiText,
+            products: recoveredProducts,
+            mode: payload?.data?.meta?.mode || (CHAT_MODE === 'rag-local' ? 'rag-local' : 'normal'),
+            provider: payload?.data?.meta?.provider || '',
+            degraded: Boolean(payload?.data?.meta?.degraded)
+          };
+        })()
       ]);
     } catch (error) {
       setMessages((prev) => [
@@ -255,7 +475,11 @@ export default function ChatWidget() {
                       </div>
                       <div className="ts-chat-bubble ts-chat-bubble-ai">
                         <div className="ts-chat-markdown">
-                          <ReactMarkdown>
+                          <ReactMarkdown
+                            components={{
+                              img: ({ src, alt }) => <MarkdownImage src={src} alt={alt} />
+                            }}
+                          >
                             {msg.text || ''}
                           </ReactMarkdown>
                         </div>
@@ -299,6 +523,13 @@ export default function ChatWidget() {
 
                   {msg.role === 'user' && (
                     <div className="ts-chat-bubble ts-chat-bubble-user">
+                      {msg.image && (
+                        <img
+                          src={msg.image}
+                          className="max-w-xs rounded-lg mb-2 object-cover"
+                          alt="User upload"
+                        />
+                      )}
                       {msg.text}
                     </div>
                   )}
@@ -327,10 +558,38 @@ export default function ChatWidget() {
           </main>
 
           <div className="ts-chat-composer-wrap">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleImageSelected}
+            />
+
+            {selectedImageBase64 && (
+              <div className="ts-chat-image-preview-wrap">
+                <img
+                  src={selectedImageBase64}
+                  alt="Ảnh đã chọn"
+                  className="ts-chat-image-preview"
+                />
+                <button
+                  type="button"
+                  className="ts-chat-image-preview-remove"
+                  onClick={handleRemoveSelectedImage}
+                  aria-label="Xóa ảnh đã chọn"
+                  disabled={isLoading}
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
             <div className="ts-chat-composer">
               <button
                 className="ts-chat-icon-btn"
                 type="button"
+                onClick={handlePickImageClick}
                 disabled={isLoading}
                 aria-label="Upload image"
               >
@@ -349,7 +608,7 @@ export default function ChatWidget() {
               />
 
               <div className="ts-chat-actions">
-                {!inputText.trim() ? (
+                {!inputText.trim() && !selectedImageBase64 ? (
                   <button
                     className="ts-chat-icon-btn"
                     type="button"

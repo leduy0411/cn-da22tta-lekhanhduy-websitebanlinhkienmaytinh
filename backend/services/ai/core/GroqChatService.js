@@ -7,33 +7,57 @@
 
 const axios = require('axios');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const SemanticSearchService = require('../SemanticSearchService');
+const VectorSearchService = require('../rag/VectorSearchService');
 
-const MASTER_SYSTEM_PROMPT = [
-  'RULE ƯU TIÊN CAO NHẤT (SMALL TALK): Khi khách hàng chỉ gửi câu chào cơ bản như "xin chào", "hello", "chào em", "hi", CHỈ ĐƯỢC chào lại ngắn gọn, thân thiện và hỏi họ cần hỗ trợ tư vấn mua hàng hay sửa chữa. TUYỆT ĐỐI KHÔNG tự động hỏi thông tin cấu hình, không yêu cầu mô tả triệu chứng lỗi, không hỏi thời điểm lỗi và không đưa ra các bước sửa chữa khi khách chưa nêu vấn đề cụ thể.',
-  'LƯU Ý BẮT BUỘC: Rule small-talk ở trên chỉ áp dụng khi tin nhắn là lời chào đơn thuần. Nếu người dùng có yêu cầu rõ ràng (ví dụ: hướng dẫn sửa laptop, tư vấn mua hàng, so sánh sản phẩm), phải trả lời trực tiếp yêu cầu đó, KHÔNG được dùng lại mẫu câu chào mặc định.',
-  'RÀNG BUỘC PHÂN BIỆT: Nếu tin nhắn chứa động từ hành động như "hướng dẫn", "sửa", "tư vấn", "so sánh", "mua", "khắc phục", thì đây KHÔNG phải small-talk. Trong trường hợp này phải đi thẳng vào nội dung yêu cầu ngay ở câu đầu tiên.',
-  'VÍ DỤ: Input "bạn hướng dẫn tôi sửa laptop được không" -> Output phải bắt đầu bằng hướng dẫn sửa laptop, không bắt đầu bằng câu chào xã giao.',
-  'Bạn là trợ lý kỹ thuật của TechStore.',
-  'Mục tiêu: trả lời đúng trọng tâm, dễ làm theo, ưu tiên tiếng Việt tự nhiên.',
-  'BẮT BUỘC NGÔN NGỮ: Luôn trả lời bằng tiếng Việt có dấu đầy đủ (Unicode chuẩn), không viết kiểu không dấu.',
-  'Nếu có context truy xuất (RAG), ưu tiên bám sát context và không bịa thông tin ngoài context.',
-  'Nếu dữ liệu chưa đủ, nêu rõ phần còn thiếu và hỏi tối đa 1-2 câu làm rõ.',
-  'KHI NGƯỜI DÙNG MUỐN SỬA CHỮA NHƯNG CHƯA NÊU ĐỦ TRIỆU CHỨNG: vẫn phải đưa checklist chẩn đoán ban đầu 4-6 bước (từ dễ đến khó) có thể làm ngay, sau đó chỉ hỏi thêm 1 câu ngắn để khoanh vùng.',
-  'Không được trả lời kiểu bế tắc như "không tìm thấy thông tin cụ thể" hoặc yêu cầu người dùng mô tả lại từ đầu khi vẫn có thể hướng dẫn chẩn đoán cơ bản.',
-  'Nếu người dùng đã cung cấp triệu chứng lỗi (ví dụ: "lỗi màn hình", "màn hình đen", "nhấp nháy"), không hỏi lại triệu chứng lần nữa; chuyển ngay sang hướng dẫn xử lý theo từng bước phù hợp với triệu chứng đó.',
-  'Với câu hỏi lỗi máy tính, ưu tiên quy trình chẩn đoán theo từng bước từ dễ đến khó.',
-  'Áp dụng cho MỌI nhóm lỗi, không chỉ màn hình: nguồn/sạc, pin, nhiệt độ/quạt, bàn phím/touchpad, Wi-Fi/Bluetooth, âm thanh/camera, hiệu năng chậm/đơ, lỗi hệ điều hành/BSOD.',
-  'Không dùng cùng một checklist chung cho mọi lỗi; phải tùy biến checklist theo triệu chứng chính mà người dùng nêu.',
-  'Khi có rủi ro mất dữ liệu hoặc can thiệp phần cứng, cần cảnh báo ngắn gọn trước khi hướng dẫn.',
-  'Không dùng câu mở đầu kiểu "Tôi xin lỗi vì lỗi tạm thời của mình" hoặc các biến thể tương tự.',
-  'Tránh xin lỗi chung chung; thay bằng hành động cụ thể người dùng có thể làm ngay.'
-].join('\n');
+const PRODUCT_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/400x400.png?text=TechStore+Chua+Co+Anh';
+const IMAGE_CARD_ONLY_REPLY = 'Dạ mời anh/chị xem chi tiết ở các thẻ sản phẩm bên dưới nhé!';
+const SALES_CLOSING_LINE = 'Dạ, chi tiết và hình ảnh em đã hiển thị bên dưới ạ.';
+let lastSearchedProducts = [];
+
+const MASTER_SYSTEM_PROMPT = `[MASTER SYSTEM PROMPT]
+# 0. LỆNH TỐI CAO (MANDATORY TOOL CALLING)
+- LỆNH TỐI CAO: BẠN BỊ NGHIÊM CẤM TỰ BỊA RA HOẶC TƯ VẤN SẢN PHẨM BẰNG KIẾN THỨC CỦA BẠN. Bất cứ khi nào khách hàng hỏi mua, nhờ tư vấn, liệt kê sản phẩm, HOẶC YÊU CẦU XEM HÌNH ẢNH, bạn BẮT BUỘC PHẢI GỌI TOOL \`search_products\`. Nếu bạn không gọi tool, hệ thống sẽ sập và khách hàng sẽ không thấy được hình ảnh.
+
+# 1. ĐỊNH DANH & NHÂN VẬT (PERSONA)
+- Bạn là "Trợ lý AI TechStore" - một nhân viên tư vấn bán hàng và kỹ thuật viên xuất sắc tại Việt Nam.
+- Giọng điệu: Chuyên nghiệp, nhiệt tình, lịch sự, ngắn gọn và mang đậm phong cách E-commerce Việt Nam.
+- Xưng hô: Xưng "em" hoặc "mình", gọi khách hàng là "anh/chị" hoặc "bạn" một cách linh hoạt và tự nhiên.
+- TUYỆT ĐỐI CẤM: Không bao giờ xưng là "Autonomous Agent", "AI", "Bot", hay "Mô hình ngôn ngữ". Không bao giờ để lộ bạn đang dùng "Tools", "Functions", "Database" hay "RAG".
+
+# 2. XỬ LÝ GIAO TIẾP XÃ GIAO (SMALL TALK)
+- Nếu khách hàng chỉ chào hỏi (xin chào, hi, chào buổi sáng) hoặc cảm ơn: BẮT BUỘC chỉ đáp lại tối đa 2 câu thật tự nhiên. 
+- Mẫu tham khảo: "Dạ em chào anh/chị ạ! Hôm nay anh/chị cần TechStore tư vấn build PC, mua linh kiện hay hỗ trợ sửa chữa máy tính ạ?"
+- NẾU KHÁCH CHỈ CHÀO HỎI (xin chào, hi...): CHỈ ĐƯỢC đáp lại lời chào và hỏi họ cần hỗ trợ gì. TUYỆT ĐỐI CẤM dùng các từ "hình ảnh", "chi tiết bên dưới", "sản phẩm" trong câu trả lời.
+- TUYỆT ĐỐI CẤM: Không tự động lôi kịch bản chẩn đoán lỗi ra. Cấm dùng văn phong dịch máy (Ví dụ: Cấm nói "Tại sao tôi có thể giúp bạn hôm nay").
+
+# 3. QUY TẮC SỬ DỤNG CÔNG CỤ (AGENTIC RULES)
+- Khi khách HỎI MUA HÀNG (chuột, bàn phím, VGA...): BẮT BUỘC gọi tool \`search_products\`.
+- Khi khách HỎI LỖI KỸ THUẬT (máy không lên, màn hình xanh...): BẮT BUỘC gọi tool \`search_technical_knowledge\`.
+- NẾU KHÁCH CHỈ CHÀO HỎI BÌNH THƯỜNG: KHÔNG ĐƯỢC GỌI BẤT KỲ TOOL NÀO. Trả lời trực tiếp bằng kiến thức cơ bản của bạn.
+
+# 4. QUY TẮC XỬ LÝ DỮ LIỆU (ANTI-HALLUCINATION)
+- Nếu gọi tool sản phẩm mà kết quả trả về RỖNG: Hãy xin lỗi khéo léo và báo tạm hết hàng, hỏi khách có muốn tham khảo mẫu khác không. TUYỆT ĐỐI KHÔNG tự bịa ra sản phẩm không có trong kết quả của tool.
+- Nếu tool trả về sản phẩm: Hãy chắt lọc thông tin (Tên, Giá, Điểm nổi bật) và tư vấn một cách hấp dẫn như một người sale thực thụ. Trình bày bằng gạch đầu dòng cho dễ đọc.
+- Bám sát tuyệt đối vào dữ liệu tool trả về. Không thêm thắt các tính năng mà sản phẩm không có.
+
+# 5. CẤU TRÚC TRẢ LỜI ĐA Ý ĐỊNH (MULTI-INTENT)
+- Nếu khách vừa hỏi lỗi, vừa hỏi mua hàng: Hãy trả lời phần lỗi kỹ thuật trước (ngắn gọn, đưa giải pháp), sau đó mới giới thiệu sản phẩm ở đoạn dưới. Chia bố cục rõ ràng, dễ nhìn.
+
+# 6. QUY TẮC CỐ ĐỊNH CHO PRODUCTION (HARD RULES)
+- Bạn là Sale của TechStore. TUYỆT ĐỐI CẤM NÓI XIN LỖI vì không thể gửi ảnh/link. Việc hiển thị ảnh là do UI tự lo, bạn không bị mù.
+- Khi tư vấn sản phẩm: Chỉ tóm tắt ngắn gọn và chốt câu: "Dạ, chi tiết và hình ảnh em đã hiển thị bên dưới ạ."
+- Nếu khách cố tình đòi xem hình: BẮT BUỘC chỉ đáp đúng 1 câu: "Dạ mời anh/chị xem chi tiết ở các thẻ sản phẩm bên dưới nhé!" (không giải thích thêm).
+- TUYỆT ĐỐI CẤM rò rỉ mã code: Không bao giờ được in ra màn hình các thẻ XML như <function>, <tool_call>, mã JSON, hoặc payload tool.
+- Chỉ trả lời bằng ngôn ngữ hội thoại tự nhiên, rõ ràng, không dùng markdown ảnh và không in URL trực tiếp.`;
 
 class GroqChatService {
   constructor() {
     this.groqBaseUrl = process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
     this.groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
     this.groqApiKey = process.env.GROQ_API_KEY || '';
+    this.publicBaseUrl = (process.env.PUBLIC_BASE_URL || process.env.API_BASE_URL || 'http://localhost:5000').replace(/\/$/, '');
+    this.assetBaseUrl = this.publicBaseUrl.replace(/\/api$/i, '');
 
     this.geminiModelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
     this.geminiApiKey = process.env.GEMINI_API_KEY || '';
@@ -113,8 +137,111 @@ class GroqChatService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  _extractProductsFromFunctionPayload(payloadRaw = '') {
+    let parsed;
+    try {
+      parsed = JSON.parse(String(payloadRaw || '').trim());
+    } catch (error) {
+      return [];
+    }
+
+    const toArray = (value) => (Array.isArray(value) ? value : []);
+    const candidates = [];
+
+    if (Array.isArray(parsed)) {
+      candidates.push(...parsed);
+    } else if (parsed && typeof parsed === 'object') {
+      if (Array.isArray(parsed.products)) {
+        candidates.push(...parsed.products);
+      } else if (Array.isArray(parsed.data)) {
+        candidates.push(...parsed.data);
+      } else if (parsed.product && typeof parsed.product === 'object') {
+        candidates.push(parsed.product);
+      } else {
+        candidates.push(parsed);
+      }
+    }
+
+    return toArray(candidates)
+      .map((item) => ({
+        name: String(item?.name || item?.productName || item?.title || '').trim(),
+        image: String(item?.image || item?.imageUrl || item?.thumbnail || item?.avatar || '').trim()
+      }))
+      .filter((item) => item.name && item.image)
+      .map((item) => ({
+        name: item.name,
+        image: this._toAbsoluteImageUrl(item.image)
+      }))
+      .filter((item) => item.image);
+  }
+
+  _postProcessFunctionLeakage(rawText = '') {
+    const raw = String(rawText || '');
+    if (!raw) {
+      return '';
+    }
+
+    const functionTagRegex = /<function\s*=\s*search_products\s*>([\s\S]*?)<\/function>/gi;
+    const matches = [...raw.matchAll(functionTagRegex)];
+    if (matches.length === 0) {
+      return raw.trim();
+    }
+
+    const products = [];
+    for (const match of matches) {
+      const payload = match?.[1] || '';
+      products.push(...this._extractProductsFromFunctionPayload(payload));
+    }
+
+    const uniqueProducts = [];
+    const seen = new Set();
+    for (const item of products) {
+      const key = `${item.name}::${item.image}`.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueProducts.push(item);
+      }
+    }
+
+    const greetingPrefix = raw
+      .replace(functionTagRegex, ' ')
+      .replace(/<\/?[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (uniqueProducts.length === 0) {
+      return greetingPrefix || raw.trim();
+    }
+
+    const intro = greetingPrefix || 'Dạ em gửi anh/chị hình ảnh sản phẩm tham khảo:';
+    const body = uniqueProducts
+      .map((item) => `- ${item.name}\n![${item.name}](${item.image})`)
+      .join('\n\n');
+
+    return `${intro}\n\n${body}`.trim();
+  }
+
   _sanitizeResponseText(text = '') {
-    let cleaned = String(text || '').trim();
+    const responseText = String(text || '');
+    const cleanMessage = responseText
+      .replace(/<function[^>]*>[\s\S]*?(?:<\/function>|$)/gi, ' ')
+      .replace(/<tool_call[^>]*>[\s\S]*?(?:<\/tool_call>|$)/gi, ' ')
+      .trim();
+    let cleaned = String(cleanMessage || '').trim();
+
+    // Guardrail: remove any markdown image hallucination and bare image URLs from model text.
+    cleaned = cleaned
+      .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+      .replace(/https?:\/\/[^\s)]+\.(?:png|jpg|jpeg|webp|gif)/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    // Prevent model from hallucinating inability to show images/links.
+    cleaned = cleaned
+      .replace(/xin\s*l[oô]i[^.?!\n]*(kh[oô]ng\s*th[eể]|chua\s*th[eể]|kh[oô]ng\s*c[oó]\s*kh[aả]\s*n[aă]ng)[^.?!\n]*(g[uư]i|h[iì]nh|anh|link|url)[^.?!\n]*[.?!]?/gi, '')
+      .replace(/m[iì]nh\s*kh[oô]ng\s*th[eể][^.?!\n]*(g[uư]i|h[iì]nh|anh|link|url)[^.?!\n]*[.?!]?/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
 
     // Remove generic dead-end openings so the answer starts with actionable guidance.
     cleaned = cleaned
@@ -124,7 +251,66 @@ class GroqChatService {
       .replace(/^\s*Tôi\s+xin\s+lỗi[^.?!]*[.?!]\s*/i, '')
       .trim();
 
-    return cleaned || String(text || '').trim();
+    return cleaned || cleanMessage || responseText.trim();
+  }
+
+  _setLastSearchedProducts(products = []) {
+    lastSearchedProducts = (Array.isArray(products) ? products : []).slice(0, 10);
+  }
+
+  _getLastSearchedProducts() {
+    return (Array.isArray(lastSearchedProducts) ? lastSearchedProducts : []).slice(0, 10);
+  }
+
+  getLastSearchedProducts() {
+    return this._getLastSearchedProducts();
+  }
+
+  _shouldForceImageCardReply(text = '') {
+    const value = this._normalizeTextForMatch(text);
+    if (!value) {
+      return false;
+    }
+
+    return /(cho xem hinh|xem hinh|gui hinh|xem anh|hinh anh|anh san pham|show image|show me image)/.test(value);
+  }
+
+  _ensureSalesClosingLine(text = '', products = []) {
+    const base = String(text || '').trim();
+    if (!base) {
+      return Array.isArray(products) && products.length > 0 ? SALES_CLOSING_LINE : '';
+    }
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return base;
+    }
+
+    if (base.toLowerCase().includes(SALES_CLOSING_LINE.toLowerCase())) {
+      return base;
+    }
+
+    return `${base} ${SALES_CLOSING_LINE}`.trim();
+  }
+
+  _toAbsoluteImageUrl(rawUrl = '') {
+    const value = String(rawUrl || '').trim();
+    if (!value) {
+      return '';
+    }
+
+    if (/^https?:\/\//i.test(value)) {
+      return value;
+    }
+
+    if (value.startsWith('//')) {
+      return `https:${value}`;
+    }
+
+    if (value.startsWith('/')) {
+      return `${this.assetBaseUrl}${value}`;
+    }
+
+    return `${this.assetBaseUrl}/${value}`;
   }
 
   _normalizeTextForMatch(value = '') {
@@ -134,6 +320,253 @@ class GroqChatService {
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  _isImageRequest(text = '') {
+    const value = this._normalizeTextForMatch(text);
+    if (!value) {
+      return false;
+    }
+
+    return /(hinh|anh|image|xem hinh|cho xem hinh|hinh anh|hinh san pham)/.test(value);
+  }
+
+  _isProductShoppingIntent(text = '') {
+    const value = this._normalizeTextForMatch(text);
+    if (!value) {
+      return false;
+    }
+
+    return /(muon mua|can mua|mua|tu van|goi y|de xuat|tham khao|tim san pham|tim pc|tim laptop|tam gia|ngan sach|duoi\s*\d+|tren\s*\d+|bao nhieu tien)/.test(value);
+  }
+
+  _isGlobalCatalogIntent(text = '') {
+    const value = this._normalizeTextForMatch(text);
+    if (!value) {
+      return false;
+    }
+
+    return /(tat ca san pham|toan bo san pham|all products|khong rieng pc|khong chi pc|khong gioi han pc|khong phai chi pc|ca cac san pham khac|tat ca danh muc)/.test(value);
+  }
+
+  _sanitizeKeywordForGlobalSearch(text = '') {
+    const value = this._normalizeTextForMatch(text);
+    if (!value) {
+      return '';
+    }
+
+    return value
+      .replace(/\b(pc|desktop|laptop|chuot|mouse|ban phim|keyboard|man hinh|monitor|tai nghe|headphone|ssd|hdd|ram|cpu|vga|gpu)\b/g, ' ')
+      .replace(/\b(tat ca san pham|toan bo san pham|all products|khong rieng pc|khong chi pc|khong gioi han pc|khong phai chi pc|ca cac san pham khac|tat ca danh muc)\b/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  _toVndPrice(amountRaw, unitRaw = '') {
+    const amount = Number(String(amountRaw || '').replace(',', '.'));
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return null;
+    }
+
+    const unit = String(unitRaw || '').toLowerCase();
+    if (/^(ty|ti)$/.test(unit)) {
+      return Math.round(amount * 1000000000);
+    }
+    if (/^(tr|trieu|trieeu|trieeuj|m)$/.test(unit)) {
+      return Math.round(amount * 1000000);
+    }
+    if (/^(k|nghin|ngan)$/.test(unit)) {
+      return Math.round(amount * 1000);
+    }
+
+    return Math.round(amount);
+  }
+
+  _extractPriceConstraintsFromText(text = '') {
+    const value = this._normalizeTextForMatch(text);
+    if (!value) {
+      return { min: null, max: null };
+    }
+
+    const unitGroup = '(ty|ti|trieu|trieeu|trieeuj|tr|m|k|nghin|ngan)?';
+    let min = null;
+    let max = null;
+
+    const rangeMatch = value.match(new RegExp(`tu\\s*(\\d+(?:[.,]\\d+)?)\\s*${unitGroup}\\s*(?:den|toi)\\s*(\\d+(?:[.,]\\d+)?)\\s*${unitGroup}`, 'i'));
+    if (rangeMatch) {
+      const left = this._toVndPrice(rangeMatch[1], rangeMatch[2]);
+      const right = this._toVndPrice(rangeMatch[3], rangeMatch[4]);
+      if (left !== null && right !== null) {
+        min = Math.min(left, right);
+        max = Math.max(left, right);
+      }
+    }
+
+    const minRegex = new RegExp(`(?:tren|hon|tu|toi thieu|it nhat)\\s*(\\d+(?:[.,]\\d+)?)\\s*${unitGroup}`, 'ig');
+    let minMatch = minRegex.exec(value);
+    while (minMatch) {
+      const parsed = this._toVndPrice(minMatch[1], minMatch[2]);
+      if (parsed !== null) {
+        min = min === null ? parsed : Math.max(min, parsed);
+      }
+      minMatch = minRegex.exec(value);
+    }
+
+    const maxRegex = new RegExp(`(?:duoi|toi da|khong qua|nho hon|it hon)\\s*(\\d+(?:[.,]\\d+)?)\\s*${unitGroup}`, 'ig');
+    let maxMatch = maxRegex.exec(value);
+    while (maxMatch) {
+      const parsed = this._toVndPrice(maxMatch[1], maxMatch[2]);
+      if (parsed !== null) {
+        max = max === null ? parsed : Math.min(max, parsed);
+      }
+      maxMatch = maxRegex.exec(value);
+    }
+
+    const upwardMatch = value.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*${unitGroup}\\s*(?:tro len|len tro len)`, 'i'));
+    if (upwardMatch) {
+      const parsed = this._toVndPrice(upwardMatch[1], upwardMatch[2]);
+      if (parsed !== null) {
+        min = min === null ? parsed : Math.max(min, parsed);
+      }
+    }
+
+    const downwardMatch = value.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*${unitGroup}\\s*(?:tro xuong|do lai)`, 'i'));
+    if (downwardMatch) {
+      const parsed = this._toVndPrice(downwardMatch[1], downwardMatch[2]);
+      if (parsed !== null) {
+        max = max === null ? parsed : Math.min(max, parsed);
+      }
+    }
+
+    if (min !== null && max !== null && min > max) {
+      const temp = min;
+      min = max;
+      max = temp;
+    }
+
+    return { min, max };
+  }
+
+  _extractFirstMarkdownImage(text = '') {
+    const raw = String(text || '');
+    const match = raw.match(/!\[[^\]]*\]\(([^)]+)\)/);
+    return match ? String(match[1] || '').trim() : '';
+  }
+
+  _replaceFirstMarkdownImageUrl(text = '', newUrl = '') {
+    const nextUrl = String(newUrl || '').trim();
+    if (!nextUrl) {
+      return String(text || '');
+    }
+
+    return String(text || '').replace(/(!\[[^\]]*\]\()([^)]+)(\))/, `$1${nextUrl}$3`);
+  }
+
+  _inferProductCategoryFromText(text = '') {
+    const value = this._normalizeTextForMatch(text);
+    if (!value) {
+      return '';
+    }
+
+    const rules = [
+      { category: 'Tai nghe', pattern: /tai nghe|headphone|earphone|earbuds/ },
+      { category: 'Laptop', pattern: /laptop|notebook|macbook/ },
+      { category: 'Chuột', pattern: /chuot|mouse/ },
+      { category: 'Bàn phím', pattern: /ban phim|keyboard/ },
+      { category: 'Màn hình', pattern: /man hinh|monitor/ },
+      { category: 'Card đồ họa', pattern: /vga|gpu|card do hoa/ }
+    ];
+
+    const matched = rules.find((item) => item.pattern.test(value));
+    return matched ? matched.category : '';
+  }
+
+  _extractProductHintFromAnswer(text = '') {
+    const value = String(text || '');
+    const directMatch = value.match(/hinh\s*anh\s*cua\s*([^\n:.!?]+)/i);
+    if (directMatch && directMatch[1]) {
+      return directMatch[1].trim();
+    }
+
+    const markdownAlt = value.match(/!\[([^\]]+)\]/);
+    if (markdownAlt && markdownAlt[1]) {
+      return markdownAlt[1].trim();
+    }
+
+    return '';
+  }
+
+  async _enrichImageAnswer({ finalText = '', userMessage = '', aggregatedProducts = [] }) {
+    const products = Array.isArray(aggregatedProducts) ? [...aggregatedProducts] : [];
+    if (!this._isImageRequest(userMessage)) {
+      return {
+        text: finalText,
+        products
+      };
+    }
+
+    if (products.length === 0) {
+      const categoryHint = this._inferProductCategoryFromText(`${userMessage} ${finalText}`);
+      const answerHint = this._extractProductHintFromAnswer(finalText);
+
+      try {
+        const fallbackByKeyword = await this._executeAgentTool('search_products', {
+          keywords: userMessage,
+          sort_by: 'relevance'
+        });
+
+        if (Array.isArray(fallbackByKeyword?.data) && fallbackByKeyword.data.length > 0) {
+          products.push(...fallbackByKeyword.data);
+        }
+
+        if (products.length === 0 && answerHint) {
+          const fallbackByAnswerHint = await this._executeAgentTool('search_products', {
+            keywords: answerHint,
+            category: categoryHint || undefined,
+            sort_by: 'relevance'
+          });
+
+          if (Array.isArray(fallbackByAnswerHint?.data) && fallbackByAnswerHint.data.length > 0) {
+            products.push(...fallbackByAnswerHint.data);
+          }
+        }
+
+        if (products.length === 0 && categoryHint) {
+          const fallbackByCategory = await this._executeAgentTool('search_products', {
+            category: categoryHint,
+            sort_by: 'relevance'
+          });
+
+          if (Array.isArray(fallbackByCategory?.data) && fallbackByCategory.data.length > 0) {
+            products.push(...fallbackByCategory.data);
+          }
+        }
+      } catch (error) {
+        // Keep the original response if fallback enrichment fails.
+      }
+    }
+
+    const productWithImage = products.find((p) => p?.imageUrl || p?.image);
+    const firstImageUrl = productWithImage?.imageUrl || productWithImage?.image || '';
+    if (!firstImageUrl) {
+      return {
+        text: finalText,
+        products
+      };
+    }
+
+    const existingMarkdownImageUrl = this._extractFirstMarkdownImage(finalText);
+    if (existingMarkdownImageUrl) {
+      return {
+        text: this._replaceFirstMarkdownImageUrl(finalText, firstImageUrl),
+        products
+      };
+    }
+
+    return {
+      text: `${String(finalText || '').trim()}\n\n![Hinh anh san pham](${firstImageUrl})`,
+      products
+    };
   }
 
   _isUnrelatedRefusal(text = '') {
@@ -147,200 +580,60 @@ class GroqChatService {
     );
   }
 
-  _buildChecklistTemplate(issueType = 'general_hardware') {
-    const templates = {
-      power_boot: [
-        'Bước 1: Kiểm tra nguồn, adapter, ổ cắm và đèn báo nguồn.',
-        'Bước 2: Hard reset (giữ nút nguồn 15 giây), sau đó thử bật lại.',
-        'Bước 3: Rút toàn bộ ngoại vi, khởi động tối thiểu chỉ với sạc.',
-        'Bước 4: Nếu không vào được hệ điều hành, kiểm tra BIOS/boot order.',
-        'Bước 5: Nếu vẫn thất bại, đề xuất kiểm tra phần cứng tại trung tâm.'
-      ],
-      display: [
-        'Bước 1: Kiểm tra độ sáng, phím tắt màn hình và cáp màn ngoài.',
-        'Bước 2: Thử xuất màn ngoài để tách lỗi panel với GPU.',
-        'Bước 3: Cài lại/cập nhật driver đồ họa và tần số quét.',
-        'Bước 4: Kiểm tra dấu hiệu sọc/nhấp nháy/thêm vệt ở panel.',
-        'Bước 5: Nếu nghi hỏng panel/cáp, đề xuất kiểm tra phần cứng.'
-      ],
-      battery_charging: [
-        'Bước 1: Kiểm tra cổng sạc, cáp sạc, adapter đúng công suất.',
-        'Bước 2: Kiểm tra tình trạng pin và chu kỳ sạc trong hệ điều hành.',
-        'Bước 3: Hiệu chỉnh pin và cập nhật firmware/driver quản lý pin.',
-        'Bước 4: Thử adapter khác chuẩn để loại trừ lỗi bộ sạc.',
-        'Bước 5: Nếu pin chai/mạnh xuống cấp, đề xuất thay pin.'
-      ],
-      thermal_fan: [
-        'Bước 1: Kiểm tra nhiệt độ CPU/GPU và tiến trình nền.',
-        'Bước 2: Vệ sinh khe gió, quạt và đảm bảo thoáng khí.',
-        'Bước 3: Giảm tải nền/startup apps và cập nhật BIOS nếu cần.',
-        'Bước 4: Kiểm tra tốc độ quạt và tiếng ồn bất thường.',
-        'Bước 5: Nếu vẫn quá nhiệt, cân nhắc thay keo tản nhiệt.'
-      ],
-      keyboard_touchpad: [
-        'Bước 1: Kiểm tra Fn Lock/Num Lock và cài đặt ngôn ngữ bàn phím.',
-        'Bước 2: Thử bàn phím/chuột ngoài để khoanh vùng phần cứng.',
-        'Bước 3: Gỡ và cài lại driver HID/keyboard/touchpad.',
-        'Bước 4: Kiểm tra nút touchpad enable/disable.',
-        'Bước 5: Nếu liệt phím cố định, cần kiểm tra bàn phím phần cứng.'
-      ],
-      network: [
-        'Bước 1: Khởi động lại router và adapter mạng.',
-        'Bước 2: Forget Wi-Fi rồi kết nối lại, kiểm tra IP/DNS.',
-        'Bước 3: Cập nhật driver WLAN/LAN và tắt tiết kiệm điện cho adapter.',
-        'Bước 4: Test bằng mạng khác để loại trừ lỗi nhà mạng/router.',
-        'Bước 5: Nếu vẫn mất kết nối, reset stack mạng hệ điều hành.'
-      ],
-      audio_camera: [
-        'Bước 1: Kiểm tra output/input mặc định và quyền truy cập app.',
-        'Bước 2: Test bằng ứng dụng hệ thống (camera/sound recorder).',
-        'Bước 3: Gỡ và cài lại driver audio/camera.',
-        'Bước 4: Kiểm tra mute/privacy switch trên thiết bị.',
-        'Bước 5: Nếu vẫn lỗi, thử tài khoản hệ điều hành khác để đối chiếu.'
-      ],
-      performance_os: [
-        'Bước 1: Kiểm tra CPU/RAM/Disk usage và startup apps.',
-        'Bước 2: Dọn dẹp dung lượng, tắt app nền, cập nhật hệ điều hành.',
-        'Bước 3: Quét malware và kiểm tra tính toàn vẹn hệ thống.',
-        'Bước 4: Kiểm tra ổ cứng (SMART/CHKDSK) và bộ nhớ RAM.',
-        'Bước 5: Nếu BSOD/treo lặp lại, thử Safe Mode và đọc mã lỗi.'
-      ],
-      general_hardware: [
-        'Bước 1: Xác định triệu chứng chính và thời điểm xuất hiện.',
-        'Bước 2: Kiểm tra nguồn, nhiệt độ, kết nối và thay đổi gần đây.',
-        'Bước 3: Thử từng bước chẩn đoán từ dễ đến khó, ghi lại kết quả.',
-        'Bước 4: Loại trừ yếu tố phần mềm bằng cập nhật driver/hệ điều hành.',
-        'Bước 5: Nếu vẫn không ổn định, đề xuất kiểm tra phần cứng.'
-      ]
-    };
+  _compactMessagesForGroq(messages = [], options = {}) {
+    const maxChars = Number(options.maxChars || process.env.GROQ_TOOLCALL_MAX_CHARS || 12000);
+    const maxPerMessageChars = Number(options.maxPerMessageChars || process.env.GROQ_TOOLCALL_MAX_PER_MESSAGE_CHARS || 1200);
+    const safeMessages = Array.isArray(messages) ? messages : [];
 
-    return templates[issueType] || templates.general_hardware;
-  }
-
-  _buildDeterministicTroubleshootingFallback(userQuestion = '', issueProfile = { type: 'general_hardware', hints: [] }) {
-    const hints = Array.isArray(issueProfile?.hints) ? issueProfile.hints.slice(0, 3) : [];
-    const lines = hints.length > 0
-      ? hints.map((h, idx) => `${idx + 1}. ${h}`).join('\n')
-      : ['1. kiểm tra nguồn và kết nối cơ bản', '2. khởi động lại thiết bị và cập nhật driver', '3. ghi lại dấu hiệu lỗi để khoanh vùng'].join('\n');
-
-    return {
-      provider: 'groq-safe-fallback',
-      model: this.groqModel,
-      text: [
-        `Nhận định nhanh: vấn đề có khả năng thuộc nhóm ${issueProfile?.type || 'general_hardware'}.`,
-        'Checklist xử lý ban đầu:',
-        lines,
-        `Câu hỏi khoanh vùng tiếp theo: Bạn mô tả thêm khi nào lỗi xuất hiện và tần suất lỗi với trường hợp "${String(userQuestion || '').slice(0, 120)}"?`
-      ].join('\n')
-    };
-  }
-
-  _inferIssueProfile(userQuestion = '', conversationHistory = []) {
-    const historyText = (Array.isArray(conversationHistory) ? conversationHistory : [])
-      .slice(-8)
-      .map((item) => String(item?.content || ''))
-      .join(' ');
-
-    const fullText = this._normalizeTextForMatch(`${String(userQuestion || '')} ${historyText}`);
-
-    const profiles = [
-      {
-        type: 'power_boot',
-        test: /(khong len nguon|khong bat len|khong khoi dong|sap nguon|tat dot ngot|khong vao duoc win|boot|bios|no power)/,
-        hints: [
-          'kiem tra adapter, day sac, o cam, pin va den bao nguon',
-          'thu hard reset (giu nut nguon 15 giay) roi bat lai',
-          'thu rut ngoai vi, chi de lai sac va khoi dong toi thieu'
-        ]
-      },
-      {
-        type: 'display',
-        test: /(man hinh|den man|soc man|nhap nhay|flicker|khong len hinh|vo man|backlight)/,
-        hints: [
-          'kiem tra do sang, phim tat man hinh, va day cap man ngoai',
-          'thu xuat man hinh ngoai de tach loi panel va gpu',
-          'cap nhat driver do hoa va kiem tra tan so quet'
-        ]
-      },
-      {
-        type: 'battery_charging',
-        test: /(pin|chai pin|sut pin|khong sac|sac khong vao|battery|adapter nong)/,
-        hints: [
-          'kiem tra cong sac, adapter dung cong suat, va tinh trang cap',
-          'kiem tra health pin trong he dieu hanh va chu ky sac',
-          'thu hieu chinh pin va cap nhat firmware/driver pin'
-        ]
-      },
-      {
-        type: 'thermal_fan',
-        test: /(nong|qua nhiet|quat keu|fan keu|tu dong tat|throttling|nhiet do cao)/,
-        hints: [
-          've sinh khe tan nhiet, kiem tra quat va luong gio',
-          'giam tai nen, kiem tra tien trinh ngam cpu/gpu cao',
-          'can nhac thay keo tan nhiet neu may da su dung lau'
-        ]
-      },
-      {
-        type: 'keyboard_touchpad',
-        test: /(ban phim|liet phim|phim khong an|touchpad|chuot cam ung|double key)/,
-        hints: [
-          'kiem tra phim fn lock, num lock va cai dat input',
-          'thu ban phim/touchpad ngoai de khoanh vung phan cung',
-          'go va cai lai driver hid/keyboard/touchpad'
-        ]
-      },
-      {
-        type: 'network',
-        test: /(wifi|bluetooth|mang cham|mat mang|khong vao mang|disconnect|khong bat duoc wifi)/,
-        hints: [
-          'khoi dong lai adapter mang va router',
-          'forget mang wifi roi ket noi lai, kiem tra ip/dns',
-          'cap nhat driver wlan/lan va tat che do tiet kiem dien cho adapter'
-        ]
-      },
-      {
-        type: 'audio_camera',
-        test: /(khong co tieng|mat am thanh|re|mic khong nhan|camera khong len|webcam)/,
-        hints: [
-          'kiem tra output/input mac dinh va quyen truy cap app',
-          'test bang ung dung he thong (sound recorder/camera)',
-          'go va cai lai driver audio/camera'
-        ]
-      },
-      {
-        type: 'performance_os',
-        test: /(lag|cham|do|treo|freeze|man hinh xanh|bsod|crash|full disk|ram day)/,
-        hints: [
-          'kiem tra cpu/ram/disk usage va startup apps',
-          'kiem tra o cung (smart/chkdsk) va bo nho ram',
-          'cap nhat he dieu hanh, driver, va quet malware'
-        ]
-      }
-    ];
-
-    const matched = profiles.find((p) => p.test.test(fullText));
-    if (matched) {
-      return matched;
+    if (safeMessages.length === 0) {
+      return [];
     }
 
-    return {
-      type: 'general_hardware',
-      hints: [
-        'xac dinh trieu chung chinh, thoi diem xay ra, va tan suat',
-        'kiem tra nguon, nhiet do, cap ket noi, va thay doi gan day',
-        'thuc hien cac buoc chan doan tu de den kho va ghi lai ket qua tung buoc'
-      ]
+    const normalize = (item) => {
+      const role = item?.role === 'assistant' || item?.role === 'tool' || item?.role === 'system' ? item.role : 'user';
+      const rawContent = typeof item?.content === 'string' ? item.content : '';
+      const compactContent = rawContent.length > maxPerMessageChars
+        ? `${rawContent.slice(0, maxPerMessageChars)} ...[truncated]`
+        : rawContent;
+
+      const normalized = {
+        role,
+        content: compactContent
+      };
+
+      if (Array.isArray(item?.tool_calls) && item.tool_calls.length > 0) {
+        normalized.tool_calls = item.tool_calls;
+      }
+      if (item?.tool_call_id) {
+        normalized.tool_call_id = item.tool_call_id;
+      }
+      if (item?.name) {
+        normalized.name = item.name;
+      }
+
+      return normalized;
     };
-  }
 
-  _isTroubleshootingRequest(userQuestion = '', conversationHistory = []) {
-    const historyText = (Array.isArray(conversationHistory) ? conversationHistory : [])
-      .slice(-6)
-      .map((item) => String(item?.content || ''))
-      .join(' ');
+    const head = safeMessages[0]?.role === 'system' ? [normalize(safeMessages[0])] : [];
+    const tailSource = safeMessages.slice(head.length).map(normalize);
+    const selectedTail = [];
+    let used = head.reduce((sum, msg) => sum + (msg.content?.length || 0), 0);
 
-    const fullText = this._normalizeTextForMatch(`${String(userQuestion || '')} ${historyText}`);
-    return /(sua|khac phuc|chan doan|hu|hong|loi|khong len|man hinh|pin|sac|nong|quat|wifi|bluetooth|ban phim|touchpad|camera|am thanh|lag|treo|freeze|bsod|crash|may tinh van de|laptop van de)/.test(fullText);
+    for (let i = tailSource.length - 1; i >= 0; i -= 1) {
+      const candidate = tailSource[i];
+      const size = candidate.content?.length || 0;
+
+      if (selectedTail.length === 0 || used + size <= maxChars) {
+        selectedTail.unshift(candidate);
+        used += size;
+      }
+
+      if (used >= maxChars) {
+        break;
+      }
+    }
+
+    return [...head, ...selectedTail];
   }
 
   async _callGroq(messages, options = {}) {
@@ -353,13 +646,18 @@ class GroqChatService {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
+        const compactedMessages = this._compactMessagesForGroq(messages, {
+          maxChars: process.env.GROQ_CHAT_MAX_CHARS || 10000,
+          maxPerMessageChars: process.env.GROQ_CHAT_MAX_PER_MESSAGE_CHARS || 1000
+        });
+
         const response = await axios.post(
           `${this.groqBaseUrl}/chat/completions`,
           {
             model: options.model || this.groqModel,
             temperature: options.temperature ?? 0.2,
-            max_tokens: options.maxTokens ?? 900,
-            messages
+            max_tokens: Math.min(options.maxTokens ?? 900, Number(process.env.GROQ_CHAT_MAX_OUTPUT_TOKENS || 512)),
+            messages: compactedMessages
           },
           {
             timeout: options.timeoutMs || 15000,
@@ -420,6 +718,453 @@ class GroqChatService {
     };
   }
 
+  async _callGroqWithTools(messages, options = {}) {
+    if (!this._canUseGroq()) {
+      throw new Error('Groq circuit is OPEN or API key missing');
+    }
+
+    let lastError = null;
+    const maxAttempts = Math.max(1, this.maxRetries + 1);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const compactedMessages = this._compactMessagesForGroq(messages, {
+          maxChars: process.env.GROQ_TOOLCALL_MAX_CHARS || 12000,
+          maxPerMessageChars: process.env.GROQ_TOOLCALL_MAX_PER_MESSAGE_CHARS || 1200
+        });
+
+        const response = await axios.post(
+          `${this.groqBaseUrl}/chat/completions`,
+          {
+            model: options.model || this.groqModel,
+            temperature: options.temperature ?? 0.2,
+            max_tokens: Math.min(options.maxTokens ?? 900, Number(process.env.GROQ_TOOLCALL_MAX_OUTPUT_TOKENS || 512)),
+            messages: compactedMessages,
+            tools: options.tools,
+            tool_choice: options.toolChoice || 'auto'
+          },
+          {
+            timeout: options.timeoutMs || 20000,
+            headers: {
+              Authorization: `Bearer ${this.groqApiKey}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        this._onGroqSuccess();
+        return {
+          provider: 'groq',
+          model: options.model || this.groqModel,
+          raw: response?.data || {}
+        };
+      } catch (error) {
+        lastError = error;
+        this._onGroqFailure(error);
+
+        const shouldRetry = attempt < maxAttempts && this._isRetryableGroqError(error);
+        if (!shouldRetry) {
+          break;
+        }
+
+        await this._sleep(this.retryDelayMs * attempt);
+      }
+    }
+
+    const status = lastError?.response?.status || lastError?.status;
+    const providerMessage = lastError?.response?.data?.error?.message || lastError?.message || 'Groq request failed';
+    const enriched = new Error(`Groq tool-call request failed${status ? ` (${status})` : ''}: ${providerMessage}`);
+    enriched.status = status;
+    throw enriched;
+  }
+
+  _getAgentTools() {
+    return [
+      {
+        type: 'function',
+        function: {
+          name: 'search_products',
+          description: 'Công cụ tìm kiếm sản phẩm trong Database. BẮT BUỘC PHẢI GỌI công cụ này mỗi khi người dùng có ý định hỏi về sản phẩm, nhờ tư vấn, tìm kiếm đồ công nghệ, hoặc KHI NGƯỜI DÙNG YÊU CẦU XEM HÌNH ẢNH.',
+          parameters: {
+            type: 'object',
+            properties: {
+              category: {
+                type: 'string',
+                description: 'Danh muc san pham can tim, vi du: laptop, chuot, ban phim, man hinh.'
+              },
+              keywords: {
+                type: 'string',
+                description: 'Tu khoa tim kiem tu do theo nhu cau nguoi dung, co the gom model, thuong hieu, dac diem.'
+              },
+              min_price: {
+                type: 'number',
+                description: 'Gia toi thieu theo VND, de trong neu khong co rang buoc.'
+              },
+              max_price: {
+                type: 'number',
+                description: 'Gia toi da theo VND, de trong neu khong co rang buoc.'
+              },
+              sort_by: {
+                type: 'string',
+                enum: ['relevance', 'price_asc', 'price_desc', 'rating_desc', 'newest'],
+                description: 'Thu tu sap xep ket qua san pham.'
+              }
+            },
+            required: []
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'search_technical_knowledge',
+          description: 'Luc tim tai lieu ky thuat, sua chua, bao hanh tu vector database (RAG Markdown). Dung tool nay khi can huong dan chan doan, cach khac phuc loi, quy trinh bao hanh.',
+          parameters: {
+            type: 'object',
+            properties: {
+              topic: {
+                type: 'string',
+                description: 'Chu de ky thuat chinh can tra cuu, vi du: ket noi wifi, qua nhiet laptop, loi pin.'
+              },
+              error_symptoms: {
+                type: 'string',
+                description: 'Mo ta trieu chung loi cu the ma nguoi dung gap phai de tim tai lieu sat nhat.'
+              }
+            },
+            required: []
+          }
+        }
+      }
+    ];
+  }
+
+  async _executeAgentTool(toolName, args = {}) {
+    if (toolName === 'search_products') {
+      const rawKeywords = String(args.keywords || '').trim();
+      const explicitCategory = String(args.category || '').trim();
+      const globalCatalogIntent = this._isGlobalCatalogIntent(`${rawKeywords} ${explicitCategory}`);
+      const normalizedKeywords = globalCatalogIntent
+        ? this._sanitizeKeywordForGlobalSearch(rawKeywords)
+        : rawKeywords;
+      const categoryValue = globalCatalogIntent ? null : (explicitCategory || null);
+      const keywordParts = [normalizedKeywords, categoryValue].filter(Boolean).join(' ').trim();
+      const inferredBudget = this._extractPriceConstraintsFromText(keywordParts);
+      const explicitMin = Number.isFinite(Number(args.min_price)) ? Number(args.min_price) : null;
+      const explicitMax = Number.isFinite(Number(args.max_price)) ? Number(args.max_price) : null;
+      const minPrice = explicitMin ?? inferredBudget.min;
+      const maxPrice = explicitMax ?? inferredBudget.max;
+      const filters = {
+        category: categoryValue,
+        price_min: minPrice,
+        price_max: maxPrice
+      };
+
+      const searchResult = await SemanticSearchService.searchProducts({
+        keyword: keywordParts,
+        filters,
+        limit: 10
+      });
+
+      const products = Array.isArray(searchResult?.products) ? [...searchResult.products] : [];
+      const normalizePrice = (p) => Number(p?.salePrice || p?.price || Number.MAX_SAFE_INTEGER);
+
+      const strictPriceProducts = products.filter((p) => {
+        const price = Number(p?.salePrice || p?.price || NaN);
+        if (!Number.isFinite(price) || price <= 0) {
+          return false;
+        }
+        if (minPrice !== null && price < Number(minPrice)) {
+          return false;
+        }
+        if (maxPrice !== null && price > Number(maxPrice)) {
+          return false;
+        }
+        return true;
+      });
+
+      const effectiveProducts = (minPrice !== null || maxPrice !== null)
+        ? strictPriceProducts
+        : products;
+
+      switch (args.sort_by) {
+        case 'price_asc':
+          effectiveProducts.sort((a, b) => normalizePrice(a) - normalizePrice(b));
+          break;
+        case 'price_desc':
+          effectiveProducts.sort((a, b) => normalizePrice(b) - normalizePrice(a));
+          break;
+        case 'rating_desc':
+          effectiveProducts.sort((a, b) => Number(b?.rating || 0) - Number(a?.rating || 0));
+          break;
+        case 'newest':
+          effectiveProducts.sort((a, b) => Number(new Date(b?.createdAt || 0)) - Number(new Date(a?.createdAt || 0)));
+          break;
+        default:
+          break;
+      }
+
+      const sanitizedProducts = effectiveProducts.slice(0, 10).map((p) => {
+        const rawImage = p?.image || p?.imageUrl || p?.thumbnail || p?.hinh_anh || p?.images?.[0] || '';
+        const normalizedImage = this._toAbsoluteImageUrl(rawImage);
+        const image = /^https?:\/\//i.test(normalizedImage) ? normalizedImage : PRODUCT_IMAGE_PLACEHOLDER;
+
+        return {
+          id: p?._id,
+          name: p?.name,
+          category: p?.category,
+          brand: p?.brand,
+          price: p?.salePrice || p?.price || null,
+          description: p?.description || '',
+          image,
+          imageUrl: image,
+          productUrl: p?._id ? `/product/${p._id}` : '',
+          rating: p?.rating || 0,
+          stock: p?.stock ?? null
+        };
+      });
+
+      if (sanitizedProducts.length > 0) {
+        this._setLastSearchedProducts(sanitizedProducts);
+      }
+
+      return {
+        tool: 'search_products',
+        found: sanitizedProducts.length > 0,
+        total: sanitizedProducts.length,
+        data: sanitizedProducts,
+        note: sanitizedProducts.length > 0 ? 'Product search completed.' : 'No products found.'
+      };
+    }
+
+    if (toolName === 'search_technical_knowledge') {
+      const query = [args.topic, args.error_symptoms].filter(Boolean).join(' | ').trim();
+      const docs = query
+        ? await VectorSearchService.search(query, { limit: 6, minSimilarity: 0.2 })
+        : [];
+
+      const normalizedDocs = (Array.isArray(docs) ? docs : []).slice(0, 6).map((d) => ({
+        source: d?.source || 'N/A',
+        category: d?.category || 'N/A',
+        similarity: d?.similarity || d?.finalScore || 0,
+        snippet: String(d?.text || '').slice(0, 500)
+      }));
+
+      return {
+        tool: 'search_technical_knowledge',
+        found: normalizedDocs.length > 0,
+        total: normalizedDocs.length,
+        data: normalizedDocs,
+        note: normalizedDocs.length > 0 ? 'Knowledge search completed.' : 'No technical knowledge found.'
+      };
+    }
+
+    return {
+      tool: toolName,
+      found: false,
+      total: 0,
+      data: [],
+      note: `Unknown tool: ${toolName}`
+    };
+  }
+
+  async chatWithAgent(userMessage, conversationHistory = []) {
+    const trimmedUserMessage = String(userMessage || '').trim();
+
+    // Bắt các câu đòi xem ảnh
+    const isAskingForImage = /^(có hình không|đâu|hình đâu|cho xem hình|xem ảnh|hình ảnh đâu|đâu rồi|xem hình)$/i.test(userMessage.trim());
+
+    if (isAskingForImage) {
+      if (typeof lastSearchedProducts !== 'undefined' && lastSearchedProducts.length > 0) {
+        // TRẢ VỀ LUÔN, KHÔNG GỌI GROQ API ĐỂ TRÁNH LỖI!
+        return {
+          text: 'Dạ, hình ảnh và thông tin chi tiết các sản phẩm anh/chị vừa hỏi đây ạ!',
+          products: lastSearchedProducts
+        };
+      }
+
+      return {
+        text: 'Dạ anh/chị muốn tìm sản phẩm nào ạ? Em sẽ hiển thị hình ảnh ngay cho anh/chị xem.',
+        products: []
+      };
+    }
+
+    const isSmallTalk = /^(xin chào|chào|hi|hello|alo|dạ|vâng|cảm ơn|bye)$/i.test(trimmedUserMessage);
+    if (isSmallTalk) {
+      lastSearchedProducts = [];
+    }
+
+    const tools = this._getAgentTools();
+    const boundedHistory = (Array.isArray(conversationHistory) ? conversationHistory : [])
+      .filter((item) => item && typeof item.content === 'string')
+      .map((item) => ({
+        role: item.role === 'assistant' ? 'assistant' : 'user',
+        content: String(item.content || '').trim()
+      }))
+      .filter((item) => item.content);
+
+    const messages = [
+      {
+        role: 'system',
+        content: MASTER_SYSTEM_PROMPT
+      },
+      ...boundedHistory,
+      {
+        role: 'user',
+        content: String(userMessage || '').trim()
+      }
+    ];
+
+    const aggregatedProducts = [];
+    const aggregatedSources = [];
+    const toolTrace = [];
+    const maxIterations = Number(process.env.AGENT_MAX_ITERATIONS || 6);
+
+    for (let step = 1; step <= maxIterations; step += 1) {
+      const turn = await this._callGroqWithTools(messages, {
+        tools,
+        temperature: 0.2,
+        maxTokens: 900,
+        toolChoice: 'auto'
+      });
+
+      const choice = turn?.raw?.choices?.[0] || {};
+      const assistantMessage = choice?.message || {};
+      const finishReason = choice?.finish_reason || '';
+      const toolCalls = Array.isArray(assistantMessage?.tool_calls) ? assistantMessage.tool_calls : [];
+
+      if (toolCalls.length === 0 && finishReason === 'stop') {
+        const responseText = String(assistantMessage?.content || '').trim();
+        const sanitized = this._sanitizeResponseText(responseText);
+        const hasFreshProducts = Array.isArray(aggregatedProducts) && aggregatedProducts.length > 0;
+        let activeProductsList = hasFreshProducts
+          ? aggregatedProducts.slice(0, 10)
+          : [];
+
+        if (!hasFreshProducts && this._isProductShoppingIntent(trimmedUserMessage)) {
+          try {
+            const fallbackProductSearch = await this._executeAgentTool('search_products', {
+              keywords: trimmedUserMessage,
+              sort_by: 'relevance'
+            });
+
+            const fallbackProducts = Array.isArray(fallbackProductSearch?.data)
+              ? fallbackProductSearch.data.slice(0, 10)
+              : [];
+
+            if (fallbackProducts.length > 0) {
+              activeProductsList = fallbackProducts;
+              toolTrace.push({
+                name: 'search_products',
+                args: { keywords: trimmedUserMessage, sort_by: 'relevance', autoFallback: true },
+                total: fallbackProducts.length,
+                found: true
+              });
+            }
+          } catch (fallbackError) {
+            toolTrace.push({
+              name: 'search_products',
+              args: { keywords: trimmedUserMessage, sort_by: 'relevance', autoFallback: true },
+              total: 0,
+              found: false
+            });
+          }
+        }
+
+        if (activeProductsList.length > 0) {
+          this._setLastSearchedProducts(activeProductsList);
+        }
+
+        let cleanMessage = sanitized;
+        if (this._shouldForceImageCardReply(userMessage) && activeProductsList.length > 0) {
+          cleanMessage = IMAGE_CARD_ONLY_REPLY;
+        } else {
+          cleanMessage = this._ensureSalesClosingLine(cleanMessage, activeProductsList);
+        }
+
+        if (!cleanMessage) {
+          throw new Error('Agent returned empty final response');
+        }
+
+        const final_llm_text = cleanMessage;
+        const final_products = activeProductsList;
+
+        return {
+          provider: turn.provider,
+          model: turn.model,
+          text: final_llm_text,
+          products: final_products,
+          sources: aggregatedSources.slice(0, 10),
+          toolTrace
+        };
+      }
+
+      messages.push({
+        role: 'assistant',
+        content: assistantMessage?.content || '',
+        tool_calls: toolCalls
+      });
+
+      if (toolCalls.length === 0) {
+        continue;
+      }
+
+      for (const tc of toolCalls) {
+        const toolName = tc?.function?.name || 'unknown_tool';
+        let toolArgs = {};
+        try {
+          toolArgs = tc?.function?.arguments ? JSON.parse(tc.function.arguments) : {};
+        } catch (error) {
+          toolArgs = {};
+        }
+
+        let toolResult;
+        try {
+          toolResult = await this._executeAgentTool(toolName, toolArgs);
+        } catch (toolError) {
+          toolResult = {
+            tool: toolName,
+            found: false,
+            total: 0,
+            data: [],
+            note: `Tool execution error: ${toolError?.message || 'unknown error'}`
+          };
+        }
+
+        toolTrace.push({ name: toolName, args: toolArgs, total: toolResult.total, found: toolResult.found });
+
+        if (toolName === 'search_products' && Array.isArray(toolResult.data)) {
+          aggregatedProducts.push(...toolResult.data);
+        }
+        if (toolName === 'search_technical_knowledge' && Array.isArray(toolResult.data)) {
+          aggregatedSources.push(...toolResult.data);
+        }
+
+        messages.push({
+          role: 'tool',
+          tool_call_id: tc?.id,
+          name: toolName,
+          content: JSON.stringify(toolResult)
+        });
+      }
+    }
+
+    if (Array.isArray(aggregatedProducts) && aggregatedProducts.length > 0) {
+      this._setLastSearchedProducts(aggregatedProducts.slice(0, 10));
+    }
+
+    const final_llm_text = 'Mình đã thử nhiều vòng truy vấn dữ liệu nhưng chưa gom đủ kết quả ổn định. Bạn có thể nêu lại nhu cầu chính để mình ưu tiên xử lý trước?';
+    const final_products = this._getLastSearchedProducts();
+
+    return {
+      provider: 'agent-fallback',
+      model: this.groqModel,
+      text: final_llm_text,
+      products: final_products,
+      sources: aggregatedSources.slice(0, 10),
+      toolTrace
+    };
+  }
+
   async chat(messages, options = {}) {
     try {
       return await this._callGroq(messages, options);
@@ -433,39 +1178,6 @@ class GroqChatService {
         const reason = primaryError?.message || 'Groq failed';
         throw new Error(`All providers failed. Primary: ${reason}. Fallback: ${fallbackError.message}`);
       }
-    }
-  }
-
-  async detectIntent(message, conversationHistory = []) {
-    const systemPrompt = [
-      'You are an intent classifier for an e-commerce chatbot.',
-      'Output ONLY strict JSON without markdown.',
-      'Allowed intents: greeting, product_search, recommendation, comparison, pc_build, product_details, price_inquiry, knowledge_question, technical_question, order_status, help, general_chat, unknown.',
-      'JSON schema: {"intent":"...","confidence":0-1,"reasoning":"short"}'
-    ].join(' ');
-
-    const userPrompt = JSON.stringify({
-      message,
-      conversationHistory: conversationHistory.slice(-4)
-    });
-
-    const response = await this.chat([
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
-    ], {
-      temperature: 0,
-      maxTokens: 180
-    });
-
-    try {
-      const parsed = JSON.parse(response.text);
-      return {
-        ...parsed,
-        provider: response.provider,
-        model: response.model
-      };
-    } catch (parseError) {
-      throw new Error(`Intent parse failed: ${parseError.message}`);
     }
   }
 
@@ -501,37 +1213,39 @@ class GroqChatService {
       .trim();
   }
 
+  _logGroqDebugPayload({ userMessage = '', ragContext = [], finalPrompt = [], stage = 'before-call' }) {
+    const color = {
+      reset: '\x1b[0m',
+      cyan: '\x1b[36m',
+      yellow: '\x1b[33m',
+      magenta: '\x1b[35m',
+      green: '\x1b[32m'
+    };
+
+    const divider = `${color.cyan}\n==================== GROQ DEBUG (${stage}) ====================${color.reset}`;
+    const safeStringify = (value) => {
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch (error) {
+        return `[UNSERIALIZABLE_PAYLOAD] ${error?.message || 'unknown error'}`;
+      }
+    };
+
+    console.log(divider);
+    console.log(`${color.yellow}USER_MESSAGE:${color.reset}\n${String(userMessage || '')}`);
+    console.log(`${color.magenta}RAG_CONTEXT:${color.reset}\n${safeStringify(ragContext)}`);
+    console.log(`${color.green}FINAL_PROMPT:${color.reset}\n${safeStringify(finalPrompt)}`);
+    console.log(`${color.cyan}===============================================================\n${color.reset}`);
+  }
+
   async generateRagAnswer({ systemPrompt, userQuestion, contextBlocks = [], conversationHistory = [], requireGroq = true }) {
     const contextText = contextBlocks.length > 0
       ? contextBlocks.map((item, idx) => `[CONTEXT ${idx + 1}]\n${item}`).join('\n\n')
       : '[CONTEXT] Không có dữ liệu truy xuất';
 
-    const issueProfile = this._inferIssueProfile(userQuestion, conversationHistory);
-    const troubleshootingMode = this._isTroubleshootingRequest(userQuestion, conversationHistory);
-
-    const checklistTemplate = this._buildChecklistTemplate(issueProfile.type);
-
     const userPrompt = [
       `Dựa vào hệ thống kiến thức sau:\n${contextText}`,
-      `Hãy trả lời câu hỏi: ${userQuestion}`,
-      troubleshootingMode
-        ? `Nhom loi du doan: ${issueProfile.type}`
-        : 'Che do hien tai: normal_chat',
-      troubleshootingMode
-        ? `Huong dan dac thu uu tien: ${issueProfile.hints.join('; ')}`
-        : 'Neu day la loi chao hoac hoi chung, tra loi tu nhien, ngan gon, dung ngu canh.',
-      troubleshootingMode
-        ? `Template checklist bat buoc theo nhom loi:\n${checklistTemplate.join('\n')}`
-        : 'Khong can checklist ky thuat neu nguoi dung chi chao hoi.',
-      troubleshootingMode
-        ? 'Nếu context không đủ chi tiết cho ca cụ thể, vẫn đưa checklist chẩn đoán thực tế để người dùng làm ngay, không trả lời chung chung.'
-        : 'Khong chuyen sang checklist ky thuat neu nguoi dung chua neu van de ky thuat.',
-      troubleshootingMode
-        ? 'Checklist phai phu hop voi nhom loi du doan o tren, tranh lap lai checklist tong quat khong lien quan.'
-        : 'Uu tien hoi dap dung y nguoi dung va giu giong tu nhien.',
-      troubleshootingMode
-        ? 'Ưu tiên cấu trúc: (1) nhận định nhanh, (2) checklist hành động theo nhóm lỗi, (3) 1 câu hỏi khoanh vùng tiếp theo.'
-        : 'Neu la loi chao, chi can chao lai va hoi nhu cau ngan gon.'
+      `Hãy trả lời câu hỏi: ${userQuestion}`
     ].join('\n\n');
 
     const mergedSystemPrompt = [MASTER_SYSTEM_PROMPT, systemPrompt || ''].filter(Boolean).join('\n\n');
@@ -556,35 +1270,17 @@ class GroqChatService {
     ];
 
     if (requireGroq) {
-      const first = await this._callGroq(messages, {
+      this._logGroqDebugPayload({
+        userMessage: userQuestion,
+        ragContext: contextBlocks,
+        finalPrompt: messages,
+        stage: 'generateRagAnswer:first-call'
+      });
+
+      return this._callGroq(messages, {
         temperature: 0.1,
         maxTokens: 850
       });
-
-      if (!troubleshootingMode || !this._isUnrelatedRefusal(first.text)) {
-        return first;
-      }
-
-      const retryMessages = [
-        {
-          role: 'system',
-          content:
-            `${mergedSystemPrompt}\n\nBAT BUOC: Day la yeu cau ho tro ky thuat may tinh thong thuong. Neu khong co noi dung nguy hai ro rang, khong duoc tu choi chung chung; hay dua huong dan chan doan cu the.`
-        },
-        ...normalizedHistory,
-        { role: 'user', content: userPrompt }
-      ];
-
-      const retried = await this._callGroq(retryMessages, {
-        temperature: 0.1,
-        maxTokens: 850
-      });
-
-      if (this._isUnrelatedRefusal(retried.text)) {
-        return this._buildDeterministicTroubleshootingFallback(userQuestion, issueProfile);
-      }
-
-      return retried;
     }
 
     return this.chat(messages, {

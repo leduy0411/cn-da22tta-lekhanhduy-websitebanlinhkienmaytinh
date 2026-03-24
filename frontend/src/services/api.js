@@ -89,6 +89,7 @@ export const authAPI = {
 export const adminAPI = {
   // Statistics
   getStats: () => api.get('/admin/stats'),
+  getAIObservability: () => api.get('/v3/chat/observability'),
 
   // Users Management
   getUsers: (params) => api.get('/admin/users', { params }),

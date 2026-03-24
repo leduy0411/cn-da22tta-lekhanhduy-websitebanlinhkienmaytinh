@@ -4,7 +4,7 @@
  * user_message -> RAG retrieval -> Groq generation -> frontend response
  */
 
-const RAGPipeline = require('../rag/RAGPipeline');
+const GroqChatService = require('./GroqChatService');
 
 class AIRouter {
   constructor() {
@@ -32,27 +32,18 @@ class AIRouter {
     return Array.from(this.agents.keys());
   }
 
-  async routeQuery(userMessage) {
-    return {
-      intent: 'unified',
-      explicit_filters: {},
-      semantic_needs: String(userMessage || '')
-    };
-  }
-
   async route(message, context = {}) {
     const routingId = this._generateRoutingId();
     const startedAt = Date.now();
 
     try {
-      const routed = await this.routeQuery(message);
       const result = await this._handleUnifiedFlow(message, context);
       const executionTime = Date.now() - startedAt;
 
       this._logRouting({
         routingId,
         message,
-        intent: routed.intent,
+        intent: 'unified_direct',
         executionTime,
         success: true,
         timestamp: new Date()
@@ -61,15 +52,11 @@ class AIRouter {
       return {
         success: true,
         routingId,
-        intent: routed.intent,
+        intent: 'unified_direct',
         confidence: 1,
         agent: 'UnifiedRAGRouter',
         result,
-        executionTime,
-        metadata: {
-          explicit_filters: routed.explicit_filters,
-          semantic_needs: routed.semantic_needs
-        }
+        executionTime
       };
     } catch (error) {
       const executionTime = Date.now() - startedAt;
@@ -139,8 +126,33 @@ class AIRouter {
     return routed.result;
   }
 
+  _logUnifiedFlowDebug({ userMessage = '', masterContext = '', finalPrompt = [] }) {
+    const color = {
+      reset: '\x1b[0m',
+      cyan: '\x1b[36m',
+      yellow: '\x1b[33m',
+      magenta: '\x1b[35m',
+      green: '\x1b[32m'
+    };
+
+    const safeStringify = (value) => {
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch (error) {
+        return `[UNSERIALIZABLE_PAYLOAD] ${error?.message || 'unknown error'}`;
+      }
+    };
+
+    console.log(`${color.cyan}\n================== AIRouter UNIFIED DEBUG ==================${color.reset}`);
+    console.log(`${color.yellow}USER_MESSAGE:${color.reset}\n${String(userMessage || '')}`);
+    console.log(`${color.magenta}MASTER_CONTEXT:${color.reset}\n${String(masterContext || '')}`);
+    console.log(`${color.green}FINAL_PROMPT:${color.reset}\n${safeStringify(finalPrompt)}`);
+    console.log(`${color.cyan}=============================================================\n${color.reset}`);
+  }
+
   async _handleUnifiedFlow(userMessage, context = {}) {
     const normalizedMessage = String(userMessage || '').trim();
+    const conversationHistory = Array.isArray(context.conversationHistory) ? context.conversationHistory : [];
     const sessionKey = String(context?.sessionId || 'anonymous');
     const cacheKey = `${sessionKey}::${normalizedMessage.toLowerCase()}`;
 
@@ -154,27 +166,37 @@ class AIRouter {
       }
     }
 
-    const response = await RAGPipeline.query(normalizedMessage, {
-      pipeline: 'auto',
-      conversationHistory: Array.isArray(context.conversationHistory) ? context.conversationHistory : [],
-      includeProducts: true,
-      maxKnowledgeDocs: 5,
-      maxProducts: 6,
-      minSimilarity: 0.3
-    });
-
-    if (!response || typeof response.answer !== 'string' || !response.answer.trim()) {
-      throw new Error('RAG pipeline returned invalid response');
+    if (!normalizedMessage) {
+      throw new Error('User message is empty');
     }
 
+    const agentResult = await GroqChatService.chatWithAgent(normalizedMessage, conversationHistory);
+
+    this._logUnifiedFlowDebug({
+      userMessage: normalizedMessage,
+      masterContext: '[AGENT_TOOL_CALLING_MODE]',
+      finalPrompt: [
+        {
+          role: 'user',
+          content: normalizedMessage
+        }
+      ]
+    });
+
     const payload = {
-      answer: response.answer,
-      sources: Array.isArray(response.sources) ? response.sources : [],
-      products: Array.isArray(response.products) ? response.products : [],
-      provider: response.sourceProvider || 'unknown',
-      model: response.sourceModel || 'unknown',
-      cacheHit: false
+      answer: String(agentResult?.text || '').trim(),
+      sources: Array.isArray(agentResult?.sources) ? agentResult.sources : [],
+      products: Array.isArray(agentResult?.products) ? agentResult.products : [],
+      provider: agentResult?.provider || 'unknown',
+      model: agentResult?.model || 'unknown',
+      cacheHit: false,
+      flow: 'autonomous_agent_tool_calling',
+      toolTrace: Array.isArray(agentResult?.toolTrace) ? agentResult.toolTrace : []
     };
+
+    if (!payload.answer) {
+      throw new Error('LLM returned empty answer');
+    }
 
     if (this.cacheEnabled) {
       this.responseCache.set(cacheKey, {
@@ -256,6 +278,14 @@ class AIRouter {
       routing: this.getStats(),
       timestamp: new Date().toISOString()
     };
+  }
+
+  getLastSearchedProducts() {
+    if (typeof GroqChatService.getLastSearchedProducts === 'function') {
+      return GroqChatService.getLastSearchedProducts();
+    }
+
+    return [];
   }
 }
 

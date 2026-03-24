@@ -43,6 +43,12 @@ const STATUS_MAP = {
   cancelled:  { label: 'Đã hủy',     cls: 'db-badge-cancelled'  },
 };
 
+const OBS_LEVEL_UI = {
+  ok: { label: 'Ổn định', cls: 'ok' },
+  warning: { label: 'Cảnh báo', cls: 'warning' },
+  critical: { label: 'Nghiêm trọng', cls: 'critical' }
+};
+
 /* ── Custom Tooltip ───────────────────────────────────────── */
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -71,11 +77,49 @@ const Dashboard = () => {
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
   const [modalData, setModalData]     = useState({ show: false, type: '', data: [], title: '' });
+  const [observability, setObservability] = useState(null);
+  const [obsLoading, setObsLoading] = useState(false);
+  const [obsError, setObsError] = useState('');
   const navigate  = useNavigate();
   const { isAdmin, user } = useAuth();
 
   /* fetch */
   useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    if (!isAdmin()) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const run = async () => {
+      setObsLoading(true);
+      setObsError('');
+      try {
+        const res = await adminAPI.getAIObservability();
+        if (!cancelled) {
+          setObservability(res?.data?.data || null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setObsError('Không thể tải trạng thái AI observability');
+        }
+      } finally {
+        if (!cancelled) {
+          setObsLoading(false);
+        }
+      }
+    };
+
+    run();
+    const timer = setInterval(run, 10000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [isAdmin]);
 
   const fetchData = async () => {
     try {
@@ -133,6 +177,23 @@ const Dashboard = () => {
       if (day) { day.revenue += o.totalAmount || 0; day.orders += 1; }
     });
     setRevenueData(days);
+  };
+
+  const refreshObservability = async () => {
+    if (!isAdmin()) {
+      return;
+    }
+
+    setObsLoading(true);
+    setObsError('');
+    try {
+      const res = await adminAPI.getAIObservability();
+      setObservability(res?.data?.data || null);
+    } catch (error) {
+      setObsError('Không thể tải trạng thái AI observability');
+    } finally {
+      setObsLoading(false);
+    }
   };
 
   /* stat card click modal */
@@ -256,6 +317,58 @@ const Dashboard = () => {
               <p className="db-alert-val warning">{stats?.lowStockProducts || 0}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {isAdmin() && (
+        <div className="db-card db-ai-obs-card">
+          <div className="db-ai-obs-head">
+            <p className="db-card-title" style={{ margin: 0 }}>AI Observability</p>
+            <button className="db-ai-obs-refresh" onClick={refreshObservability} disabled={obsLoading}>
+              <FiRefreshCw className={obsLoading ? 'spinning' : ''} />
+              Làm mới
+            </button>
+          </div>
+
+          {obsError ? <p className="db-ai-obs-error">{obsError}</p> : null}
+
+          {observability && (
+            <>
+              <div className="db-ai-obs-topline">
+                <span className={`db-ai-obs-level ${OBS_LEVEL_UI[observability.level]?.cls || 'warning'}`}>
+                  {OBS_LEVEL_UI[observability.level]?.label || observability.level}
+                </span>
+                <span className="db-ai-obs-meta">Uptime: {observability.uptimeSeconds || 0}s</span>
+                <span className="db-ai-obs-meta">PID: {observability?.process?.pid || '-'}</span>
+                <span className="db-ai-obs-meta">RAM: {observability?.process?.memoryMb || 0} MB</span>
+              </div>
+
+              <div className="db-ai-obs-grid">
+                <div className="db-ai-obs-metric">
+                  <span>Tổng phản hồi</span>
+                  <strong>{observability?.outputGuard?.totalResponses || 0}</strong>
+                </div>
+                <div className="db-ai-obs-metric">
+                  <span>Fallback rate</span>
+                  <strong>{((observability?.outputGuard?.fallbackRate || 0) * 100).toFixed(2)}%</strong>
+                </div>
+                <div className="db-ai-obs-metric">
+                  <span>Sanitize rate</span>
+                  <strong>{((observability?.outputGuard?.sanitizeRate || 0) * 100).toFixed(2)}%</strong>
+                </div>
+                <div className="db-ai-obs-metric">
+                  <span>Leakage detected</span>
+                  <strong>{observability?.outputGuard?.leakageDetected || 0}</strong>
+                </div>
+              </div>
+
+              <div className="db-ai-obs-actions">
+                {(observability.actions || []).map((item, idx) => (
+                  <span key={`${item}-${idx}`} className="db-ai-obs-action-item">{item}</span>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 

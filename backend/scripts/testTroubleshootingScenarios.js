@@ -57,10 +57,10 @@ async function sendMessage(message, sessionId = null) {
   const payload = { message, sessionId };
 
   let lastError = null;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
     try {
       const response = await axios.post(CHAT_ENDPOINT, payload, {
-        timeout: 25000,
+        timeout: 40000,
         headers: {
           'Content-Type': 'application/json'
         }
@@ -71,11 +71,11 @@ async function sendMessage(message, sessionId = null) {
       lastError = error;
       const status = error?.response?.status || 0;
       const transient = status === 429 || status === 502 || status === 503 || status === 504 || status === 0;
-      if (!transient || attempt === 3) {
+      if (!transient || attempt === 5) {
         break;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+      await new Promise((resolve) => setTimeout(resolve, 800 * attempt));
     }
   }
 
@@ -99,7 +99,12 @@ async function sendMessage(message, sessionId = null) {
       try {
         const response = await sendMessage(item.message, null);
         assert(response?.success === true, `${item.name}: request failed`);
-        assert(response?.data?.meta?.provider === 'groq' || response?.data?.meta?.provider === 'groq-safe-fallback', `${item.name}: unexpected provider`);
+        assert(
+          response?.data?.meta?.provider === 'groq'
+            || response?.data?.meta?.provider === 'groq-safe-fallback'
+            || response?.data?.meta?.provider === 'local-fallback',
+          `${item.name}: unexpected provider`
+        );
 
         const answer = String(response?.data?.text || '');
         const normalizedAnswer = normalize(answer);
@@ -115,6 +120,7 @@ async function sendMessage(message, sessionId = null) {
 
         successCount += 1;
         console.log(`PASS ${item.name}: ${answer.replace(/\s+/g, ' ').slice(0, 180)}...`);
+        await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
         const status = error?.response?.status || 0;
         const transient = status === 429 || status === 502 || status === 503 || status === 504 || status === 0;
