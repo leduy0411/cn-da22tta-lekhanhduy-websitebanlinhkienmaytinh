@@ -184,6 +184,8 @@ export default function ChatWidget() {
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const chatBoxRef = useRef(null);
+  const chatTriggerRef = useRef(null);
 
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
 
@@ -259,6 +261,31 @@ export default function ChatWidget() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isLoading]);
+
+  const handleClickOutside = (event) => {
+    if (!isOpen) {
+      return;
+    }
+
+    const clickedInsideChatBox = chatBoxRef.current && chatBoxRef.current.contains(event.target);
+    const clickedOnTrigger = chatTriggerRef.current && chatTriggerRef.current.contains(event.target);
+
+    if (!clickedInsideChatBox && !clickedOnTrigger) {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const formatCurrency = (value) => {
     const amount = Number(value);
@@ -589,7 +616,7 @@ export default function ChatWidget() {
   return (
     <div className="ts-chat-widget">
       {isOpen && (
-        <div className="ts-chat-panel" role="dialog" aria-label="TechStore AI Chat">
+        <div ref={chatBoxRef} className="ts-chat-panel" role="dialog" aria-label="TechStore AI Chat">
           <header className="ts-chat-header">
             <div className="ts-chat-brand">
               <div className="ts-chat-brand-icon">
@@ -792,7 +819,11 @@ export default function ChatWidget() {
       )}
 
       <button
-        onClick={() => setIsOpen((prev) => !prev)}
+        ref={chatTriggerRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen((prev) => !prev);
+        }}
         className="ts-chat-trigger"
         type="button"
         aria-label={isOpen ? 'Đóng chat' : 'Mở chat'}
