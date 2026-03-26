@@ -58,6 +58,7 @@ const zalopayRoutes = require('./routes/zalopay');
 const reviewRoutes = require('./routes/reviews');
 const couponRoutes = require('./routes/coupons');
 const aiRoutes = require('./routes/ai');
+const recommendationsRoutes = require('./routes/recommendations');
 const recommendationV2Routes = require('./routes/v2/recommendations');
 const chatV3Routes = require('./routes/v3/chat');
 const videoReviewRoutes = require('./routes/videoReviews');
@@ -75,6 +76,7 @@ app.use('/api/zalopay', zalopayRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/ai/recommendations', recommendationsRoutes);
 app.use('/api/ai/v2', recommendationV2Routes);
 app.use('/api/v3', chatV3Routes);
 app.use('/api', chatV3Routes); // Alias: exposes /api/chat/* alongside /api/v3/chat/*

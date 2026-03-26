@@ -1,11 +1,11 @@
 /**
  * Unified AI Router
  * Single flow for every message:
- * user_message -> RAG retrieval -> Groq generation -> frontend response
+ * user_message -> Gemini native multimodal tool calling -> frontend response
  */
 
-const GroqChatService = require('./GroqChatService');
 const crypto = require('crypto');
+const GeminiChatService = require('../../GeminiChatService');
 
 class AIRouter {
   constructor() {
@@ -178,8 +178,12 @@ class AIRouter {
       throw new Error('User message is empty');
     }
 
-    const agentResult = await GroqChatService.chatWithAgent(normalizedMessage, conversationHistory, {
-      imageBase64
+    const agentResult = await GeminiChatService.chatWithTools({
+      message: normalizedMessage,
+      history: conversationHistory,
+      imageBase64,
+      sessionId: context?.sessionId || null,
+      userId: context?.userId || null
     });
 
     this._logUnifiedFlowDebug({
@@ -197,10 +201,10 @@ class AIRouter {
       answer: String(agentResult?.text || '').trim(),
       sources: Array.isArray(agentResult?.sources) ? agentResult.sources : [],
       products: Array.isArray(agentResult?.products) ? agentResult.products : [],
-      provider: agentResult?.provider || 'unknown',
+      provider: agentResult?.provider || 'gemini',
       model: agentResult?.model || 'unknown',
       cacheHit: false,
-      flow: 'autonomous_agent_tool_calling',
+      flow: 'gemini_native_multimodal_tool_calling',
       toolTrace: Array.isArray(agentResult?.toolTrace) ? agentResult.toolTrace : []
     };
 
@@ -292,8 +296,8 @@ class AIRouter {
   }
 
   getProviderDiagnostics() {
-    if (typeof GroqChatService.getProviderDiagnostics === 'function') {
-      return GroqChatService.getProviderDiagnostics();
+    if (typeof GeminiChatService.getProviderDiagnostics === 'function') {
+      return GeminiChatService.getProviderDiagnostics();
     }
 
     return {
@@ -302,8 +306,8 @@ class AIRouter {
   }
 
   getLastSearchedProducts() {
-    if (typeof GroqChatService.getLastSearchedProducts === 'function') {
-      return GroqChatService.getLastSearchedProducts();
+    if (typeof GeminiChatService.getLastSearchedProducts === 'function') {
+      return GeminiChatService.getLastSearchedProducts();
     }
 
     return [];

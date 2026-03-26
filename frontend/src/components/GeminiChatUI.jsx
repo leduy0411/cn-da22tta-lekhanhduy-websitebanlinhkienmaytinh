@@ -5,6 +5,7 @@ import './GeminiChatUI.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const SESSION_KEY = 'techstore_chat_session';
+const USER_KEY = 'techstore_chat_user';
 const LAST_USER_MESSAGE_AT_KEY = 'techstore_chat_last_user_message_at';
 const SESSION_INACTIVITY_RESET_MS = 30 * 60 * 1000;
 const normalizedApiBase = API_BASE.replace(/\/$/, '');
@@ -118,6 +119,37 @@ function createClientSessionId(userId = '') {
   return `guest_${randomHex}`;
 }
 
+function isSessionCompatibleWithUser(sessionId = '', userId = '') {
+  const normalizedSessionId = String(sessionId || '').trim();
+  if (!normalizedSessionId) {
+    return false;
+  }
+
+  if (userId && !String(userId).startsWith('guest_')) {
+    return normalizedSessionId.startsWith(`user_${userId}_`);
+  }
+
+  return /^guest_[a-f0-9]{64}$/.test(normalizedSessionId);
+}
+
+function getOrCreateClientUserId() {
+  const token = localStorage.getItem('token');
+  const tokenUserId = getUserIdFromToken(token);
+  if (tokenUserId) {
+    localStorage.setItem(USER_KEY, tokenUserId);
+    return tokenUserId;
+  }
+
+  const existing = String(localStorage.getItem(USER_KEY) || '').trim();
+  if (existing) {
+    return existing;
+  }
+
+  const guestUserId = `guest_${Math.random().toString(36).slice(2, 12)}${Date.now().toString(36)}`;
+  localStorage.setItem(USER_KEY, guestUserId);
+  return guestUserId;
+}
+
 function ProductImage({ src, alt }) {
   const [failed, setFailed] = useState(false);
   const safeSrc = resolveAssetUrl(src);
@@ -178,7 +210,16 @@ export default function ChatWidget() {
   const [inputText, setInputText] = useState('');
   const [selectedImageBase64, setSelectedImageBase64] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState(() => localStorage.getItem(SESSION_KEY) || '');
+  const [sessionId, setSessionId] = useState(() => {
+    const userId = getOrCreateClientUserId();
+    const existingSession = String(localStorage.getItem(SESSION_KEY) || '').trim();
+    if (existingSession) {
+      return existingSession;
+    }
+    const generated = createClientSessionId(userId && !userId.startsWith('guest_') ? userId : '');
+    localStorage.setItem(SESSION_KEY, generated);
+    return generated;
+  });
   const [forceNewChat, setForceNewChat] = useState(false);
 
   const textareaRef = useRef(null);
@@ -253,6 +294,24 @@ export default function ChatWidget() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    const tokenUserId = getUserIdFromToken(token);
+    const resolvedUserId = tokenUserId || getOrCreateClientUserId();
+
+    if (isSessionCompatibleWithUser(sessionId, resolvedUserId)) {
+      return;
+    }
+
+    const mappedUserId = resolvedUserId && !resolvedUserId.startsWith('guest_')
+      ? resolvedUserId
+      : '';
+    const rotatedSessionId = createClientSessionId(mappedUserId);
+    setSessionId(rotatedSessionId);
+    localStorage.setItem(SESSION_KEY, rotatedSessionId);
+    localStorage.removeItem(LAST_USER_MESSAGE_AT_KEY);
+  }, [sessionId]);
+
+  useEffect(() => {
     if (!textareaRef.current) return;
     textareaRef.current.style.height = 'auto';
     textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
@@ -319,9 +378,9 @@ export default function ChatWidget() {
   };
 
   const handleNewChat = () => {
-    const token = localStorage.getItem('token');
-    const userId = getUserIdFromToken(token);
-    const newSessionId = createClientSessionId(userId);
+    const userId = getOrCreateClientUserId();
+    const mappedUserId = userId.startsWith('guest_') ? '' : userId;
+    const newSessionId = createClientSessionId(mappedUserId);
 
     setSessionId(newSessionId);
     localStorage.setItem(SESSION_KEY, newSessionId);
@@ -517,19 +576,29 @@ export default function ChatWidget() {
         && lastUserMessageAt > 0
         && (now - lastUserMessageAt > SESSION_INACTIVITY_RESET_MS);
 
-      let outboundSessionId = sessionId;
+      const clientUserId = getOrCreateClientUserId();
+      let outboundSessionId = String(sessionId || '').trim();
       if (shouldRotateByInactivity) {
-        outboundSessionId = '';
+        const mappedUserId = clientUserId.startsWith('guest_') ? '' : clientUserId;
+        outboundSessionId = createClientSessionId(mappedUserId);
         resetChatSession();
+        setSessionId(outboundSessionId);
+        localStorage.setItem(SESSION_KEY, outboundSessionId);
       }
 
       if (forceNewChat && !outboundSessionId) {
-        const token = localStorage.getItem('token');
-        const userId = getUserIdFromToken(token);
-        const generatedSessionId = createClientSessionId(userId);
+        const mappedUserId = clientUserId.startsWith('guest_') ? '' : clientUserId;
+        const generatedSessionId = createClientSessionId(mappedUserId);
         outboundSessionId = generatedSessionId;
         setSessionId(generatedSessionId);
         localStorage.setItem(SESSION_KEY, generatedSessionId);
+      }
+
+      if (!outboundSessionId) {
+        const mappedUserId = clientUserId.startsWith('guest_') ? '' : clientUserId;
+        outboundSessionId = createClientSessionId(mappedUserId);
+        setSessionId(outboundSessionId);
+        localStorage.setItem(SESSION_KEY, outboundSessionId);
       }
 
       const token = localStorage.getItem('token');
@@ -549,6 +618,7 @@ export default function ChatWidget() {
             content: m.text
           })),
           sessionId: outboundSessionId || undefined,
+          userId: clientUserId,
           newChat: shouldRotateByInactivity || forceNewChat
         })
       });

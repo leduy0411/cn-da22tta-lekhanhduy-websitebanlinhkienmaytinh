@@ -55,6 +55,22 @@ function isValidOwnedUserSessionId(value, userId) {
   return value.startsWith(`user_${userId}_`);
 }
 
+async function resolveLatestActiveUserSessionId(userId) {
+  if (typeof userId !== 'string' || !userId.trim()) {
+    return '';
+  }
+
+  const latestConversation = await ChatbotConversation.findOne({
+    user: userId,
+    status: 'active'
+  })
+    .select('sessionId updatedAt')
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  return String(latestConversation?.sessionId || '').trim();
+}
+
 function resolveAbsoluteAssetUrl(req, assetPath) {
   if (!assetPath || typeof assetPath !== 'string') {
     return null;
@@ -119,6 +135,8 @@ function applyFinalOutputGuard({ text = '', products = [] } = {}) {
   const cleanMessage = responseText
     .replace(/<function[^>]*>[\s\S]*?(?:<\/function>|$)/gi, ' ')
     .replace(/<tool_call[^>]*>[\s\S]*?(?:<\/tool_call>|$)/gi, ' ')
+    .replace(/^\s*\[TOOL:[^\]]+\]\s*[\s\S]*$/gim, ' ')
+    .replace(/\[TOOL:[^\]]+\]/gi, ' ')
     .trim();
   const sanitizedText = String(cleanMessage || '')
     .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
@@ -331,11 +349,11 @@ function classifyAIProviderFailure(errorMessage = '') {
     || text.includes('socket hang up')
     || text.includes('network error');
   const isCircuitOpen = text.includes('circuit is open');
-  const isMissingProviderKey = text.includes('groq_api_key is missing') || text.includes('api key missing');
-  const isGroqProviderFailure = text.includes('groq request failed')
-    || text.includes('groq vision request failed')
-    || text.includes('groq circuit is open')
-    || text.includes('groq circuit is open or api key missing');
+  const isMissingProviderKey = text.includes('gemini_api_key') || text.includes('api key missing');
+  const isGeminiProviderFailure = text.includes('gemini request failed')
+    || text.includes('google api')
+    || text.includes('gemini service not initialized')
+    || text.includes('gemini initialization failed');
   const isProviderFailure = text.includes('all providers failed')
     || isRateLimit
     || isTimeout
@@ -343,7 +361,7 @@ function classifyAIProviderFailure(errorMessage = '') {
     || isNetworkFailure
     || isCircuitOpen
     || isMissingProviderKey
-    || isGroqProviderFailure;
+    || isGeminiProviderFailure;
   const retryAfterSeconds = isRateLimit ? extractRetryAfterSeconds(errorMessage) : null;
 
   if (!isProviderFailure) {
@@ -377,13 +395,13 @@ function normalizeHistoryMessages(history = [], maxItems = 8) {
     .filter((item) => item && typeof item.content === 'string')
     .map((item) => {
       const roleRaw = String(item.role || '').toLowerCase();
-      const role = roleRaw === 'assistant' || roleRaw === 'system' ? roleRaw : 'user';
+      const role = roleRaw === 'assistant' ? 'assistant' : (roleRaw === 'user' ? 'user' : null);
       return {
         role,
         content: String(item.content || '').trim()
       };
     })
-    .filter((item) => item.content.length > 0)
+    .filter((item) => item.role && item.content.length > 0)
     .slice(-Math.max(1, Number(maxItems) || 8));
 }
 
@@ -572,7 +590,7 @@ router.post('/chat/health/reset', optionalAuth, async (req, res) => {
   }
 });
 
-router.get('/chat/history/:userId', optionalAuth, async (req, res) => {
+router.get('/chat/sessions/:userId', optionalAuth, async (req, res) => {
   try {
     const requestedUserId = String(req.params.userId || '').trim();
     const authenticatedUserId = req.user?._id?.toString() || req.user?.id || null;
@@ -589,46 +607,102 @@ router.get('/chat/history/:userId', optionalAuth, async (req, res) => {
     if (!authenticatedUserId) {
       return res.status(401).json({
         success: false,
-        message: 'Vui lòng đăng nhập để xem lịch sử chat.'
+        message: 'Vui lòng đăng nhập để xem danh sách phiên chat.'
       });
     }
 
     if (!isPrivileged && authenticatedUserId !== requestedUserId) {
       return res.status(403).json({
         success: false,
-        message: 'Bạn không có quyền xem lịch sử chat của người dùng này.'
+        message: 'Bạn không có quyền xem danh sách phiên chat của người dùng này.'
       });
     }
 
-    const latestConversation = await ChatbotConversation.findOne({
+    const conversations = await ChatbotConversation.find({
       user: requestedUserId,
       status: 'active'
     })
-      .sort({ 'metadata.lastMessageAt': -1, updatedAt: -1 })
+      .select('sessionId updatedAt messages')
+      .sort({ updatedAt: -1 })
       .lean();
 
-    if (!latestConversation) {
+    const sessions = (Array.isArray(conversations) ? conversations : []).map((conversation) => {
+      const firstUserMessage = (Array.isArray(conversation.messages) ? conversation.messages : [])
+        .find((item) => item?.role === 'user' && String(item?.content || '').trim());
+
+      const rawTitle = String(firstUserMessage?.content || 'Phiên chat mới').replace(/\s+/g, ' ').trim();
+      const title = rawTitle.length > 60 ? `${rawTitle.slice(0, 57)}...` : rawTitle;
+
+      return {
+        sessionId: conversation.sessionId,
+        updatedAt: conversation.updatedAt,
+        title
+      };
+    });
+
+    return res.json({
+      success: true,
+      data: sessions
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+router.get('/chat/history/:sessionId', optionalAuth, async (req, res) => {
+  try {
+    const requestedSessionId = String(req.params.sessionId || '').trim();
+    const authenticatedUserId = req.user?._id?.toString() || req.user?.id || null;
+    const role = String(req.user?.role || '').toLowerCase();
+    const isPrivileged = role === 'admin' || role === 'staff';
+
+    if (!requestedSessionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'sessionId là bắt buộc.'
+      });
+    }
+
+    const conversation = await ChatbotConversation.findOne({
+      sessionId: requestedSessionId,
+      status: 'active'
+    })
+      .select('sessionId user messages updatedAt')
+      .lean();
+
+    if (!conversation) {
       return res.json({
         success: true,
         data: {
-          sessionId: null,
+          sessionId: requestedSessionId,
           messages: []
         }
       });
     }
 
-    const messages = (Array.isArray(latestConversation.messages) ? latestConversation.messages : [])
+    const ownerId = conversation?.user?.toString?.() || '';
+    if (ownerId && !isPrivileged && authenticatedUserId && ownerId !== authenticatedUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền xem phiên chat này.'
+      });
+    }
+
+    const messages = (Array.isArray(conversation.messages) ? conversation.messages : [])
       .map((item, index) => {
-        const role = item?.role === 'assistant' ? 'ai' : 'user';
+        const roleName = item?.role === 'assistant' ? 'ai' : (item?.role === 'system' ? 'system' : 'user');
         const text = String(item?.content || '').trim();
-        const image = role === 'user' ? String(item?.metadata?.image || '').trim() : '';
-        const products = role === 'ai' && Array.isArray(item?.metadata?.products)
+        const image = roleName === 'user' ? String(item?.metadata?.image || '').trim() : '';
+        const products = roleName === 'ai' && Array.isArray(item?.metadata?.products)
           ? item.metadata.products
           : [];
 
         return {
-          id: `${latestConversation.sessionId}_${index}_${new Date(item?.timestamp || Date.now()).getTime()}`,
-          role,
+          id: `${conversation.sessionId}_${index}_${new Date(item?.timestamp || Date.now()).getTime()}`,
+          role: roleName,
           text,
           image: image || null,
           products,
@@ -640,7 +714,8 @@ router.get('/chat/history/:userId', optionalAuth, async (req, res) => {
     return res.json({
       success: true,
       data: {
-        sessionId: latestConversation.sessionId,
+        sessionId: conversation.sessionId,
+        updatedAt: conversation.updatedAt,
         messages
       }
     });
@@ -662,101 +737,80 @@ router.post('/chat', optionalAuth, async (req, res) => {
       message,
       imageBase64,
       sessionId: clientSessionId,
+      userId: clientUserId,
       newChat: newChatRequested = false
     } = req.body || {};
     const normalizedMessage = typeof message === 'string' ? message.trim() : '';
     const normalizedImageBase64 = typeof imageBase64 === 'string' ? imageBase64.trim() : '';
     const hasImagePayload = /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(normalizedImageBase64);
     const effectiveMessage = normalizedMessage || (hasImagePayload ? 'Tìm sản phẩm từ hình ảnh này' : '');
+    const normalizedClientSessionId = typeof clientSessionId === 'string' ? clientSessionId.trim() : '';
+    const normalizedClientUserId = typeof clientUserId === 'string' ? clientUserId.trim() : '';
     console.log(`[${requestId}] [STEP 2] payload parsed`, {
       hasMessage: typeof message === 'string',
       messageLength: typeof message === 'string' ? message.length : 0,
       hasImagePayload,
-      hasClientSessionId: Boolean(clientSessionId),
+      hasClientSessionId: Boolean(normalizedClientSessionId),
+      hasClientUserId: Boolean(normalizedClientUserId),
       newChatRequested: Boolean(newChatRequested),
-      clientSessionIdPreview: typeof clientSessionId === 'string' ? clientSessionId.slice(0, 18) : null
+      clientSessionIdPreview: normalizedClientSessionId ? normalizedClientSessionId.slice(0, 18) : null
     });
 
-    if (!effectiveMessage) {
+    if (!effectiveMessage || !normalizedClientSessionId || !normalizedClientUserId) {
       console.warn(`[${requestId}] [STEP 2.1] invalid message payload`);
       return res.status(400).json({
         success: false,
         data: {
-          text: 'Yêu cầu không hợp lệ. Vui lòng nhập nội dung hoặc tải ảnh cần tìm kiếm.',
+          text: 'Yêu cầu không hợp lệ. Bắt buộc gửi đầy đủ message (hoặc image), sessionId và userId.',
           products: []
         }
       });
     }
 
-    const userId = req.user?._id?.toString() || req.user?.id || null;
+    const authenticatedUserId = req.user?._id?.toString() || req.user?.id || null;
+    if (authenticatedUserId && authenticatedUserId !== normalizedClientUserId) {
+      return res.status(403).json({
+        success: false,
+        data: {
+          text: 'userId không khớp với token đăng nhập.',
+          products: []
+        }
+      });
+    }
+
+    const userId = authenticatedUserId;
     console.log(`[${requestId}] [STEP 3] auth resolved`, {
       isAuthenticated: Boolean(userId),
-      userId: userId || 'guest'
+      userId: userId || normalizedClientUserId
     });
 
     // Security-first session policy:
     // - Authenticated users can reuse owned session ids, otherwise fallback to latest active session.
     // - Guests only reuse strong server-issued guest ids that point to guest conversations.
-    let effectiveSessionId = null;
+    let effectiveSessionId = normalizedClientSessionId;
     console.log(`[${requestId}] [STEP 4] session bootstrap`, {
       mode: userId ? 'user' : 'guest',
       effectiveSessionId
     });
 
-    if (userId && !newChatRequested) {
-      const canUseClientSession = isValidOwnedUserSessionId(clientSessionId, userId);
-
-      if (canUseClientSession) {
-        const ownedSession = await ConversationMemoryService.getSession(clientSessionId, {
-          includeMessages: false
-        });
-
-        if (ownedSession.success && ownedSession.conversation?.user?.toString?.() === userId) {
-          effectiveSessionId = clientSessionId;
-        }
-      }
-
-      if (!effectiveSessionId) {
-        const latestOwnedConversation = await ChatbotConversation.findOne({
-          user: userId,
-          status: 'active'
-        })
-          .sort({ 'metadata.lastMessageAt': -1, updatedAt: -1 })
-          .select('sessionId')
-          .lean();
-
-        if (latestOwnedConversation?.sessionId) {
-          effectiveSessionId = latestOwnedConversation.sessionId;
-        }
-      }
+    if (userId && !isValidOwnedUserSessionId(effectiveSessionId, normalizedClientUserId)) {
+      const latestOwnedSessionId = await resolveLatestActiveUserSessionId(userId);
+      effectiveSessionId = latestOwnedSessionId || createUserSessionId(userId);
+      console.warn(`[${requestId}] [STEP 4.1] invalid sessionId for authenticated user; auto-rotated`, {
+        previousSessionIdPreview: normalizedClientSessionId ? normalizedClientSessionId.slice(0, 18) : null,
+        effectiveSessionIdPreview: effectiveSessionId.slice(0, 18),
+        reusedLatestSession: Boolean(latestOwnedSessionId)
+      });
     }
 
-    if (!effectiveSessionId) {
-      if (!userId && isValidGuestSessionId(clientSessionId)) {
-        console.log(`[${requestId}] [STEP 4.1] validating guest session`, {
-          clientSessionIdPreview: clientSessionId.slice(0, 18)
-        });
-
-        const candidateSession = await ConversationMemoryService.getSession(clientSessionId, {
-          includeMessages: false
-        });
-
-        console.log(`[${requestId}] [STEP 4.2] guest session lookup done`, {
-          success: candidateSession.success,
-          hasBoundUser: Boolean(candidateSession.conversation?.user)
-        });
-
-        if (candidateSession.success && !candidateSession.conversation?.user) {
-          effectiveSessionId = clientSessionId;
+    if (!userId && !isValidGuestSessionId(effectiveSessionId)) {
+      return res.status(400).json({
+        success: false,
+        data: {
+          text: 'sessionId guest không hợp lệ.',
+          products: []
         }
-      }
-
-      if (!effectiveSessionId) {
-        effectiveSessionId = userId ? createUserSessionId(userId) : createGuestSessionId();
-        console.log(`[${requestId}] [STEP 4.3] generated new guest session`, {
-          effectiveSessionIdPreview: effectiveSessionId.slice(0, 18)
-        });
-      }
+      });
     }
 
     const rateLimitKey = userId ? `user:${userId}` : `session:${effectiveSessionId}`;
@@ -793,22 +847,11 @@ router.post('/chat', optionalAuth, async (req, res) => {
     const isInactiveTooLong = Boolean(lastUserMessageAt)
       && (Date.now() - lastUserMessageAt.getTime() > SESSION_INACTIVITY_RESET_MS);
     const shouldStartFreshSession = Boolean(newChatRequested) || isInactiveTooLong;
-
     if (shouldStartFreshSession) {
-      console.log(`[${requestId}] [STEP 5.2] resetting session scope`, {
+      console.log(`[${requestId}] [STEP 5.2] newChat/inactivity flagged; using client-provided sessionId`, {
         reason: newChatRequested ? 'new_chat_requested' : 'inactive_over_30m',
-        mode: userId ? 'rotate_user_session' : 'rotate_guest_session'
+        effectiveSessionIdPreview: effectiveSessionId.slice(0, 18)
       });
-
-      effectiveSessionId = userId ? createUserSessionId(userId) : createGuestSessionId();
-      const freshSession = await ConversationMemoryService.ensureSession(effectiveSessionId, userId, {
-        channel: 'api_v3_chat',
-        refreshedBy: newChatRequested ? 'new_chat_requested' : 'inactive_over_30m'
-      });
-
-      if (!freshSession.success) {
-        throw new Error(freshSession.error || 'Không thể tạo phiên chat mới');
-      }
     }
 
     console.log(`[${requestId}] [STEP 7] loading conversation history`);
@@ -836,7 +879,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
         imageBase64: hasImagePayload ? normalizedImageBase64 : undefined,
         history: historyForRouter,
         sessionId: effectiveSessionId,
-        userId
+        userId: normalizedClientUserId
       }),
       PHASE_TIMEOUTS.aiExecutionMs,
       'ai_execution'
@@ -873,6 +916,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
         content: effectiveMessage,
         metadata: {
           source: 'api_v3_chat',
+          userId: normalizedClientUserId,
           hasImagePayload,
           image: hasImagePayload ? normalizedImageBase64 : null
         }
@@ -881,6 +925,35 @@ router.post('/chat', optionalAuth, async (req, res) => {
       'save_user_message'
     );
     console.log(`[${requestId}] [STEP 9.1] user message saved`);
+
+    const toolTrace = Array.isArray(aiResult?.raw?.result?.toolTrace)
+      ? aiResult.raw.result.toolTrace
+      : [];
+
+    if (toolTrace.length > 0) {
+      console.log(`[${requestId}] [STEP 9.2] saving tool responses`, {
+        toolCount: toolTrace.length
+      });
+
+      for (const traceItem of toolTrace.slice(0, 8)) {
+        const toolName = String(traceItem?.name || 'tool').trim() || 'tool';
+
+        await withTimeout(
+          () => ConversationMemoryService.saveMessage(effectiveSessionId, {
+            role: 'system',
+            content: `[TOOL:${toolName}]`,
+            metadata: {
+              source: 'gemini_tool_call',
+              toolName,
+              toolArguments: traceItem?.arguments || {},
+              toolResult: traceItem?.result || {}
+            }
+          }),
+          PHASE_TIMEOUTS.saveMessageMs,
+          'save_tool_message'
+        );
+      }
+    }
 
     console.log(`[${requestId}] [STEP 10] saving assistant message`);
     await withTimeout(

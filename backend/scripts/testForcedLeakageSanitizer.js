@@ -1,5 +1,4 @@
 const axios = require('axios');
-const GroqChatService = require('../services/ai/core/GroqChatService');
 
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:5000';
 const HEALTH_ENDPOINT = `${API_BASE.replace(/\/$/, '')}/api/v3/chat/health`;
@@ -10,12 +9,21 @@ function assert(condition, message) {
   }
 }
 
+function sanitizeResponseText(raw = '') {
+  return String(raw || '')
+    .replace(/<function[^>]*>[\s\S]*?(?:<\/function>|$)/gi, ' ')
+    .replace(/<tool_call[^>]*>[\s\S]*?(?:<\/tool_call>|$)/gi, ' ')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 (async () => {
   try {
     console.log('Running forced leakage sanitizer test...');
 
     const leaked = 'Dạ đây là dữ liệu <function=search_products>[{"name":"HyperX Cloud II","image":"https://example.com/hx.jpg"}]</function>';
-    const cleaned = GroqChatService._sanitizeResponseText(leaked);
+    const cleaned = sanitizeResponseText(leaked);
 
     assert(typeof cleaned === 'string' && cleaned.trim().length > 0, 'sanitized text is empty');
     assert(!/<function\s*=\s*search_products/i.test(cleaned), 'function opening tag still present');

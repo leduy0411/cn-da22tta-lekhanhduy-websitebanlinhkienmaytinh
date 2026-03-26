@@ -7,7 +7,7 @@
 const KnowledgeDocument = require('../../../models/KnowledgeDocument');
 const VectorSearchService = require('./VectorSearchService');
 const EmbeddingService = require('./EmbeddingService');
-const GroqChatService = require('../core/GroqChatService');
+const GeminiChatService = require('../../GeminiChatService');
 
 class RAGPipeline {
   constructor() {
@@ -59,8 +59,8 @@ class RAGPipeline {
       const contextBlocks = this._buildContextBlocks({ productContext, knowledgeContext, pipeline });
       const systemPrompt = this._buildSystemPrompt(pipeline);
 
-      // 4) Generate with Groq primary + Gemini fallback
-      const llmResult = await GroqChatService.generateRagAnswer({
+      // 4) Generate with Gemini
+      const llmResult = await GeminiChatService.generateRagAnswer({
         systemPrompt,
         userQuestion: query,
         contextBlocks,
@@ -68,9 +68,9 @@ class RAGPipeline {
       });
 
       return {
-        answer: llmResult.text,
-        sourceProvider: llmResult.provider,
-        sourceModel: llmResult.model,
+        answer: llmResult.answer,
+        sourceProvider: 'gemini',
+        sourceModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
         sources: knowledgeContext.map((doc) => ({
           source: doc.source,
           category: doc.category,

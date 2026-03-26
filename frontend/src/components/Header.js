@@ -11,6 +11,18 @@ const Header = ({ onSearch }) => {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [showUserMenu, setShowUserMenu] = React.useState(false);
+  const dropdownRef = React.useRef(null);
+
+  const handleClickOutside = (event) => {
+    if (showUserMenu && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setShowUserMenu(false);
+    }
+  };
+
+  React.useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showUserMenu]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -100,7 +112,7 @@ const Header = ({ onSearch }) => {
             </a>
 
             {isAuthenticated ? (
-              <div className="user-menu-container">
+              <div className="user-menu-container" ref={dropdownRef}>
                 <button
                   className="user-button"
                   onClick={() => setShowUserMenu(!showUserMenu)}
