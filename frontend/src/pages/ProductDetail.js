@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiShoppingCart, FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
+import { FiShoppingCart, FiArrowLeft, FiShoppingBag, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { productAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -100,6 +100,42 @@ const ProductDetail = () => {
     }).format(price);
   };
 
+  const uniqueProductImages = useMemo(() => {
+    const productImages = [product?.image, ...(product?.images || [])].filter(Boolean);
+    return productImages.filter((img, index) => productImages.indexOf(img) === index);
+  }, [product]);
+
+  const handlePrevImage = () => {
+    if (uniqueProductImages.length <= 1) return;
+    const currentIndex = uniqueProductImages.indexOf(selectedImage);
+    const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+    const prevIndex = safeCurrentIndex === 0 ? uniqueProductImages.length - 1 : safeCurrentIndex - 1;
+    setSelectedImage(uniqueProductImages[prevIndex]);
+  };
+
+  const handleNextImage = () => {
+    if (uniqueProductImages.length <= 1) return;
+    const currentIndex = uniqueProductImages.indexOf(selectedImage);
+    const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+    const nextIndex = safeCurrentIndex === uniqueProductImages.length - 1 ? 0 : safeCurrentIndex + 1;
+    setSelectedImage(uniqueProductImages[nextIndex]);
+  };
+
+  useEffect(() => {
+    if (uniqueProductImages.length <= 1) return undefined;
+
+    const sliderTimer = setInterval(() => {
+      setSelectedImage((currentImage) => {
+        const currentIndex = uniqueProductImages.indexOf(currentImage);
+        const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+        const nextIndex = safeCurrentIndex === uniqueProductImages.length - 1 ? 0 : safeCurrentIndex + 1;
+        return uniqueProductImages[nextIndex];
+      });
+    }, 3000);
+
+    return () => clearInterval(sliderTimer);
+  }, [uniqueProductImages]);
+
   if (loading) {
     return <div className="loading">Đang tải...</div>;
   }
@@ -119,19 +155,33 @@ const ProductDetail = () => {
           <div className="product-image-section">
             <div className="main-image">
               <img src={selectedImage} alt={product.name} />
+              {uniqueProductImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    className="image-nav-btn image-nav-btn-left"
+                    onClick={handlePrevImage}
+                    aria-label="Ảnh trước"
+                  >
+                    <FiChevronLeft size={24} />
+                  </button>
+                  <button
+                    type="button"
+                    className="image-nav-btn image-nav-btn-right"
+                    onClick={handleNextImage}
+                    aria-label="Ảnh tiếp theo"
+                  >
+                    <FiChevronRight size={24} />
+                  </button>
+                </>
+              )}
             </div>
 
-            {product.images && product.images.length > 0 && (
+            {uniqueProductImages.length > 1 && (
               <div className="image-thumbnails">
-                <div
-                  className={`thumbnail ${selectedImage === product.image ? 'active' : ''}`}
-                  onClick={() => setSelectedImage(product.image)}
-                >
-                  <img src={product.image} alt={`${product.name} - main`} />
-                </div>
-                {product.images.map((img, index) => (
+                {uniqueProductImages.map((img, index) => (
                   <div
-                    key={index}
+                    key={`${img}-${index}`}
                     className={`thumbnail ${selectedImage === img ? 'active' : ''}`}
                     onClick={() => setSelectedImage(img)}
                   >
