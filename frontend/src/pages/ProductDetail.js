@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useProductRecommendations, useInteractionTracker } from '../hooks/useRecommendations';
 import ProductCard from '../components/ProductCard';
 import ProductReviews from '../components/ProductReviews';
+import TechNewsSection from '../components/TechNewsSection';
 import Swal from 'sweetalert2';
 import './ProductDetail.css';
 
@@ -285,6 +286,8 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+
+        <TechNewsSection limit={5} />
 
         {/* Sản phẩm gợi ý AI */}
         {relatedProducts.length > 0 && (

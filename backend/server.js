@@ -62,6 +62,7 @@ const recommendationsRoutes = require('./routes/recommendations');
 const recommendationV2Routes = require('./routes/v2/recommendations');
 const chatV3Routes = require('./routes/v3/chat');
 const videoReviewRoutes = require('./routes/videoReviews');
+const techNewsRoutes = require('./routes/techNews');
 const knowledgeRoutes = require('./routes/knowledge');
 
 app.use('/api/products', productRoutes);
@@ -81,6 +82,7 @@ app.use('/api/ai/v2', recommendationV2Routes);
 app.use('/api/v3', chatV3Routes);
 app.use('/api', chatV3Routes); // Alias: exposes /api/chat/* alongside /api/v3/chat/*
 app.use('/api/video-reviews', videoReviewRoutes);
+app.use('/api/tech-news', techNewsRoutes);
 app.use('/api/knowledge', knowledgeRoutes); // RAG knowledge base
 
 // Home route

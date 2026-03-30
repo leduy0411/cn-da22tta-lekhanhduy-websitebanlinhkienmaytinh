@@ -146,6 +146,14 @@ export const videoReviewAPI = {
   delete: (id) => api.delete(`/video-reviews/${id}`),
 };
 
+export const techNewsAPI = {
+  getAll: (limit = 6) => api.get('/tech-news', { params: { limit } }),
+  adminGetAll: () => api.get('/tech-news/admin/all'),
+  create: (data) => api.post('/tech-news', data),
+  update: (id, data) => api.put(`/tech-news/${id}`, data),
+  delete: (id) => api.delete(`/tech-news/${id}`),
+};
+
 // AI API
 export const aiAPI = {
   // Chatbot

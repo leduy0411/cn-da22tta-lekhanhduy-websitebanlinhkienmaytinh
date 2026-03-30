@@ -6,6 +6,7 @@ import {
   FiChevronRight,
   FiCommand,
   FiCpu,
+  FiFileText,
   FiGrid,
   FiHome,
   FiLogOut,
@@ -62,6 +63,7 @@ const AdminLayout = () => {
     { id: 'coupons', path: '/admin/coupons', icon: FiTag, label: 'Mã giảm giá', roles: ['admin', 'staff'], section: 'management' },
     { id: 'reviews', path: '/admin/reviews', icon: FiStar, label: 'Đánh giá', roles: ['admin', 'staff'], section: 'management' },
     { id: 'video-reviews', path: '/admin/video-reviews', icon: FiVideo, label: 'Video review', roles: ['admin'], section: 'management' },
+    { id: 'tech-news', path: '/admin/tech-news', icon: FiFileText, label: 'Tin tức công nghệ', roles: ['admin'], section: 'management' },
     { id: 'ai', path: '/admin/ai', icon: RiRobot2Line, label: 'AI Assistant', roles: ['admin'], section: 'workspace' },
   ];
 
