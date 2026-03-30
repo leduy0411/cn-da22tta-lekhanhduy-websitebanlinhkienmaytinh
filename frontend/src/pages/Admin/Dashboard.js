@@ -418,14 +418,36 @@ const Dashboard = () => {
             <p className="db-card-title">💰 Tổng doanh thu</p>
             <div className="db-earning-amount">
               {fmtShort(stats?.totalRevenue || 0)}
-              <span className="db-earning-up"><FiArrowUp /> 10%</span>
+              <span className="db-earning-up"><FiArrowUp /> Theo đơn hoàn thành</span>
             </div>
-            <p className="db-earning-compare">So với tháng trước</p>
+            <p className="db-earning-compare">Doanh thu, vốn và lợi nhuận thực tế</p>
             <div className="db-earning-list">
               {[
-                { icon: '🟣', name: 'Đơn đã giao', sub: 'Hoàn thành', color: '#7367F0', pct: 60 },
-                { icon: '🟡', name: 'Đang xử lý',  sub: 'Tiến hành',  color: '#FF9F43', pct: 25 },
-                { icon: '🔵', name: 'Đang giao',   sub: 'Vận chuyển', color: '#00CFE8', pct: 15 },
+                {
+                  icon: '🟢',
+                  name: `Doanh thu: ${fmt(stats?.revenue || 0)}`,
+                  sub: 'Tổng quantity * price',
+                  color: '#28C76F',
+                  pct: 100,
+                },
+                {
+                  icon: '🟠',
+                  name: `Tiền vốn: ${fmt(stats?.totalCost || 0)}`,
+                  sub: 'Tổng quantity * costPrice',
+                  color: '#FF9F43',
+                  pct: (stats?.revenue || 0) > 0
+                    ? Math.min(100, Math.round(((stats?.totalCost || 0) / (stats?.revenue || 1)) * 100))
+                    : 0,
+                },
+                {
+                  icon: '🔵',
+                  name: `Lợi nhuận: ${fmt(stats?.profit || 0)}`,
+                  sub: 'Revenue - Total Cost',
+                  color: '#00CFE8',
+                  pct: (stats?.revenue || 0) > 0
+                    ? Math.max(0, Math.min(100, Math.round(((stats?.profit || 0) / (stats?.revenue || 1)) * 100)))
+                    : 0,
+                },
               ].map((item, i) => (
                 <div key={i} className="db-earning-item">
                   <div className="db-earning-item-icon" style={{ background: item.color + '18' }}>
@@ -452,9 +474,9 @@ const Dashboard = () => {
                 <FiTrendingUp />
               </div>
               <p className="db-metric-label">Lợi nhuận</p>
-              <p className="db-metric-val">{fmtShort((stats?.totalRevenue || 0) * 0.25)}</p>
-              <span className="db-metric-change up"><FiArrowUp /> +42%</span>
-              <span className="db-metric-period">Tuần này</span>
+              <p className="db-metric-val">{fmtShort(stats?.profit || 0)}</p>
+              <span className="db-metric-change up"><FiArrowUp /> Dữ liệu thực</span>
+              <span className="db-metric-period">Revenue - Total Cost</span>
             </div>
           </div>
 

@@ -37,6 +37,7 @@ router.post('/', optionalAuth, async (req, res) => {
         product: product._id,
         name: product.name,
         price: product.price,
+        costPrice: product.costPrice || 0,
         quantity: quantity,
         image: product.image
       });
@@ -87,16 +88,17 @@ router.post('/', optionalAuth, async (req, res) => {
           product: product._id,
           name: product.name,
           price: product.price,
+          costPrice: product.costPrice || 0,
           quantity: item.quantity,
           image: product.image
         });
+
+        totalAmount += product.price * item.quantity;
 
         // Giảm số lượng tồn kho
         product.stock -= item.quantity;
         await product.save();
       }
-
-      totalAmount = cart.totalAmount;
 
       // Xóa giỏ hàng sau khi đặt hàng thành công
       cart.items = [];

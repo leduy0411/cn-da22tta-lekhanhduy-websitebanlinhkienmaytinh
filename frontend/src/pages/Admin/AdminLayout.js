@@ -148,7 +148,7 @@ const AdminLayout = () => {
         />
       )}
 
-      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+      <aside className={`admin-sidebar z-40 ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-shortcut">
           <FiCommand />
           <span>Tìm nhanh</span>

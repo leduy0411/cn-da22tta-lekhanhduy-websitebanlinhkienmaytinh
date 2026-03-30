@@ -1,0 +1,22 @@
+TECHSTORE AI CHATBOT - EVALUATION REPORT
+==================================================
+Generated: 2026-03-29T16:40:17.053Z
+
+Total Questions    : 100
+Successful         : 100
+Failed (API Error) : 0
+
+METRICS
+--------------------------------------------------
+Retrieval Accuracy : 18.0%
+Answer Correctness : 8.6%
+Faithfulness       : 60.0%
+Average Latency    : 1.32 seconds
+
+CATEGORY BREAKDOWN
+--------------------------------------------------
+product_query: RA=15.0% AC=16.2% FF=56.3% Latency=1.85s
+product_comparison: RA=15.0% AC=7.1% FF=58.6% Latency=1.40s
+tech_explanation: RA=15.0% AC=6.3% FF=57.1% Latency=1.18s
+recommendation: RA=20.0% AC=10.8% FF=64.7% Latency=1.09s
+general_technical: RA=25.0% AC=2.8% FF=63.6% Latency=1.08s

@@ -6,7 +6,7 @@
 module.exports = {
   // Backend API endpoint
   API_BASE_URL: 'http://localhost:5000',
-  CHAT_ENDPOINT: '/api/ai-assistant/chat',
+  CHAT_ENDPOINT: '/api/v3/chat',
 
   // Evaluation settings
   CONCURRENCY: 3,           // Parallel requests

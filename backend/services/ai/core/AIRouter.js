@@ -107,6 +107,9 @@ class AIRouter {
     return {
       text: routed.result.answer,
       sources: Array.isArray(routed.result.sources) ? routed.result.sources : [],
+      usage: routed.result.usage && typeof routed.result.usage === 'object'
+        ? routed.result.usage
+        : null,
       raw: routed
     };
   }
@@ -203,6 +206,9 @@ class AIRouter {
       products: Array.isArray(agentResult?.products) ? agentResult.products : [],
       provider: agentResult?.provider || 'gemini',
       model: agentResult?.model || 'unknown',
+      usage: agentResult?.usage && typeof agentResult.usage === 'object'
+        ? agentResult.usage
+        : null,
       cacheHit: false,
       flow: 'gemini_native_multimodal_tool_calling',
       toolTrace: Array.isArray(agentResult?.toolTrace) ? agentResult.toolTrace : []

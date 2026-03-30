@@ -8,6 +8,7 @@
  */
 
 const axios  = require('axios');
+const crypto = require('crypto');
 const config = require('../config');
 const MetricsCalculator = require('./MetricsCalculator');
 
@@ -18,6 +19,14 @@ class EvaluationPipeline {
     this.endpoint = `${this.apiBase}${config.CHAT_ENDPOINT}`;
     this.timeout = config.REQUEST_TIMEOUT_MS;
     this.delay = config.DELAY_BETWEEN_REQUESTS_MS;
+  }
+
+  _createGuestSessionId() {
+    return `guest_${crypto.randomBytes(32).toString('hex')}`;
+  }
+
+  _createGuestUserId() {
+    return `guest_eval_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   }
 
   /**
@@ -86,9 +95,15 @@ class EvaluationPipeline {
 
     try {
       // ── Step 1: Call the chatbot API ──────────────────────────
+      const sessionId = this._createGuestSessionId();
+      const userId = this._createGuestUserId();
       const response = await axios.post(
         this.endpoint,
-        { message: testCase.question, sessionId: null },
+        {
+          message: testCase.question,
+          sessionId,
+          userId
+        },
         {
           timeout: this.timeout,
           headers: { 'Content-Type': 'application/json' }
@@ -99,8 +114,10 @@ class EvaluationPipeline {
       const data = response.data;
 
       // Extract chatbot answer and retrieved products (RAG context)
-      const chatbotAnswer    = data.answer || '';
-      const retrievedProducts = data.products || [];
+      const chatbotAnswer = String(data?.data?.text || data?.answer || '').trim();
+      const retrievedProducts = Array.isArray(data?.data?.products)
+        ? data.data.products
+        : (Array.isArray(data?.products) ? data.products : []);
 
       // ── Step 2: Calculate all 4 metrics ──────────────────────
       const retrievalAccuracy = MetricsCalculator.calculateRetrievalAccuracy(
@@ -137,9 +154,10 @@ class EvaluationPipeline {
           latency: latency
         },
         api_metadata: {
-          intent: data.metadata?.intent,
-          confidence: data.metadata?.confidence,
-          agent: data.metadata?.agent
+          intent: data?.metadata?.intent,
+          confidence: data?.metadata?.confidence,
+          agent: data?.metadata?.agent,
+          sessionId: data?.sessionId || sessionId
         },
         error: null
       };
@@ -161,7 +179,9 @@ class EvaluationPipeline {
           latency:            MetricsCalculator.calculateLatency(latencyMs)
         },
         api_metadata: {},
-        error: err.message
+        error: err?.response?.data?.message
+          || err?.response?.data?.data?.text
+          || err.message
       };
     }
   }

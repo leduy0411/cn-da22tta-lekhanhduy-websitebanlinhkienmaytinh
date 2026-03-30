@@ -134,6 +134,7 @@ class GeminiChatService {
 
     const toolTrace = [];
     const collectedProducts = [];
+    const usage = this._createEmptyUsageSummary();
     let finalText = '';
 
     for (let turn = 0; turn < 6; turn += 1) {
@@ -142,6 +143,7 @@ class GeminiChatService {
         tools: this.tools
       });
       const response = result?.response;
+      this._accumulateUsageSummary(usage, response, turn);
       const functionCalls = typeof response?.functionCalls === 'function'
         ? response.functionCalls() || []
         : [];
@@ -201,6 +203,7 @@ class GeminiChatService {
       products: this._dedupeProducts(collectedProducts).slice(0, 8),
       provider: 'gemini',
       model: this.modelName,
+      usage,
       toolTrace
     };
   }
@@ -328,6 +331,48 @@ class GeminiChatService {
         data: match[2]
       }
     };
+  }
+
+  _createEmptyUsageSummary() {
+    return {
+      promptTokenCount: 0,
+      candidatesTokenCount: 0,
+      totalTokenCount: 0,
+      turns: []
+    };
+  }
+
+  _safeTokenValue(value) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : 0;
+  }
+
+  _extractUsageMetadata(response) {
+    const usageMetadata = response?.usageMetadata && typeof response.usageMetadata === 'object'
+      ? response.usageMetadata
+      : {};
+
+    return {
+      promptTokenCount: this._safeTokenValue(usageMetadata.promptTokenCount),
+      candidatesTokenCount: this._safeTokenValue(usageMetadata.candidatesTokenCount),
+      totalTokenCount: this._safeTokenValue(usageMetadata.totalTokenCount)
+    };
+  }
+
+  _accumulateUsageSummary(summary, response, turnIndex) {
+    if (!summary || typeof summary !== 'object') {
+      return;
+    }
+
+    const extracted = this._extractUsageMetadata(response);
+    summary.promptTokenCount += extracted.promptTokenCount;
+    summary.candidatesTokenCount += extracted.candidatesTokenCount;
+    summary.totalTokenCount += extracted.totalTokenCount;
+
+    summary.turns.push({
+      turn: Number(turnIndex) + 1,
+      ...extracted
+    });
   }
 
   async _executeFunctionCall(name, args, context = {}) {

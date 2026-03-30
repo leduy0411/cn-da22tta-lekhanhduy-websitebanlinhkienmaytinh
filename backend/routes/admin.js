@@ -16,10 +16,35 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
     // Chỉ đếm đơn hàng chưa bị hủy
     const totalOrders = await Order.countDocuments({ status: { $ne: 'cancelled' } });
 
-    const totalRevenue = await Order.aggregate([
-      { $match: { status: { $ne: 'cancelled' } } },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+    const financialStats = await Order.aggregate([
+      { $match: { status: 'delivered' } },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: null,
+          revenue: {
+            $sum: {
+              $multiply: [
+                { $ifNull: ['$items.quantity', 0] },
+                { $ifNull: ['$items.price', 0] }
+              ]
+            }
+          },
+          totalCost: {
+            $sum: {
+              $multiply: [
+                { $ifNull: ['$items.quantity', 0] },
+                { $ifNull: ['$items.costPrice', 0] }
+              ]
+            }
+          }
+        }
+      }
     ]);
+
+    const revenue = financialStats[0]?.revenue || 0;
+    const totalCost = financialStats[0]?.totalCost || 0;
+    const profit = revenue - totalCost;
 
     const pendingOrders = await Order.countDocuments({ status: 'pending' });
     const lowStockProducts = await Product.countDocuments({ stock: { $lte: 1 } });
@@ -28,7 +53,10 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
       totalUsers,
       totalProducts,
       totalOrders,
-      totalRevenue: totalRevenue[0]?.total || 0,
+      totalRevenue: revenue,
+      revenue,
+      totalCost,
+      profit,
       pendingOrders,
       lowStockProducts
     });

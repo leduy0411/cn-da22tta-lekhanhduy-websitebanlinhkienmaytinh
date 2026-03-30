@@ -274,6 +274,16 @@ function isImageFollowUpRequest(message = '') {
 
 async function buildLocalFallbackResponse(req, message = '') {
   const normalizedMessage = String(message || '').trim();
+  const greetingPattern = /^(xin\s*ch(a|à)o|ch(a|à)o(\s+(b(a|ạ)n|anh|ch(i|ị)|shop|ad|minh))?|hello|hi|hey)\b/i;
+  const blessingPattern = /\b(chuc|chúc)\b.{0,40}\b(s(a|á)ng|chi(e|ề)u|t(o|ố)i|ng(a|à)y|cu(o|ố)i\s*tu(a|ầ)n|vui|tot|t(o|ố)t\s*l(a|à)nh|an\s*l(a|à)nh|ng(u|ủ)\s*ngon)\b/i;
+
+  if (greetingPattern.test(normalizedMessage) || blessingPattern.test(normalizedMessage)) {
+    return {
+      text: 'Chào bạn, mình là trợ lý AI của TechStore. Mình có thể giúp gì cho bạn hôm nay?',
+      products: []
+    };
+  }
+
   const genericNeedPattern = /^(toi can tim|m(i|ì)nh can tim|can tim|tim giup|tim san pham|nhu vay|nhu nay|giong nhu|san pham nhu)/i;
   const effectiveKeyword = genericNeedPattern.test(normalizedMessage)
     ? ''
@@ -892,7 +902,8 @@ router.post('/chat', optionalAuth, async (req, res) => {
     console.log(`[${requestId}] [STEP 8.1] AI engine completed`, {
       hasText: Boolean(aiResult.text),
       textLength: aiResult.text.length,
-      sourcesCount: Array.isArray(aiResult.sources) ? aiResult.sources.length : 0
+      sourcesCount: Array.isArray(aiResult.sources) ? aiResult.sources.length : 0,
+      usage: aiResult?.usage || null
     });
 
     const routedProducts = Array.isArray(aiResult.raw?.result?.products)
@@ -963,7 +974,8 @@ router.post('/chat', optionalAuth, async (req, res) => {
         metadata: {
           source: 'api_v3_chat',
           sources: aiResult.sources || [],
-          products: finalizedProducts
+          products: finalizedProducts,
+          usage: aiResult?.usage || null
         }
       }),
       PHASE_TIMEOUTS.saveMessageMs,
@@ -977,7 +989,8 @@ router.post('/chat', optionalAuth, async (req, res) => {
       sessionId: effectiveSessionId,
       data: {
         text: cleanMessage,
-        products: finalizedProducts
+        products: finalizedProducts,
+        usage: aiResult?.usage || null
       }
     });
   } catch (error) {
@@ -994,6 +1007,46 @@ router.post('/chat', optionalAuth, async (req, res) => {
       }
 
       const incomingMessage = String(req.body?.message || '');
+      const incomingImageBase64 = String(req.body?.imageBase64 || '').trim();
+      const hasIncomingImagePayload = /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(incomingImageBase64);
+
+      if (hasIncomingImagePayload) {
+        const cachedProducts = Array.isArray(AIRouter.getLastSearchedProducts?.())
+          ? AIRouter.getLastSearchedProducts().slice(0, 10)
+          : [];
+
+        if (cachedProducts.length > 0) {
+          const guardedCached = applyFinalOutputGuard({
+            text: 'Dạ, em đang tạm quá tải nhận diện ảnh, nhưng em vẫn gửi lại danh sách sản phẩm vừa tìm được để anh/chị tham khảo ạ.',
+            products: cachedProducts
+          });
+
+          return res.status(200).json({
+            success: true,
+            debugId: requestId,
+            sessionId: req.body?.sessionId || null,
+            data: {
+              text: guardedCached.text,
+              products: guardedCached.products
+            }
+          });
+        }
+
+        const visionFallbackText = providerFailure.retryAfterSeconds
+          ? `Em đang tạm quá tải ở bước nhận diện ảnh. Anh/chị vui lòng thử gửi lại ảnh sau khoảng ${providerFailure.retryAfterSeconds} giây giúp em nhé.`
+          : 'Em đang tạm quá tải ở bước nhận diện ảnh nên chưa phân tích được hình vừa gửi. Anh/chị thử lại sau ít giây hoặc mô tả thêm tên sản phẩm để em hỗ trợ ngay ạ.';
+
+        return res.status(200).json({
+          success: true,
+          debugId: requestId,
+          sessionId: req.body?.sessionId || null,
+          data: {
+            text: visionFallbackText,
+            products: []
+          }
+        });
+      }
+
       if (isImageFollowUpRequest(incomingMessage)) {
         const cachedProducts = Array.isArray(AIRouter.getLastSearchedProducts?.())
           ? AIRouter.getLastSearchedProducts().slice(0, 10)

@@ -1,0 +1,3977 @@
+{
+  "summary": {
+    "total_questions": 100,
+    "successful": 100,
+    "failed": 0,
+    "metrics": {
+      "retrieval_accuracy": {
+        "average": 0.18,
+        "passed": 3,
+        "pass_rate": 0.03
+      },
+      "answer_correctness": {
+        "average": 0.08630800000000004,
+        "passed": 0,
+        "pass_rate": 0
+      },
+      "faithfulness": {
+        "average": 0.6003000000000003,
+        "passed": 24,
+        "pass_rate": 0.24
+      },
+      "latency": {
+        "average_ms": 1320.91,
+        "average_seconds": 1.32091,
+        "passed": 99,
+        "pass_rate": 0.99,
+        "min_ms": 999,
+        "max_ms": 5735
+      }
+    },
+    "category_breakdown": {
+      "product_query": {
+        "count": 20,
+        "retrieval_accuracy": 0.15,
+        "answer_correctness": 0.161615,
+        "faithfulness": 0.562505,
+        "avg_latency_ms": 1854.05
+      },
+      "product_comparison": {
+        "count": 20,
+        "retrieval_accuracy": 0.15,
+        "answer_correctness": 0.07109,
+        "faithfulness": 0.586345,
+        "avg_latency_ms": 1398.95
+      },
+      "tech_explanation": {
+        "count": 20,
+        "retrieval_accuracy": 0.15,
+        "answer_correctness": 0.06271499999999999,
+        "faithfulness": 0.57061,
+        "avg_latency_ms": 1178.85
+      },
+      "recommendation": {
+        "count": 20,
+        "retrieval_accuracy": 0.2,
+        "answer_correctness": 0.10776499999999997,
+        "faithfulness": 0.64652,
+        "avg_latency_ms": 1093.65
+      },
+      "general_technical": {
+        "count": 20,
+        "retrieval_accuracy": 0.25,
+        "answer_correctness": 0.028354999999999998,
+        "faithfulness": 0.63552,
+        "avg_latency_ms": 1079.05
+      }
+    },
+    "worst_questions": [
+      {
+        "id": "Q006",
+        "question": "SSD NVMe 1TB nào đọc ghi nhanh nhất?...",
+        "answer_correctness": 0
+      },
+      {
+        "id": "Q048",
+        "question": "M.2 2280 là gì, lắp như thế nào?...",
+        "answer_correctness": 0
+      },
+      {
+        "id": "Q055",
+        "question": "Khi nào cần nâng cấp từ HDD lên SSD?...",
+        "answer_correctness": 0
+      },
+      {
+        "id": "Q068",
+        "question": "Tôi cần NAS gia đình để lưu trữ phim và ảnh, mua gì?...",
+        "answer_correctness": 0
+      },
+      {
+        "id": "Q076",
+        "question": "Printer in laser đen trắng cho văn phòng nhỏ dưới 5 triệu?...",
+        "answer_correctness": 0
+      }
+    ],
+    "thresholds_used": {
+      "retrieval_accuracy": 0.7,
+      "answer_correctness": 0.6,
+      "faithfulness": 0.7,
+      "latency_seconds": 5
+    },
+    "generated_at": "2026-03-29T16:40:17.053Z"
+  },
+  "results": [
+    {
+      "id": "Q001",
+      "category": "product_query",
+      "difficulty": "easy",
+      "question": "Laptop nào phù hợp cho sinh viên dưới 15 triệu?",
+      "ground_truth": "Laptop phù hợp cho sinh viên dưới 15 triệu gồm các dòng ASUS VivoBook, Acer Aspire, Lenovo IdeaPad. Cần ưu tiên RAM 8GB, SSD 256GB, pin bền.",
+      "chatbot_answer": "Dạ, bạn muốn tìm laptop của thương hiệu nào ạ?",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0832,
+          "precision": 0.1,
+          "recall": 0.037,
+          "f1": 0.0541,
+          "reason": "Precision: 10.0%, Recall: 3.7%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.6542,
+          "latencyMs": 4112,
+          "latencySeconds": 4.112,
+          "rating": "Acceptable"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_c849c0bef20aea8bc261b05bbe12d79047ff5863206f5fa415a432278667de62"
+      },
+      "error": null
+    },
+    {
+      "id": "Q002",
+      "category": "product_query",
+      "difficulty": "easy",
+      "question": "Card đồ họa RTX 4060 giá bao nhiêu?",
+      "ground_truth": "RTX 4060 hiện có giá khoảng 7-9 triệu VND tùy nhà phân phối và thương hiệu (ASUS, MSI, Gigabyte).",
+      "chatbot_answer": "Dạ, em thấy mình đang tìm Card đồ họa RTX 4060, tuy nhiên hiện tại mẫu này bên em đang tạm hết hàng / không kinh doanh ạ. Anh/chị có muốn em tìm thử các mẫu Card đồ họa khác không ạ?",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.2255,
+          "precision": 0.125,
+          "recall": 0.2105,
+          "f1": 0.1569,
+          "reason": "Precision: 12.5%, Recall: 21.1%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.6116,
+          "latencyMs": 4496,
+          "latencySeconds": 4.496,
+          "rating": "Acceptable"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_e6028071d0b8c76031c175eda57336ea78032ca342f18e4662b8fc9e818dfc0d"
+      },
+      "error": null
+    },
+    {
+      "id": "Q003",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "PC gaming tầm giá 20 triệu cấu hình như thế nào?",
+      "ground_truth": "PC gaming 20 triệu nên có CPU i5-13400F hoặc Ryzen 5 7600, RAM 16GB DDR4, GPU RTX 4060, SSD NVMe 500GB, nguồn 650W.",
+      "chatbot_answer": "Dạ, với 20 triệu thì anh/chị có thể tham khảo cấu hình PC gaming với chip Intel Core i5 hoặc AMD Ryzen 5, card đồ họa NVIDIA GeForce RTX 3050 hoặc AMD Radeon RX 6600, RAM 16GB và SSD 500GB NVMe ạ. Cấu hình này sẽ giúp anh/chị chiến tốt các tựa game phổ biến ở độ phân giải Full HD. Anh/chị có muốn em tìm thử các mẫu PC Gaming theo cấu hình này không ạ?",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.3605,
+          "precision": 0.2222,
+          "recall": 0.6087,
+          "f1": 0.3256,
+          "reason": "Precision: 22.2%, Recall: 60.9%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.8383,
+          "latencyMs": 2455,
+          "latencySeconds": 2.455,
+          "rating": "Acceptable"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_f5b66e832239156265ad71e04a06f11aea14b66ba6bccec226a131f444129493"
+      },
+      "error": null
+    },
+    {
+      "id": "Q004",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "Mainboard B760 nào tốt cho Intel Gen 13?",
+      "ground_truth": "Mainboard B760 tốt cho Intel Gen 13 gồm ASUS Prime B760M-A, MSI Pro B760M-A, Gigabyte B760M DS3H. Tương thích LGA1700.",
+      "chatbot_answer": "Dạ, hiện tại em có hai mẫu Mainboard B760 đang có hàng: * **Mainboard Gigabyte B760M GAMING PLUS WIFI DDR4** với giá 3.090.000 VNĐ.\n* **Mainboard Msi B760M Gaming WF DDR5** với giá 3.090.000 VNĐ. Cả hai mẫu này đều có thể sử dụng tốt với Intel Gen 13 ạ. Anh/chị muốn em tìm hiểu thêm về mẫu nào hay thêm sản phẩm nào vào giỏ hàng không ạ?",
+      "retrieved_product_count": 2,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 2,
+          "matchedKeywords": [
+            "mainboard"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.3557,
+          "precision": 0.1765,
+          "recall": 0.4737,
+          "f1": 0.2571,
+          "reason": "Precision: 17.6%, Recall: 47.4%"
+        },
+        "faithfulness": {
+          "score": 0.2955,
+          "groundedCount": 13,
+          "totalChecked": 44,
+          "reason": "13/44 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.5644,
+          "latencyMs": 4920,
+          "latencySeconds": 4.92,
+          "rating": "Acceptable"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_35642b423adbecc0dc8a9e1213ea7bafff150c98f82288bec825c2e69092f1b4"
+      },
+      "error": null
+    },
+    {
+      "id": "Q005",
+      "category": "product_query",
+      "difficulty": "easy",
+      "question": "RAM DDR5 32GB giá bao nhiêu?",
+      "ground_truth": "RAM DDR5 32GB hiện có giá khoảng 2-4 triệu VND tùy tốc độ (4800MHz-6000MHz) và thương hiệu như Kingston, Corsair, G.Skill.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - RAM desktop G.skill Trident Z5 RGB (2 x 16GB) DDR5 5200MHz (F5-5200J4040A16GX2-TZ5RS): 4.790.000 VND\n- RAM desktop G.skill Trident Z5 RGB (2 x 32GB) DDR5 6400MHz (F5-6400J3239G32GX2-TZ5RK): 28.990.000 VND\n- RAM desktop Corsair Vengeance RGB (2 x 32GB) DDR5 6000MHz: 26.990.000 VND\n- RAM desktop Kingston FURY Beast (1 x 16GB) DDR4 3200MHz (KF432C16BB1/16WP): 3.090.000 VND\n- RAM laptop Adata (1 x 8GB) DDR4 3200MHz (AD4S32008G22-SGN): 1.590.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ram"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.3241,
+          "precision": 0.1429,
+          "recall": 0.3636,
+          "f1": 0.2051,
+          "reason": "Precision: 14.3%, Recall: 36.4%"
+        },
+        "faithfulness": {
+          "score": 0.6418,
+          "groundedCount": 43,
+          "totalChecked": 67,
+          "reason": "43/67 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.767,
+          "latencyMs": 3097,
+          "latencySeconds": 3.097,
+          "rating": "Acceptable"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_ccda8351ce9b339adac304cc8af2648cfea59f902af8fa6fd408acc1cb72b414"
+      },
+      "error": null
+    },
+    {
+      "id": "Q006",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "SSD NVMe 1TB nào đọc ghi nhanh nhất?",
+      "ground_truth": "SSD NVMe 1TB nhanh nhất hiện tại là Samsung 990 Pro và WD Black SN850X với tốc độ đọc lên đến 7000MB/s.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9774,
+          "latencyMs": 1203,
+          "latencySeconds": 1.203,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_334de29a53d2a40e39a38c9ca371219a1db2d72ca979df8aa693b5a0a7d74302"
+      },
+      "error": null
+    },
+    {
+      "id": "Q007",
+      "category": "product_query",
+      "difficulty": "easy",
+      "question": "Màn hình gaming 144Hz 27 inch giá bao nhiêu?",
+      "ground_truth": "Màn hình gaming 144Hz 27 inch có giá từ 4-8 triệu, thương hiệu tốt gồm ASUS, MSI, LG, Samsung với panel IPS hoặc VA.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.3236,
+          "precision": 0.1406,
+          "recall": 0.375,
+          "f1": 0.2045,
+          "reason": "Precision: 14.1%, Recall: 37.5%"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9972,
+          "latencyMs": 1025,
+          "latencySeconds": 1.025,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_7be1f94ce4ce9eb79ea985471435ce296da3d76ea44a943fde3d0ed1baf7e8a1"
+      },
+      "error": null
+    },
+    {
+      "id": "Q008",
+      "category": "product_query",
+      "difficulty": "easy",
+      "question": "Laptop gaming ASUS ROG có những model nào?",
+      "ground_truth": "ASUS ROG có các dòng: ROG Strix G15/G16, ROG Zephyrus G14/G15, ROG Flow X13/Z13, phù hợp cho gaming hiệu năng cao.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Laptop ASUS ExpertBook B1 BM1403CDA S61611W: 18.790.000 VND\n- Laptop Acer Gaming Predator Helios PHN16-73-757W (Ultra 7-255HX/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 52.990.000 VND\n- Laptop Lenovo Legion 5 15IRX10 - 83LY00HWVN (i7-14700HX/ GeForce RTX™ 5060/ 16GB/ 512GB/ Windows 11 + Office): 40.990.000 VND\n- Laptop Asus ROG Strix SCAR 18 G835LW-SA193W (Ultra 9 275HX/ GeForce RTX™ 5080/ 32GB/ 1TB/ Windows 11): 82.990.000 VND\n- Laptop Gigabyte AERO-X16 X161VH93VNC64AH (Ryzen AI 7 350/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 36.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "laptop"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.2703,
+          "precision": 0.0896,
+          "recall": 0.3,
+          "f1": 0.1379,
+          "reason": "Precision: 9.0%, Recall: 30.0%"
+        },
+        "faithfulness": {
+          "score": 0.7073,
+          "groundedCount": 58,
+          "totalChecked": 82,
+          "reason": "58/82 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9764,
+          "latencyMs": 1212,
+          "latencySeconds": 1.212,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_bd894582cad9fb22bca184f1b6716f5b6eef522ae81fbb91c6de43800bf302b9"
+      },
+      "error": null
+    },
+    {
+      "id": "Q009",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "CPU AMD Ryzen 7 7700X dùng cho công việc gì?",
+      "ground_truth": "Ryzen 7 7700X phù hợp cho đa nhiệm nặng, render video, streaming, làm việc sáng tạo và gaming hiệu năng cao.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - CPU AMD Ryzen 9 7900X3D (12 nhân 24 luồng - Boost to 5.6 GHz - 128MB - AM5): 14.859.000 VND\n- CPU AMD Ryzen 9 9950X3D (16C-32T | Up to 5.7GHz | 144MB | Radeon Graphics 2CUs - RDNA 2.0 | No Cooler | AM5): 19.900.000 VND\n- CPU AMD Ryzen 7 7800X3D (8 nhân 16 luồng - Boost to 5.0 GHz - 96MB - AM5): 12.390.000 VND\n- CPU AMD Ryzen 7 9800X3D (8 nhân 16 luồng - Boost to 5.2 GHz - 104MB - AM5): 13.890.000 VND\n- CPU AMD RYZEN™ 5 5600GT (6 Core/12 Threads - 3.6 GHz Boost to 4.6 GHz - 19MB Cache - AM4): 3.900.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "cpu"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.1111,
+          "precision": 0.058,
+          "recall": 0.1905,
+          "f1": 0.0889,
+          "reason": "Precision: 5.8%, Recall: 19.0%"
+        },
+        "faithfulness": {
+          "score": 0.6962,
+          "groundedCount": 55,
+          "totalChecked": 79,
+          "reason": "55/79 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9979,
+          "latencyMs": 1019,
+          "latencySeconds": 1.019,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_0a2ce1a14caf821754d479d58cf74f5e1af7d0f188463db5056863ca1ad1f356"
+      },
+      "error": null
+    },
+    {
+      "id": "Q010",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "Nguồn máy tính 750W có đủ cho hệ thống RTX 4070 không?",
+      "ground_truth": "Nguồn 750W đủ cho hệ thống dùng RTX 4070 với CPU tầm i5/Ryzen 5. Nên chọn nguồn 80+ Gold để hiệu quả tốt hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Card màn hình Colorful RTX 5070 Ultra W OC 12GB-V 12GB GDDR7: 18.990.000 VND\n- Card màn hình Asus Astral GeForce RTX™ 5080 16GB GDDR7 WHITE OC Edition 16GB GDDR7 (90YV0LV4-M0NA00): 49.990.000 VND\n- Card màn hình INNO3D GEFORCE RTX 5070 Ti X3 OC 16GB GDDR7 (N507T3-16D7X-176068W): 27.690.000 VND\n- Card màn hình MSI GeForce RTX 5090 32G VANGUARD SOC GDDR7 (912-V530-027): 85.990.000 VND\n- Card màn hình ASUS ROG Astral GeForce RTX 5090 32GB GDDR7 OC Edition (ROG-ASTRAL-RTX5090-O32G-GAMING): 105.000.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.039,
+          "precision": 0.0345,
+          "recall": 0.0833,
+          "f1": 0.0488,
+          "reason": "Precision: 3.4%, Recall: 8.3%"
+        },
+        "faithfulness": {
+          "score": 0.7059,
+          "groundedCount": 60,
+          "totalChecked": 85,
+          "reason": "60/85 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9964,
+          "latencyMs": 1032,
+          "latencySeconds": 1.032,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_6bb107d13235ba37df7ecef9857ae53b3f18d4e022206ff0644665c272e52250"
+      },
+      "error": null
+    },
+    {
+      "id": "Q011",
+      "category": "product_query",
+      "difficulty": "easy",
+      "question": "Tai nghe gaming không dây nào tốt dưới 2 triệu?",
+      "ground_truth": "Tai nghe gaming không dây tốt dưới 2 triệu: Logitech G435, HyperX Cloud Stinger 2 Core Wireless, JBL Quantum 360.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Tai nghe gaming Logitech G333: 999.000 VND\n- Tai nghe Gaming không dây choàng đầu Logitech G321 981-001570 (Trắng): 1.489.000 VND\n- Tai nghe Gaming không dây choàng đầu Razer Barracuda X Chroma - Phantom White Edition (RZ04-05220400-R3M1): 3.370.000 VND\n- Tai nghe gaming không dây Razer BlackShark V3 X HyperSpeed (Đen): 2.469.000 VND\n- Tai nghe Gaming không dây choàng đầu Razer Barracuda X Chroma RZ04-05220100-R3M1 (Đen): 3.240.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.3123,
+          "precision": 0.14,
+          "recall": 0.3684,
+          "f1": 0.2029,
+          "reason": "Precision: 14.0%, Recall: 36.8%"
+        },
+        "faithfulness": {
+          "score": 0.662,
+          "groundedCount": 47,
+          "totalChecked": 71,
+          "reason": "47/71 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9861,
+          "latencyMs": 1125,
+          "latencySeconds": 1.125,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_4998c8765c206c1b4970e20c2d7fb1fa7e6ddb33e531435449c1b3684cec1c6c"
+      },
+      "error": null
+    },
+    {
+      "id": "Q012",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "Bàn phím cơ phù hợp cho lập trình viên?",
+      "ground_truth": "Bàn phím cơ phù hợp cho lập trình: Keychron K2/K8 (switch Brown), Logitech G413, AKKO 3087. Ưu tiên switch tactile.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0286,
+          "precision": 0.0278,
+          "recall": 0.05,
+          "f1": 0.0357,
+          "reason": "Precision: 2.8%, Recall: 5.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9739,
+          "latencyMs": 1235,
+          "latencySeconds": 1.235,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_f1765137b778f6b2725800149ae426212babd18c89bf5acb4d26355534ba89bc"
+      },
+      "error": null
+    },
+    {
+      "id": "Q013",
+      "category": "product_query",
+      "difficulty": "easy",
+      "question": "Webcam HD cho học online nào tốt?",
+      "ground_truth": "Webcam HD tốt cho học online: Logitech C920 (1080p), Logitech C310 (720p), Microsoft LifeCam HD-3000. Giá từ 500K-2 triệu.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0593,
+          "precision": 0.0556,
+          "recall": 0.1111,
+          "f1": 0.0741,
+          "reason": "Precision: 5.6%, Recall: 11.1%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9694,
+          "latencyMs": 1275,
+          "latencySeconds": 1.275,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_ed500d97ea341501bec795bd230bc57ca6490eaedfc8f85120d43910af60f134"
+      },
+      "error": null
+    },
+    {
+      "id": "Q014",
+      "category": "product_query",
+      "difficulty": "easy",
+      "question": "Ổ cứng gắn ngoài 2TB portable hãng nào tốt?",
+      "ground_truth": "Ổ cứng ngoài 2TB tốt: WD My Passport (USB-C), Seagate Backup Plus Slim, Samsung T7 (SSD). Giá từ 1.5-3 triệu.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0561,
+          "precision": 0.0556,
+          "recall": 0.0952,
+          "f1": 0.0702,
+          "reason": "Precision: 5.6%, Recall: 9.5%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9893,
+          "latencyMs": 1096,
+          "latencySeconds": 1.096,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_7c39c8fef7a7691692bee01e1b4f73dba677378a65f0d9e4b5245f783e395abe"
+      },
+      "error": null
+    },
+    {
+      "id": "Q015",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "Chuột gaming 12000DPI phù hợp cho FPS?",
+      "ground_truth": "Chuột gaming cho FPS nên có DPI từ 12000+, polling rate 1000Hz+. Gợi ý: Logitech G Pro X Superlight 2, Razer Viper V2 Pro.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.1214,
+          "precision": 0.0833,
+          "recall": 0.1304,
+          "f1": 0.1017,
+          "reason": "Precision: 8.3%, Recall: 13.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.963,
+          "latencyMs": 1333,
+          "latencySeconds": 1.333,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_2e2a8955273376fde68aa551f1362a68b42d9efaef1d8ba3fd4880b1c5c2d205"
+      },
+      "error": null
+    },
+    {
+      "id": "Q016",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "Laptop văn phòng mỏng nhẹ Dell XPS hay ThinkPad?",
+      "ground_truth": "Dell XPS 13 và ThinkPad X1 Carbon đều là laptop văn phòng cao cấp mỏng nhẹ. ThinkPad bền hơn, XPS màn hình đẹp hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Laptop ASUS ExpertBook B1 BM1403CDA S61611W: 18.790.000 VND\n- Laptop Acer Gaming Predator Helios PHN16-73-757W (Ultra 7-255HX/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 52.990.000 VND\n- Laptop Lenovo Legion 5 15IRX10 - 83LY00HWVN (i7-14700HX/ GeForce RTX™ 5060/ 16GB/ 512GB/ Windows 11 + Office): 40.990.000 VND\n- Laptop Asus ROG Strix SCAR 18 G835LW-SA193W (Ultra 9 275HX/ GeForce RTX™ 5080/ 32GB/ 1TB/ Windows 11): 82.990.000 VND\n- Laptop Gigabyte AERO-X16 X161VH93VNC64AH (Ryzen AI 7 350/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 36.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "laptop"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0582,
+          "precision": 0.0149,
+          "recall": 0.0476,
+          "f1": 0.0227,
+          "reason": "Precision: 1.5%, Recall: 4.8%"
+        },
+        "faithfulness": {
+          "score": 0.7073,
+          "groundedCount": 58,
+          "totalChecked": 82,
+          "reason": "58/82 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9977,
+          "latencyMs": 1021,
+          "latencySeconds": 1.021,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_6f15180c598da5677a7a229a923379b15b6c98614f49d7c741eca6d6d359b9b7"
+      },
+      "error": null
+    },
+    {
+      "id": "Q017",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "Tản nhiệt nước AIO 240mm có tốt không?",
+      "ground_truth": "Tản nhiệt nước AIO 240mm tốt hơn tản khí trên CPU TDP cao. Gợi ý: Corsair H100i, NZXT Kraken X53, Cooler Master ML240L.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0276,
+          "precision": 0.0278,
+          "recall": 0.0455,
+          "f1": 0.0345,
+          "reason": "Precision: 2.8%, Recall: 4.5%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9862,
+          "latencyMs": 1124,
+          "latencySeconds": 1.124,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_13911b354e944d993ef126da2a6174513081880be9d1e4f63b97243cd6239729"
+      },
+      "error": null
+    },
+    {
+      "id": "Q018",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "Case máy tính ATX nào có quản lý dây đẹp?",
+      "ground_truth": "Case ATX dễ quản lý dây: Lian Li Lancool 216, Fractal Design Meshify C, NZXT H510 Flow. Có khoang che dây tiện lợi.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0276,
+          "precision": 0.0278,
+          "recall": 0.0455,
+          "f1": 0.0345,
+          "reason": "Precision: 2.8%, Recall: 4.5%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9862,
+          "latencyMs": 1124,
+          "latencySeconds": 1.124,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_55e3fb062fd5bc35d74613674086dd0c9bfc538c35b6dab1bf146ab1a5cb3dbf"
+      },
+      "error": null
+    },
+    {
+      "id": "Q019",
+      "category": "product_query",
+      "difficulty": "medium",
+      "question": "GPU AMD RX 7600 có chơi game 1080p mượt không?",
+      "ground_truth": "RX 7600 chơi game 1080p High/Ultra mượt với 60-100+ FPS trong hầu hết game AAA. Phù hợp tầm ngân sách 6-7 triệu.",
+      "chatbot_answer": "Để biết thông tin chi tiết về hiệu năng của GPU AMD RX 7600 trong việc chơi game 1080p, bạn có muốn tôi tìm kiếm thông tin về sản phẩm này không?",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.3082,
+          "precision": 0.2069,
+          "recall": 0.2727,
+          "f1": 0.2353,
+          "reason": "Precision: 20.7%, Recall: 27.3%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.884,
+          "latencyMs": 2044,
+          "latencySeconds": 2.044,
+          "rating": "Acceptable"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_6519f9bdcdcad5faa4a82bb7ba4d9c768114632d2e5b06b9c1ddc03c636f03e9"
+      },
+      "error": null
+    },
+    {
+      "id": "Q020",
+      "category": "product_query",
+      "difficulty": "easy",
+      "question": "Bộ nhớ RAM 16GB có đủ cho gaming và làm việc không?",
+      "ground_truth": "RAM 16GB đủ cho gaming hiện tại và làm việc văn phòng/đồ họa nhẹ. Nên dùng dual channel 2x8GB để tăng hiệu năng.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - RAM desktop G.skill Trident Z5 RGB (2 x 16GB) DDR5 5200MHz (F5-5200J4040A16GX2-TZ5RS): 4.790.000 VND\n- RAM desktop G.skill Trident Z5 RGB (2 x 32GB) DDR5 6400MHz (F5-6400J3239G32GX2-TZ5RK): 28.990.000 VND\n- RAM desktop Corsair Vengeance RGB (2 x 32GB) DDR5 6000MHz: 26.990.000 VND\n- RAM desktop Kingston FURY Beast (1 x 16GB) DDR4 3200MHz (KF432C16BB1/16WP): 3.090.000 VND\n- RAM laptop Adata (1 x 8GB) DDR4 3200MHz (AD4S32008G22-SGN): 1.590.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ram"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.14,
+          "precision": 0.0536,
+          "recall": 0.125,
+          "f1": 0.075,
+          "reason": "Precision: 5.4%, Recall: 12.5%"
+        },
+        "faithfulness": {
+          "score": 0.6418,
+          "groundedCount": 43,
+          "totalChecked": 67,
+          "reason": "43/67 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9852,
+          "latencyMs": 1133,
+          "latencySeconds": 1.133,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_1bebd460e167af4a79c8bc4dc210d905e3a0d84197e196c02528ddb5fe74af3a"
+      },
+      "error": null
+    },
+    {
+      "id": "Q021",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "So sánh Intel Core i5-13600K và AMD Ryzen 5 7600X?",
+      "ground_truth": "i5-13600K có hiệu năng gaming cao hơn nhẹ, nhưng Ryzen 5 7600X tiết kiệm điện hơn. i5-13600K cần mainboard Z790, 7600X cần AM5.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - CPU AMD Ryzen 9 7900X3D (12 nhân 24 luồng - Boost to 5.6 GHz - 128MB - AM5): 14.859.000 VND\n- CPU AMD Ryzen 9 9950X3D (16C-32T | Up to 5.7GHz | 144MB | Radeon Graphics 2CUs - RDNA 2.0 | No Cooler | AM5): 19.900.000 VND\n- CPU AMD Ryzen 7 7800X3D (8 nhân 16 luồng - Boost to 5.0 GHz - 96MB - AM5): 12.390.000 VND\n- CPU AMD Ryzen 7 9800X3D (8 nhân 16 luồng - Boost to 5.2 GHz - 104MB - AM5): 13.890.000 VND\n- CPU AMD RYZEN™ 5 5600GT (6 Core/12 Threads - 3.6 GHz Boost to 4.6 GHz - 19MB Cache - AM4): 3.900.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "cpu"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0545,
+          "precision": 0.0435,
+          "recall": 0.1579,
+          "f1": 0.0682,
+          "reason": "Precision: 4.3%, Recall: 15.8%"
+        },
+        "faithfulness": {
+          "score": 0.6962,
+          "groundedCount": 55,
+          "totalChecked": 79,
+          "reason": "55/79 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9977,
+          "latencyMs": 1021,
+          "latencySeconds": 1.021,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_deef4209f4e3828abf002b2a119201c8d73e844e1cb318f1768bd7e710688f64"
+      },
+      "error": null
+    },
+    {
+      "id": "Q022",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "So sánh RTX 4060 Ti và RX 7700 XT cái nào tốt hơn?",
+      "ground_truth": "RX 7700 XT có VRAM 12GB so với 8GB của RTX 4060 Ti, tốt hơn ở 1440p. RTX 4060 Ti có DLSS 3 tốt hơn ở 1080p.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Card màn hình Colorful RTX 5070 Ultra W OC 12GB-V 12GB GDDR7: 18.990.000 VND\n- Card màn hình Asus Astral GeForce RTX™ 5080 16GB GDDR7 WHITE OC Edition 16GB GDDR7 (90YV0LV4-M0NA00): 49.990.000 VND\n- Card màn hình INNO3D GEFORCE RTX 5070 Ti X3 OC 16GB GDDR7 (N507T3-16D7X-176068W): 27.690.000 VND\n- Card màn hình MSI GeForce RTX 5090 32G VANGUARD SOC GDDR7 (912-V530-027): 85.990.000 VND\n- Card màn hình ASUS ROG Astral GeForce RTX 5090 32GB GDDR7 OC Edition (ROG-ASTRAL-RTX5090-O32G-GAMING): 105.000.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0615,
+          "precision": 0.0517,
+          "recall": 0.15,
+          "f1": 0.0769,
+          "reason": "Precision: 5.2%, Recall: 15.0%"
+        },
+        "faithfulness": {
+          "score": 0.7059,
+          "groundedCount": 60,
+          "totalChecked": 85,
+          "reason": "60/85 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9969,
+          "latencyMs": 1028,
+          "latencySeconds": 1.028,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_db7919cf19768f53e04491174b14a025840060d243f42c1ceaee3c120981b818"
+      },
+      "error": null
+    },
+    {
+      "id": "Q023",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "SSD Samsung 980 Pro và WD Black SN850X cái nào nhanh hơn?",
+      "ground_truth": "WD Black SN850X nhanh hơn Samsung 980 Pro về tốc độ random. Samsung 980 Pro ổn định nhiệt độ tốt hơn trong tải liên tục.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0286,
+          "precision": 0.0278,
+          "recall": 0.05,
+          "f1": 0.0357,
+          "reason": "Precision: 2.8%, Recall: 5.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.974,
+          "latencyMs": 1234,
+          "latencySeconds": 1.234,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_9f69c1dcfca2f65a4821e596a71c4468fdf8714a2daed77aa2d1c90989cdd049"
+      },
+      "error": null
+    },
+    {
+      "id": "Q024",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "Màn hình IPS và VA cái nào tốt hơn cho gaming?",
+      "ground_truth": "IPS tốt hơn cho gaming nhờ góc nhìn rộng, thời gian phản hồi nhanh (1ms GtG). VA có độ tương phản cao hơn nhưng ghosting nhiều hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.1394,
+          "precision": 0.0625,
+          "recall": 0.1667,
+          "f1": 0.0909,
+          "reason": "Precision: 6.3%, Recall: 16.7%"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9977,
+          "latencyMs": 1021,
+          "latencySeconds": 1.021,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_c11e228db398296789fa6d9e6e6e87695a1009fb6acedeb163ef0bfbbf552810"
+      },
+      "error": null
+    },
+    {
+      "id": "Q025",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "Laptop Dell Inspiron vs Lenovo IdeaPad cho sinh viên?",
+      "ground_truth": "Cả hai đều phù hợp cho sinh viên. Dell Inspiron có build quality tốt hơn. Lenovo IdeaPad có pin lâu hơn và bàn phím thoải mái hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Laptop ASUS ExpertBook B1 BM1403CDA S61611W: 18.790.000 VND\n- Laptop Acer Gaming Predator Helios PHN16-73-757W (Ultra 7-255HX/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 52.990.000 VND\n- Laptop Lenovo Legion 5 15IRX10 - 83LY00HWVN (i7-14700HX/ GeForce RTX™ 5060/ 16GB/ 512GB/ Windows 11 + Office): 40.990.000 VND\n- Laptop Asus ROG Strix SCAR 18 G835LW-SA193W (Ultra 9 275HX/ GeForce RTX™ 5080/ 32GB/ 1TB/ Windows 11): 82.990.000 VND\n- Laptop Gigabyte AERO-X16 X161VH93VNC64AH (Ryzen AI 7 350/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 36.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "laptop"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0527,
+          "precision": 0.0448,
+          "recall": 0.125,
+          "f1": 0.0659,
+          "reason": "Precision: 4.5%, Recall: 12.5%"
+        },
+        "faithfulness": {
+          "score": 0.7073,
+          "groundedCount": 58,
+          "totalChecked": 82,
+          "reason": "58/82 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9969,
+          "latencyMs": 1028,
+          "latencySeconds": 1.028,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_d9cbd6bd51c362c64ce08770c25d88587b6470f9aa93a18ddb9acc04ff9491c4"
+      },
+      "error": null
+    },
+    {
+      "id": "Q026",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "So sánh RAM DDR4 và DDR5 cho gaming?",
+      "ground_truth": "DDR5 có băng thông cao hơn DDR4 nhưng latency cao hơn. Với gaming 2024, DDR5 nhỉnh hơn 5-10% FPS. DDR4 vẫn đủ tốt và rẻ hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - RAM desktop G.skill Trident Z5 RGB (2 x 16GB) DDR5 5200MHz (F5-5200J4040A16GX2-TZ5RS): 4.790.000 VND\n- RAM desktop G.skill Trident Z5 RGB (2 x 32GB) DDR5 6400MHz (F5-6400J3239G32GX2-TZ5RK): 28.990.000 VND\n- RAM desktop Corsair Vengeance RGB (2 x 32GB) DDR5 6000MHz: 26.990.000 VND\n- RAM desktop Kingston FURY Beast (1 x 16GB) DDR4 3200MHz (KF432C16BB1/16WP): 3.090.000 VND\n- RAM laptop Adata (1 x 8GB) DDR4 3200MHz (AD4S32008G22-SGN): 1.590.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ram"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.1088,
+          "precision": 0.0357,
+          "recall": 0.1,
+          "f1": 0.0526,
+          "reason": "Precision: 3.6%, Recall: 10.0%"
+        },
+        "faithfulness": {
+          "score": 0.6418,
+          "groundedCount": 43,
+          "totalChecked": 67,
+          "reason": "43/67 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9978,
+          "latencyMs": 1020,
+          "latencySeconds": 1.02,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_8e2c443ce929c597e8dbe41704098149cc98339bf675ad8f67d8ffcc247041b7"
+      },
+      "error": null
+    },
+    {
+      "id": "Q027",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "Tản nhiệt khí Noctua U12A hay AIO 240mm nào tốt hơn?",
+      "ground_truth": "Noctua U12A hiệu năng tương đương AIO 240mm, im lặng hơn, bền hơn, không lo rò rỉ. AIO đẹp hơn về mặt thẩm mỹ.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0561,
+          "precision": 0.0556,
+          "recall": 0.0952,
+          "f1": 0.0702,
+          "reason": "Precision: 5.6%, Recall: 9.5%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9866,
+          "latencyMs": 1121,
+          "latencySeconds": 1.121,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_75b2b8c1d8f69e3fec8ff5c654a92e4630bb974c23178e86a4bcaea347cf34e2"
+      },
+      "error": null
+    },
+    {
+      "id": "Q028",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "Nguồn Seasonic Focus GX-650 với Corsair RM750x cái nào tốt?",
+      "ground_truth": "Cả hai đều 80+ Gold, modular hoàn toàn. Seasonic Focus GX-650 im lặng hơn. Corsair RM750x công suất cao hơn, giá nhỉnh hơn.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0281,
+          "precision": 0.0278,
+          "recall": 0.0476,
+          "f1": 0.0351,
+          "reason": "Precision: 2.8%, Recall: 4.8%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9739,
+          "latencyMs": 1235,
+          "latencySeconds": 1.235,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_5ff005e03ccc91392feba685b84dd89aa1bfddb429c494561df4a179b3691977"
+      },
+      "error": null
+    },
+    {
+      "id": "Q029",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "SSD SATA vs NVMe khác nhau như thế nào?",
+      "ground_truth": "NVMe nhanh hơn 5-10 lần SATA (7000MB/s vs 550MB/s). NVMe dùng khe M.2, SATA dùng SATA III. NVMe đắt hơn nhưng tốc độ vượt trội.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0281,
+          "precision": 0.0278,
+          "recall": 0.0476,
+          "f1": 0.0351,
+          "reason": "Precision: 2.8%, Recall: 4.8%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9743,
+          "latencyMs": 1231,
+          "latencySeconds": 1.231,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_be6d537df5cfea1f9babcf88f041230c2b2962f381a1967a21e81656c55cb82d"
+      },
+      "error": null
+    },
+    {
+      "id": "Q030",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "So sánh ASUS ROG Strix và MSI Raider GE76 laptop gaming?",
+      "ground_truth": "ROG Strix G15 mạnh hơn về tản nhiệt và màn hình 300Hz. MSI Raider GE76 có thiết kế chuyên nghiệp hơn. Phụ thuộc config cụ thể.",
+      "chatbot_answer": "ASUS ROG Strix SCAR 18 G835LW-SA193W (Ultra 9 275HX/ GeForce RTX™ 5080/ 32GB/ 1TB/ Windows 11) có giá 82.990.000 VNĐ. Rất tiếc, mẫu Laptop MSI Raider GE76 hiện tại bên em đang tạm hết hàng hoặc không kinh doanh ạ. Anh/chị có muốn em tìm thử các mẫu laptop Gaming khác của MSI hoặc các thương hiệu khác như Acer, Dell không ạ?",
+      "retrieved_product_count": 1,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 1,
+          "matchedKeywords": [
+            "laptop"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.2385,
+          "precision": 0.1071,
+          "recall": 0.24,
+          "f1": 0.1481,
+          "reason": "Precision: 10.7%, Recall: 24.0%"
+        },
+        "faithfulness": {
+          "score": 0.3333,
+          "groundedCount": 15,
+          "totalChecked": 45,
+          "reason": "15/45 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.4739,
+          "latencyMs": 5735,
+          "latencySeconds": 5.735,
+          "rating": "Slow"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_af7fc9b6b44f8c6fb871a8b92400f6684e149d584caed435422ea5c7fb5b125e"
+      },
+      "error": null
+    },
+    {
+      "id": "Q031",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "Bàn phím cơ switch Red hay Brown phù hợp hơn cho gaming?",
+      "ground_truth": "Switch Red (Linear) nhẹ hơn, nhanh hơn, phù hợp gaming. Switch Brown (Tactile) có feedback, phù hợp cả typing và gaming nhẹ.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.1256,
+          "precision": 0.0833,
+          "recall": 0.1875,
+          "f1": 0.1154,
+          "reason": "Precision: 8.3%, Recall: 18.8%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9742,
+          "latencyMs": 1232,
+          "latencySeconds": 1.232,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_1b1d7cb39a1997e94cb5506e5872b609465de7533ca2bb9584f228b09528e8e0"
+      },
+      "error": null
+    },
+    {
+      "id": "Q032",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "Intel Arc A770 hay RX 6700 XT nên chọn cái nào?",
+      "ground_truth": "RX 6700 XT ổn định hơn, driver trưởng thành hơn. Intel Arc A770 nhanh hơn trong DirectX 12 Ultimate nhưng driver vẫn còn cải thiện.",
+      "chatbot_answer": "Để tư vấn tốt hơn, bạn có thể cho mình biết bạn muốn dùng card đồ họa để làm gì không (ví dụ: chơi game, làm đồ họa, dựng phim...)? Và bạn có ưu tiên thương hiệu nào không (ví dụ: AMD, Intel)?",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0582,
+          "precision": 0.0606,
+          "recall": 0.0909,
+          "f1": 0.0727,
+          "reason": "Precision: 6.1%, Recall: 9.1%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.8949,
+          "latencyMs": 1946,
+          "latencySeconds": 1.946,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_b3cd3d68ca5799c0a405046c0cffe6c9d4c2021f88dbf9d8d8a401fe74e78945"
+      },
+      "error": null
+    },
+    {
+      "id": "Q033",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "Màn hình 1080p hay 1440p tốt hơn cho gaming?",
+      "ground_truth": "1440p sắc nét hơn 1080p, cần GPU mạnh hơn. 1080p phù hợp GPU tầm thấp-trung, cho FPS cao hơn. 27 inch nên dùng 1440p.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0578,
+          "precision": 0.0469,
+          "recall": 0.1579,
+          "f1": 0.0723,
+          "reason": "Precision: 4.7%, Recall: 15.8%"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9858,
+          "latencyMs": 1128,
+          "latencySeconds": 1.128,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_2f9b4cf020579a1ac8e5f21870f7cb204d922caf34f8eb08c247694a43adab49"
+      },
+      "error": null
+    },
+    {
+      "id": "Q034",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "Case Lian Li Lancool II Mesh hay Fractal Design Meshify C?",
+      "ground_truth": "Lancool II Mesh to hơn, thông gió tốt hơn, hỗ trợ fan nhiều hơn. Meshify C nhỏ gọn, luồng khí tốt, giá rẻ hơn.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0286,
+          "precision": 0.0278,
+          "recall": 0.05,
+          "f1": 0.0357,
+          "reason": "Precision: 2.8%, Recall: 5.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9747,
+          "latencyMs": 1228,
+          "latencySeconds": 1.228,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_2192fe5f79c8297a333c7c8fdc1d95f8032f92305e4e9035e0448879aff8f037"
+      },
+      "error": null
+    },
+    {
+      "id": "Q035",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "Laptop ASUS ZenBook và MacBook Air M2 cho designer?",
+      "ground_truth": "MacBook Air M2 vượt trội về hiệu năng/watt, màn hình Liquid Retina, ecosystem Apple. ZenBook có giá rẻ hơn, Windows đa dụng hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Laptop ASUS ExpertBook B1 BM1403CDA S61611W: 18.790.000 VND\n- Laptop Acer Gaming Predator Helios PHN16-73-757W (Ultra 7-255HX/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 52.990.000 VND\n- Laptop Lenovo Legion 5 15IRX10 - 83LY00HWVN (i7-14700HX/ GeForce RTX™ 5060/ 16GB/ 512GB/ Windows 11 + Office): 40.990.000 VND\n- Laptop Asus ROG Strix SCAR 18 G835LW-SA193W (Ultra 9 275HX/ GeForce RTX™ 5080/ 32GB/ 1TB/ Windows 11): 82.990.000 VND\n- Laptop Gigabyte AERO-X16 X161VH93VNC64AH (Ryzen AI 7 350/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 36.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "laptop"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0178,
+          "precision": 0.0149,
+          "recall": 0.0435,
+          "f1": 0.0222,
+          "reason": "Precision: 1.5%, Recall: 4.3%"
+        },
+        "faithfulness": {
+          "score": 0.7073,
+          "groundedCount": 58,
+          "totalChecked": 82,
+          "reason": "58/82 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9966,
+          "latencyMs": 1031,
+          "latencySeconds": 1.031,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_34875b834ea02b59c88e4f7f077351e86ce1afe533d1195b363e788872ed5e01"
+      },
+      "error": null
+    },
+    {
+      "id": "Q036",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "So sánh Ryzen 9 7950X và Core i9-13900K?",
+      "ground_truth": "Ryzen 9 7950X vượt trội đa nhân (16C/32T), tốt cho render. i9-13900K mạnh hơn single-thread gaming. 7950X tiêu thụ điện ít hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - CPU AMD Ryzen 9 7900X3D (12 nhân 24 luồng - Boost to 5.6 GHz - 128MB - AM5): 14.859.000 VND\n- CPU AMD Ryzen 9 9950X3D (16C-32T | Up to 5.7GHz | 144MB | Radeon Graphics 2CUs - RDNA 2.0 | No Cooler | AM5): 19.900.000 VND\n- CPU AMD Ryzen 7 7800X3D (8 nhân 16 luồng - Boost to 5.0 GHz - 96MB - AM5): 12.390.000 VND\n- CPU AMD Ryzen 7 9800X3D (8 nhân 16 luồng - Boost to 5.2 GHz - 104MB - AM5): 13.890.000 VND\n- CPU AMD RYZEN™ 5 5600GT (6 Core/12 Threads - 3.6 GHz Boost to 4.6 GHz - 19MB Cache - AM4): 3.900.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "cpu"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0533,
+          "precision": 0.0435,
+          "recall": 0.1429,
+          "f1": 0.0667,
+          "reason": "Precision: 4.3%, Recall: 14.3%"
+        },
+        "faithfulness": {
+          "score": 0.6962,
+          "groundedCount": 55,
+          "totalChecked": 79,
+          "reason": "55/79 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9976,
+          "latencyMs": 1022,
+          "latencySeconds": 1.022,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_5a79d9bdc8458cbfe24cb4afbe50a06f15fa5b65053522523989dd2feb11cdfc"
+      },
+      "error": null
+    },
+    {
+      "id": "Q037",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "Tai nghe Logitech G Pro X 2 hay Razer BlackShark V2 Pro?",
+      "ground_truth": "G Pro X 2 có driver Graphene tốt hơn, mic tháo rời tiện. BlackShark V2 Pro có âm thanh tự nhiên hơn, chất liệu cao cấp hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Tai nghe gaming Logitech G333: 999.000 VND\n- Tai nghe Gaming không dây choàng đầu Logitech G321 981-001570 (Trắng): 1.489.000 VND\n- Tai nghe Gaming không dây choàng đầu Razer Barracuda X Chroma - Phantom White Edition (RZ04-05220400-R3M1): 3.370.000 VND\n- Tai nghe gaming không dây Razer BlackShark V3 X HyperSpeed (Đen): 2.469.000 VND\n- Tai nghe Gaming không dây choàng đầu Razer Barracuda X Chroma RZ04-05220100-R3M1 (Đen): 3.240.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0658,
+          "precision": 0.06,
+          "recall": 0.1304,
+          "f1": 0.0822,
+          "reason": "Precision: 6.0%, Recall: 13.0%"
+        },
+        "faithfulness": {
+          "score": 0.662,
+          "groundedCount": 47,
+          "totalChecked": 71,
+          "reason": "47/71 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9981,
+          "latencyMs": 1017,
+          "latencySeconds": 1.017,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_400cba077dcb4d3b22b3b6727aa45d422d0b735636a82095fc229b48fada6c15"
+      },
+      "error": null
+    },
+    {
+      "id": "Q038",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "Chuột Logitech G502 X Plus hay Razer DeathAdder V3 HyperSpeed?",
+      "ground_truth": "G502 X Plus nặng hơn (106g) nhưng có thêm weights. DeathAdder V3 HyperSpeed nhẹ hơn (87g), pin lâu hơn, phù hợp FPS.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0857,
+          "precision": 0.0833,
+          "recall": 0.15,
+          "f1": 0.1071,
+          "reason": "Precision: 8.3%, Recall: 15.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9743,
+          "latencyMs": 1231,
+          "latencySeconds": 1.231,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_7295de755e61649024229e1c2d342002ee8235947e7da190d27fac2284919536"
+      },
+      "error": null
+    },
+    {
+      "id": "Q039",
+      "category": "product_comparison",
+      "difficulty": "medium",
+      "question": "Samsung 870 EVO hay Crucial MX500 SSD SATA nào tốt hơn?",
+      "ground_truth": "Samsung 870 EVO nhanh hơn nhẹ (560/530 MB/s), bền hơn (TBW cao hơn). Crucial MX500 rẻ hơn, chất lượng tốt cho ngân sách tiết kiệm.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.08,
+          "precision": 0.0833,
+          "recall": 0.125,
+          "f1": 0.1,
+          "reason": "Precision: 8.3%, Recall: 12.5%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9627,
+          "latencyMs": 1336,
+          "latencySeconds": 1.336,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_a5da2558f625b2f2a0583082a62db6258015be3cb3d1f3c59872f96bd6b31419"
+      },
+      "error": null
+    },
+    {
+      "id": "Q040",
+      "category": "product_comparison",
+      "difficulty": "hard",
+      "question": "Màn hình OLED hay IPS Mini-LED nào tốt hơn cho đồ họa?",
+      "ground_truth": "OLED cho màu sắc hoàn hảo, độ tương phản vô cực, nhưng nguy cơ burn-in. IPS Mini-LED sáng hơn, không burn-in, phù hợp workflow đồ họa chuyên nghiệp.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0527,
+          "precision": 0.0469,
+          "recall": 0.1111,
+          "f1": 0.0659,
+          "reason": "Precision: 4.7%, Recall: 11.1%"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9851,
+          "latencyMs": 1134,
+          "latencySeconds": 1.134,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_4f22a7c078295dd8cc6d3471a9454d6f2123fdb33e3f9ec7473843e99fcf2816"
+      },
+      "error": null
+    },
+    {
+      "id": "Q041",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "CPU có bao nhiêu lõi và luồng là đủ cho gaming?",
+      "ground_truth": "Gaming hiện tại cần 6-8 lõi (core) vật lý. 12-16 luồng (thread) là lý tưởng. Ít hơn 6C/12T có thể bottleneck với GPU cao cấp.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - CPU AMD Ryzen 9 7900X3D (12 nhân 24 luồng - Boost to 5.6 GHz - 128MB - AM5): 14.859.000 VND\n- CPU AMD Ryzen 9 9950X3D (16C-32T | Up to 5.7GHz | 144MB | Radeon Graphics 2CUs - RDNA 2.0 | No Cooler | AM5): 19.900.000 VND\n- CPU AMD Ryzen 7 7800X3D (8 nhân 16 luồng - Boost to 5.0 GHz - 96MB - AM5): 12.390.000 VND\n- CPU AMD Ryzen 7 9800X3D (8 nhân 16 luồng - Boost to 5.2 GHz - 104MB - AM5): 13.890.000 VND\n- CPU AMD RYZEN™ 5 5600GT (6 Core/12 Threads - 3.6 GHz Boost to 4.6 GHz - 19MB Cache - AM4): 3.900.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "cpu"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.134,
+          "precision": 0.029,
+          "recall": 0.08,
+          "f1": 0.0426,
+          "reason": "Precision: 2.9%, Recall: 8.0%"
+        },
+        "faithfulness": {
+          "score": 0.6962,
+          "groundedCount": 55,
+          "totalChecked": 79,
+          "reason": "55/79 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9877,
+          "latencyMs": 1111,
+          "latencySeconds": 1.111,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_818915569c99b9173dbe868d8eb69f685ba3375400f9498b123ce2b1ddd7d258"
+      },
+      "error": null
+    },
+    {
+      "id": "Q042",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "VRAM 8GB có đủ cho gaming 1440p không?",
+      "ground_truth": "VRAM 8GB đủ cho gaming 1440p ở nhiều game hiện tại, nhưng một số game AAA mới cần 10-12GB ở texture cao. Đủ cho 2024 nhưng hạn chế trong tương lai.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.1174,
+          "precision": 0.0833,
+          "recall": 0.1154,
+          "f1": 0.0968,
+          "reason": "Precision: 8.3%, Recall: 11.5%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9739,
+          "latencyMs": 1235,
+          "latencySeconds": 1.235,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_1458940550ba0d35854988dcd5901daa92c80a93c1ea5391e9c91b770ce996c5"
+      },
+      "error": null
+    },
+    {
+      "id": "Q043",
+      "category": "tech_explanation",
+      "difficulty": "hard",
+      "question": "PCIe 4.0 và PCIe 5.0 khác nhau như thế nào?",
+      "ground_truth": "PCIe 5.0 có băng thông gấp đôi PCIe 4.0 (64 GB/s vs 32 GB/s cho x16). GPU hiện tại chưa cần PCIe 5.0. SSD PCIe 5.0 có thể đạt 12,000 MB/s.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0508,
+          "precision": 0.0556,
+          "recall": 0.0741,
+          "f1": 0.0635,
+          "reason": "Precision: 5.6%, Recall: 7.4%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.985,
+          "latencyMs": 1135,
+          "latencySeconds": 1.135,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_a621cc1718be2271fc496e5fd4901637b17caf58ed243a6b667e216844c36877"
+      },
+      "error": null
+    },
+    {
+      "id": "Q044",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "Overclocking RAM XMP/EXPO là gì?",
+      "ground_truth": "XMP (Intel) và EXPO (AMD) là profile tự động overclock RAM lên tốc độ quảng cáo. Bật trong BIOS để RAM chạy đúng tốc độ mua, ví dụ 3200MHz, 6000MHz.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - RAM desktop G.skill Trident Z5 RGB (2 x 16GB) DDR5 5200MHz (F5-5200J4040A16GX2-TZ5RS): 4.790.000 VND\n- RAM desktop G.skill Trident Z5 RGB (2 x 32GB) DDR5 6400MHz (F5-6400J3239G32GX2-TZ5RK): 28.990.000 VND\n- RAM desktop Corsair Vengeance RGB (2 x 32GB) DDR5 6000MHz: 26.990.000 VND\n- RAM desktop Kingston FURY Beast (1 x 16GB) DDR4 3200MHz (KF432C16BB1/16WP): 3.090.000 VND\n- RAM laptop Adata (1 x 8GB) DDR4 3200MHz (AD4S32008G22-SGN): 1.590.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ram"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.1438,
+          "precision": 0.0714,
+          "recall": 0.1481,
+          "f1": 0.0964,
+          "reason": "Precision: 7.1%, Recall: 14.8%"
+        },
+        "faithfulness": {
+          "score": 0.6418,
+          "groundedCount": 43,
+          "totalChecked": 67,
+          "reason": "43/67 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9969,
+          "latencyMs": 1028,
+          "latencySeconds": 1.028,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_5a425800793f68675959415953dc2dfa01f64b1af6f351217039d0a4fc9aa030"
+      },
+      "error": null
+    },
+    {
+      "id": "Q045",
+      "category": "tech_explanation",
+      "difficulty": "easy",
+      "question": "Thermal paste có cần thay định kỳ không?",
+      "ground_truth": "Thermal paste cần thay sau 3-5 năm khi nhiệt độ CPU tăng bất thường. Keo tốt như Thermal Grizzly Kryonaut bền hơn 5+ năm.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0276,
+          "precision": 0.0278,
+          "recall": 0.0455,
+          "f1": 0.0345,
+          "reason": "Precision: 2.8%, Recall: 4.5%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9744,
+          "latencyMs": 1230,
+          "latencySeconds": 1.23,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_b1fb469464e0ef08151966497c5cced72f599118956200de328dd9e7e8fa9ad2"
+      },
+      "error": null
+    },
+    {
+      "id": "Q046",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "PSU 80+ Gold và 80+ Bronze khác nhau điều gì?",
+      "ground_truth": "80+ Gold hiệu suất chuyển đổi 87-90%, 80+ Bronze 82-85%. Gold tiết kiệm điện hơn, ít tỏa nhiệt hơn, thường có chất lượng linh kiện tốt hơn.",
+      "chatbot_answer": "Bạn đợi một chút nhé, mình đang tìm thông tin về sự khác biệt giữa chuẩn 80+ Gold và 80+ Bronze trên PSU.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.1867,
+          "precision": 0.1364,
+          "recall": 0.1304,
+          "f1": 0.1333,
+          "reason": "Precision: 13.6%, Recall: 13.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.8947,
+          "latencyMs": 1948,
+          "latencySeconds": 1.948,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_be847eeccb12f4dca993fe2437744dde6acbf0c8aa7b954e41defdedc80bad08"
+      },
+      "error": null
+    },
+    {
+      "id": "Q047",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "DLSS và FSR công nghệ gì, hoạt động thế nào?",
+      "ground_truth": "DLSS (NVIDIA) dùng AI để upscale hình ảnh từ độ phân giải thấp lên cao, chỉ chạy trên RTX. FSR (AMD) dùng thuật toán không cần AI, chạy trên mọi GPU.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0508,
+          "precision": 0.0556,
+          "recall": 0.0741,
+          "f1": 0.0635,
+          "reason": "Precision: 5.6%, Recall: 7.4%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.975,
+          "latencyMs": 1225,
+          "latencySeconds": 1.225,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_c0e2a43697bbd6090b1d7e26f8c4e954b68a8c76873298308b1d28968c0f3a5c"
+      },
+      "error": null
+    },
+    {
+      "id": "Q048",
+      "category": "tech_explanation",
+      "difficulty": "easy",
+      "question": "M.2 2280 là gì, lắp như thế nào?",
+      "ground_truth": "M.2 2280 là chuẩn kích thước SSD: 22mm rộng, 80mm dài. Lắp vào khe M.2 trên mainboard, vặn vít cố định. Hỗ trợ cả SATA và NVMe.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9848,
+          "latencyMs": 1137,
+          "latencySeconds": 1.137,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_601686cd83ce37fe6740de9bb232dbd8c10a480bc3ba77db41d21dcabc35a777"
+      },
+      "error": null
+    },
+    {
+      "id": "Q049",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "CPU TDP 65W vs 125W ảnh hưởng gì đến hệ thống?",
+      "ground_truth": "TDP 65W tiêu thụ điện ít hơn, ít nóng hơn, phù hợp tản nhiệt nhỏ hơn. TDP 125W hiệu năng cao hơn nhưng cần tản nhiệt tốt và nguồn mạnh hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - CPU AMD Ryzen 9 7900X3D (12 nhân 24 luồng - Boost to 5.6 GHz - 128MB - AM5): 14.859.000 VND\n- CPU AMD Ryzen 9 9950X3D (16C-32T | Up to 5.7GHz | 144MB | Radeon Graphics 2CUs - RDNA 2.0 | No Cooler | AM5): 19.900.000 VND\n- CPU AMD Ryzen 7 7800X3D (8 nhân 16 luồng - Boost to 5.0 GHz - 96MB - AM5): 12.390.000 VND\n- CPU AMD Ryzen 7 9800X3D (8 nhân 16 luồng - Boost to 5.2 GHz - 104MB - AM5): 13.890.000 VND\n- CPU AMD RYZEN™ 5 5600GT (6 Core/12 Threads - 3.6 GHz Boost to 4.6 GHz - 19MB Cache - AM4): 3.900.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "cpu"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0348,
+          "precision": 0.029,
+          "recall": 0.087,
+          "f1": 0.0435,
+          "reason": "Precision: 2.9%, Recall: 8.7%"
+        },
+        "faithfulness": {
+          "score": 0.6962,
+          "groundedCount": 55,
+          "totalChecked": 79,
+          "reason": "55/79 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9861,
+          "latencyMs": 1125,
+          "latencySeconds": 1.125,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_03feaecdfc1e0a0634a9d67ada8676365448261f294236d4d27aaac0bfe5e76d"
+      },
+      "error": null
+    },
+    {
+      "id": "Q050",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "Dual channel RAM quan trọng không, cách kiểm tra?",
+      "ground_truth": "Dual channel tăng băng thông RAM ~15-20%, có lợi cho iGPU và CPU AMD. Kiểm tra trong CPU-Z tab Memory: nếu hiện Dual thì đã ở dual channel.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - RAM desktop G.skill Trident Z5 RGB (2 x 16GB) DDR5 5200MHz (F5-5200J4040A16GX2-TZ5RS): 4.790.000 VND\n- RAM desktop G.skill Trident Z5 RGB (2 x 32GB) DDR5 6400MHz (F5-6400J3239G32GX2-TZ5RK): 28.990.000 VND\n- RAM desktop Corsair Vengeance RGB (2 x 32GB) DDR5 6000MHz: 26.990.000 VND\n- RAM desktop Kingston FURY Beast (1 x 16GB) DDR4 3200MHz (KF432C16BB1/16WP): 3.090.000 VND\n- RAM laptop Adata (1 x 8GB) DDR4 3200MHz (AD4S32008G22-SGN): 1.590.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ram"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0598,
+          "precision": 0.0179,
+          "recall": 0.04,
+          "f1": 0.0247,
+          "reason": "Precision: 1.8%, Recall: 4.0%"
+        },
+        "faithfulness": {
+          "score": 0.6418,
+          "groundedCount": 43,
+          "totalChecked": 67,
+          "reason": "43/67 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9969,
+          "latencyMs": 1028,
+          "latencySeconds": 1.028,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_4c8da71119227a57ed932ca41a7b89e2c3ff46aa864912679d731d6b6ddc8dc4"
+      },
+      "error": null
+    },
+    {
+      "id": "Q051",
+      "category": "tech_explanation",
+      "difficulty": "easy",
+      "question": "Refresh rate 144Hz so với 60Hz cảm nhận khác biệt không?",
+      "ground_truth": "Khác biệt rõ ràng khi chơi FPS. 144Hz cho hình ảnh mượt mà hơn, giảm motion blur, phản ứng nhanh hơn. Cần GPU mạnh đủ để đẩy 144+ FPS.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.1016,
+          "precision": 0.1111,
+          "recall": 0.1481,
+          "f1": 0.127,
+          "reason": "Precision: 11.1%, Recall: 14.8%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9862,
+          "latencyMs": 1124,
+          "latencySeconds": 1.124,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_0c6e7c17862b9f8a51354fa219d704e33b7b336a4c012111ae121ee116acbc31"
+      },
+      "error": null
+    },
+    {
+      "id": "Q052",
+      "category": "tech_explanation",
+      "difficulty": "hard",
+      "question": "nT4 connector và ATX 12V 2x4 trên nguồn dùng cho gì?",
+      "ground_truth": "Connector 4+4 pin ATX12V cấp điện cho CPU. CPU hiện đại cần 1-2 connector 8-pin (4+4). GPU dùng PCIe power connector 6/8/16-pin.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0286,
+          "precision": 0.0278,
+          "recall": 0.05,
+          "f1": 0.0357,
+          "reason": "Precision: 2.8%, Recall: 5.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9837,
+          "latencyMs": 1147,
+          "latencySeconds": 1.147,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_8f8a8d75b67603d1347a00a44a7dd9eb4fec4af679360137592b4192c119ecee"
+      },
+      "error": null
+    },
+    {
+      "id": "Q053",
+      "category": "tech_explanation",
+      "difficulty": "hard",
+      "question": "RAM ECC là gì, có cần cho máy tính thường không?",
+      "ground_truth": "RAM ECC (Error-Correcting Code) tự sửa lỗi bit flip, dùng cho server và workstation chuyên nghiệp. Máy tính cá nhân thông thường không cần ECC.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - RAM desktop G.skill Trident Z5 RGB (2 x 16GB) DDR5 5200MHz (F5-5200J4040A16GX2-TZ5RS): 4.790.000 VND\n- RAM desktop G.skill Trident Z5 RGB (2 x 32GB) DDR5 6400MHz (F5-6400J3239G32GX2-TZ5RK): 28.990.000 VND\n- RAM desktop Corsair Vengeance RGB (2 x 32GB) DDR5 6000MHz: 26.990.000 VND\n- RAM desktop Kingston FURY Beast (1 x 16GB) DDR4 3200MHz (KF432C16BB1/16WP): 3.090.000 VND\n- RAM laptop Adata (1 x 8GB) DDR4 3200MHz (AD4S32008G22-SGN): 1.590.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ram"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.02,
+          "precision": 0.0179,
+          "recall": 0.0417,
+          "f1": 0.025,
+          "reason": "Precision: 1.8%, Recall: 4.2%"
+        },
+        "faithfulness": {
+          "score": 0.6418,
+          "groundedCount": 43,
+          "totalChecked": 67,
+          "reason": "43/67 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 1,
+          "latencyMs": 999,
+          "latencySeconds": 0.999,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_fcad4ae3ac02ac579671490fe5eacfcc177f590dcc3dc68f7a6d4b4c0efb3ff8"
+      },
+      "error": null
+    },
+    {
+      "id": "Q054",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "GPU render video Adobe Premiere cần NVIDIA hay AMD?",
+      "ground_truth": "Adobe Premiere hỗ trợ cả CUDA (NVIDIA) và OpenCL (AMD), nhưng NVIDIA GPU encoding H.264/H.265 bằng NVENC nhanh hơn và chất lượng cao hơn AMD.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Card màn hình Colorful RTX 5070 Ultra W OC 12GB-V 12GB GDDR7: 18.990.000 VND\n- Card màn hình Asus Astral GeForce RTX™ 5080 16GB GDDR7 WHITE OC Edition 16GB GDDR7 (90YV0LV4-M0NA00): 49.990.000 VND\n- Card màn hình INNO3D GEFORCE RTX 5070 Ti X3 OC 16GB GDDR7 (N507T3-16D7X-176068W): 27.690.000 VND\n- Card màn hình MSI GeForce RTX 5090 32G VANGUARD SOC GDDR7 (912-V530-027): 85.990.000 VND\n- Card màn hình ASUS ROG Astral GeForce RTX 5090 32GB GDDR7 OC Edition (ROG-ASTRAL-RTX5090-O32G-GAMING): 105.000.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0198,
+          "precision": 0.0172,
+          "recall": 0.0435,
+          "f1": 0.0247,
+          "reason": "Precision: 1.7%, Recall: 4.3%"
+        },
+        "faithfulness": {
+          "score": 0.7059,
+          "groundedCount": 60,
+          "totalChecked": 85,
+          "reason": "60/85 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9971,
+          "latencyMs": 1026,
+          "latencySeconds": 1.026,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_4ecba905eaec42f4d1429a530bb8cbbbe4335d092b6000735e3cbe645a42186f"
+      },
+      "error": null
+    },
+    {
+      "id": "Q055",
+      "category": "tech_explanation",
+      "difficulty": "easy",
+      "question": "Khi nào cần nâng cấp từ HDD lên SSD?",
+      "ground_truth": "Nên nâng cấp lên SSD khi: máy tính khởi động chậm, lag khi mở phần mềm, HDD trên 3-5 năm. SSD cải thiện tốc độ khởi động từ phút xuống 10-15 giây.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9633,
+          "latencyMs": 1330,
+          "latencySeconds": 1.33,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_781336cbeec348c8b268f2731127e7f364ccb3285798a95c41f20f2550b5f357"
+      },
+      "error": null
+    },
+    {
+      "id": "Q056",
+      "category": "tech_explanation",
+      "difficulty": "hard",
+      "question": "Thunderbolt 4 và USB 4 khác nhau gì?",
+      "ground_truth": "Thunderbolt 4 và USB 4 cùng tốc độ tối đa 40 Gbps, cùng cổng USB-C. TB4 yêu cầu chứng nhận Intel chặt hơn, hỗ trợ Daisy-chain đến 6 thiết bị.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.025,
+          "precision": 0.0278,
+          "recall": 0.0357,
+          "f1": 0.0313,
+          "reason": "Precision: 2.8%, Recall: 3.6%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9853,
+          "latencyMs": 1132,
+          "latencySeconds": 1.132,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_b19b85833fd77f76c565858817ef11a649c37f54461915b6c691500a487f0fd6"
+      },
+      "error": null
+    },
+    {
+      "id": "Q057",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "APU là gì, có phù hợp cho gaming không?",
+      "ground_truth": "APU (Accelerated Processing Unit) là CPU tích hợp GPU mạnh như Ryzen 5 5600G. Phù hợp gaming 1080p Low-Medium khi không có GPU rời, tiết kiệm chi phí.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0849,
+          "precision": 0.0556,
+          "recall": 0.0769,
+          "f1": 0.0645,
+          "reason": "Precision: 5.6%, Recall: 7.7%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9741,
+          "latencyMs": 1233,
+          "latencySeconds": 1.233,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_1293d712ecde4aed9e01e80be08eafe062ec4a6bb2d8031c07e1d530501b9582"
+      },
+      "error": null
+    },
+    {
+      "id": "Q058",
+      "category": "tech_explanation",
+      "difficulty": "hard",
+      "question": "PWM và DC fan control khác nhau thế nào?",
+      "ground_truth": "PWM (4-pin) điều chỉnh tốc độ fan bằng xung điện, ổn định và chính xác hơn. DC (3-pin) điều chỉnh điện áp, ít chính xác hơn nhưng vẫn dùng được.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.08,
+          "precision": 0.0833,
+          "recall": 0.125,
+          "f1": 0.1,
+          "reason": "Precision: 8.3%, Recall: 12.5%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9743,
+          "latencyMs": 1231,
+          "latencySeconds": 1.231,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_8003e330c74777e5130496a5c874d48fbeaa2fc531f07e4b1febadaa81d10437"
+      },
+      "error": null
+    },
+    {
+      "id": "Q059",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "Màn hình G-Sync và FreeSync hoạt động thế nào?",
+      "ground_truth": "G-Sync (NVIDIA) và FreeSync (AMD) là công nghệ đồng bộ refresh rate màn hình với GPU để loại bỏ screen tearing. G-Sync cần màn hình có module riêng.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0539,
+          "precision": 0.0469,
+          "recall": 0.12,
+          "f1": 0.0674,
+          "reason": "Precision: 4.7%, Recall: 12.0%"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9863,
+          "latencyMs": 1123,
+          "latencySeconds": 1.123,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_01e03463a1ee7fe19f74ed99b81bc649e9370d48d150ef00ca6b8740bf534d11"
+      },
+      "error": null
+    },
+    {
+      "id": "Q060",
+      "category": "tech_explanation",
+      "difficulty": "medium",
+      "question": "Benchmark Cinebench R23 để đo hiệu năng CPU gì?",
+      "ground_truth": "Cinebench R23 đo hiệu năng render CPU: Single-core (phản ánh gaming/single-thread apps) và Multi-core (phản ánh render/đa nhiệm). Dùng để so sánh CPU khác nhau.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - CPU AMD Ryzen 9 7900X3D (12 nhân 24 luồng - Boost to 5.6 GHz - 128MB - AM5): 14.859.000 VND\n- CPU AMD Ryzen 9 9950X3D (16C-32T | Up to 5.7GHz | 144MB | Radeon Graphics 2CUs - RDNA 2.0 | No Cooler | AM5): 19.900.000 VND\n- CPU AMD Ryzen 7 7800X3D (8 nhân 16 luồng - Boost to 5.0 GHz - 96MB - AM5): 12.390.000 VND\n- CPU AMD Ryzen 7 9800X3D (8 nhân 16 luồng - Boost to 5.2 GHz - 104MB - AM5): 13.890.000 VND\n- CPU AMD RYZEN™ 5 5600GT (6 Core/12 Threads - 3.6 GHz Boost to 4.6 GHz - 19MB Cache - AM4): 3.900.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "cpu"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0348,
+          "precision": 0.029,
+          "recall": 0.087,
+          "f1": 0.0435,
+          "reason": "Precision: 2.9%, Recall: 8.7%"
+        },
+        "faithfulness": {
+          "score": 0.6962,
+          "groundedCount": 55,
+          "totalChecked": 79,
+          "reason": "55/79 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9967,
+          "latencyMs": 1030,
+          "latencySeconds": 1.03,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_6af1120801d206f1956d81af805e1f5282a58e657f9d843ee63ecc13c7bb4bc3"
+      },
+      "error": null
+    },
+    {
+      "id": "Q061",
+      "category": "recommendation",
+      "difficulty": "hard",
+      "question": "Tôi cần build PC chơi game 4K tầm 40 triệu, tư vấn giúp?",
+      "ground_truth": "PC gaming 4K 40 triệu: CPU Core i7-13700K/Ryzen 7 7700X, GPU RTX 4080/RX 7900 XTX, RAM 32GB DDR5, SSD NVMe 1TB, nguồn 850W Gold, case ATX tốt.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ssd"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.2167,
+          "precision": 0.1343,
+          "recall": 0.3103,
+          "f1": 0.1875,
+          "reason": "Precision: 13.4%, Recall: 31.0%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.985,
+          "latencyMs": 1135,
+          "latencySeconds": 1.135,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_33e1048a3f3f1b1fe19a6173fe6f773cc3855a526a7692b8f7805fd4b24c7b26"
+      },
+      "error": null
+    },
+    {
+      "id": "Q062",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Muốn mua laptop làm đồ họa kiến trúc, ngân sách 25 triệu?",
+      "ground_truth": "Laptop đồ họa kiến trúc 25 triệu: ASUS ProArt Studiobook, Dell Precision hoặc Lenovo ThinkPad P series. Cần GPU NVIDIA Quadro/RTX, RAM 16-32GB, màn hình calibrated.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Laptop ASUS ExpertBook B1 BM1403CDA S61611W: 18.790.000 VND\n- Laptop Acer Gaming Predator Helios PHN16-73-757W (Ultra 7-255HX/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 52.990.000 VND\n- Laptop Lenovo Legion 5 15IRX10 - 83LY00HWVN (i7-14700HX/ GeForce RTX™ 5060/ 16GB/ 512GB/ Windows 11 + Office): 40.990.000 VND\n- Laptop Asus ROG Strix SCAR 18 G835LW-SA193W (Ultra 9 275HX/ GeForce RTX™ 5080/ 32GB/ 1TB/ Windows 11): 82.990.000 VND\n- Laptop Gigabyte AERO-X16 X161VH93VNC64AH (Ryzen AI 7 350/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 36.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "laptop"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0844,
+          "precision": 0.0448,
+          "recall": 0.1111,
+          "f1": 0.0638,
+          "reason": "Precision: 4.5%, Recall: 11.1%"
+        },
+        "faithfulness": {
+          "score": 0.7073,
+          "groundedCount": 58,
+          "totalChecked": 82,
+          "reason": "58/82 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.997,
+          "latencyMs": 1027,
+          "latencySeconds": 1.027,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_92fd4230be1e53d6fcfab44082974feb60b696f9079227fe0494bd90f0ab8b14"
+      },
+      "error": null
+    },
+    {
+      "id": "Q063",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Gợi ý bộ PC văn phòng 10 triệu đồng?",
+      "ground_truth": "PC văn phòng 10 triệu: CPU Ryzen 5 5600G (APU, không cần GPU rời), RAM 16GB DDR4, SSD 500GB SATA, mainboard B550, nguồn 450W, case micro-ATX.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ssd"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.1355,
+          "precision": 0.0597,
+          "recall": 0.1538,
+          "f1": 0.086,
+          "reason": "Precision: 6.0%, Recall: 15.4%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9858,
+          "latencyMs": 1128,
+          "latencySeconds": 1.128,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_459ca2b209a75fe0190f421ce2a1404bc5d39982900c0d7d4feb446c60c35e69"
+      },
+      "error": null
+    },
+    {
+      "id": "Q064",
+      "category": "recommendation",
+      "difficulty": "hard",
+      "question": "Tôi là streamer cần PC để stream và chơi game cùng lúc?",
+      "ground_truth": "PC cho streamer cần CPU nhiều core (i9-13900K hoặc Ryzen 9 7950X), RAM 32GB, GPU RTX 4080 (NVENC encoding), SSD nhanh. Budget tầm 50+ triệu.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ssd"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.1551,
+          "precision": 0.1045,
+          "recall": 0.28,
+          "f1": 0.1522,
+          "reason": "Precision: 10.4%, Recall: 28.0%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9977,
+          "latencyMs": 1021,
+          "latencySeconds": 1.021,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_7a6fd370e1ff48c39d0b4db613c3104d8dd7031f67d1a1c7146155ae86ba0099"
+      },
+      "error": null
+    },
+    {
+      "id": "Q065",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Màn hình nào phù hợp cho thiết kế đồ họa màu sắc chính xác?",
+      "ground_truth": "Màn hình cho đồ họa cần: độ phủ màu 100% sRGB hoặc DCI-P3, Delta E < 2, panel IPS. Gợi ý: ASUS ProArt PA279CV, Dell UltraSharp U2723QE, BenQ PD3220U.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.1551,
+          "precision": 0.1094,
+          "recall": 0.25,
+          "f1": 0.1522,
+          "reason": "Precision: 10.9%, Recall: 25.0%"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9857,
+          "latencyMs": 1129,
+          "latencySeconds": 1.129,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_420058fd86846b28a80d39668af96780755743758602eebc2ebd42b649ed0855"
+      },
+      "error": null
+    },
+    {
+      "id": "Q066",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Laptop mỏng nhẹ pin lâu cho dân đi làm di chuyển nhiều?",
+      "ground_truth": "Laptop mỏng nhẹ pin lâu: LG Gram 14/16 (pin 72Wh, 999g-1.1kg), ThinkPad X1 Carbon, ASUS ExpertBook B series. Cần pin 60Wh+, trọng lượng dưới 1.5kg.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Laptop ASUS ExpertBook B1 BM1403CDA S61611W: 18.790.000 VND\n- Laptop Acer Gaming Predator Helios PHN16-73-757W (Ultra 7-255HX/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 52.990.000 VND\n- Laptop Lenovo Legion 5 15IRX10 - 83LY00HWVN (i7-14700HX/ GeForce RTX™ 5060/ 16GB/ 512GB/ Windows 11 + Office): 40.990.000 VND\n- Laptop Asus ROG Strix SCAR 18 G835LW-SA193W (Ultra 9 275HX/ GeForce RTX™ 5080/ 32GB/ 1TB/ Windows 11): 82.990.000 VND\n- Laptop Gigabyte AERO-X16 X161VH93VNC64AH (Ryzen AI 7 350/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 36.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "laptop"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0516,
+          "precision": 0.0448,
+          "recall": 0.1154,
+          "f1": 0.0645,
+          "reason": "Precision: 4.5%, Recall: 11.5%"
+        },
+        "faithfulness": {
+          "score": 0.7073,
+          "groundedCount": 58,
+          "totalChecked": 82,
+          "reason": "58/82 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9863,
+          "latencyMs": 1123,
+          "latencySeconds": 1.123,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_bb85bfecb9a8856dbaf5607e9287ef0d73a0b30c69e111d11baaecd4aed42ba8"
+      },
+      "error": null
+    },
+    {
+      "id": "Q067",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Gợi ý bộ phím chuột cho gaming FPS tầm 3 triệu?",
+      "ground_truth": "Combo phím chuột cho FPS 3 triệu: Bàn phím Keychron Q1 (Red switch) hoặc ASUS ROG Falchion Ace, chuột Logitech G Pro X Superlight (nếu còn ngân sách).",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.1441,
+          "precision": 0.0833,
+          "recall": 0.1154,
+          "f1": 0.0968,
+          "reason": "Precision: 8.3%, Recall: 11.5%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9631,
+          "latencyMs": 1332,
+          "latencySeconds": 1.332,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_86b4a379df60035582a29c97c57e826043c882abd4c8d9619c63d60f717fe41e"
+      },
+      "error": null
+    },
+    {
+      "id": "Q068",
+      "category": "recommendation",
+      "difficulty": "hard",
+      "question": "Tôi cần NAS gia đình để lưu trữ phim và ảnh, mua gì?",
+      "ground_truth": "NAS gia đình: Synology DS223 (2-bay), QNAP TS-230. Dùng ổ cứng WD Red hoặc Seagate IronWolf 4-8TB. Truy cập từ xa qua app, backup tự động.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9851,
+          "latencyMs": 1134,
+          "latencySeconds": 1.134,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_2cc10f7601b9013dc41cac22b89761706075245fa6844096c43004fa710fc40b"
+      },
+      "error": null
+    },
+    {
+      "id": "Q069",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Cần mua UPS để bảo vệ PC tránh mất điện đột ngột?",
+      "ground_truth": "UPS cho PC tầm 500-800VA: APC Back-UPS 650VA, CyberPower CP850PFCLCD. Với PC gaming PSU 650W cần UPS 1000VA+ để đủ công suất.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0885,
+          "precision": 0.0448,
+          "recall": 0.15,
+          "f1": 0.069,
+          "reason": "Precision: 4.5%, Recall: 15.0%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.997,
+          "latencyMs": 1027,
+          "latencySeconds": 1.027,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_58d5d86749c1d0e41c0cff6f8b1987c9824f1c40d3e832d3d99bae3b593e8aff"
+      },
+      "error": null
+    },
+    {
+      "id": "Q070",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Gợi ý setup góc học tập/làm việc tầm 15 triệu tiện nghi?",
+      "ground_truth": "Setup 15 triệu: Màn hình 24-27 inch IPS (4-5tr), bàn phím cơ (1-1.5tr), chuột wireless (500K-1tr), webcam HD (500K-1tr), tai nghe (500K-1tr), đèn ring light.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0867,
+          "precision": 0.0556,
+          "recall": 0.0833,
+          "f1": 0.0667,
+          "reason": "Precision: 5.6%, Recall: 8.3%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9853,
+          "latencyMs": 1132,
+          "latencySeconds": 1.132,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_7dc710d345ab431113e3f527a6286304b7a9276f94e45d38cc82bd746b656726"
+      },
+      "error": null
+    },
+    {
+      "id": "Q071",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Laptop nào tốt cho học lập trình năm 2024?",
+      "ground_truth": "Laptop lập trình 2024: MacBook Air M2/M3 (tốt nhất cho dev), ASUS ZenBook 14, ThinkPad L14. Cần RAM 16GB, SSD 512GB+, màn hình Full HD.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Laptop ASUS ExpertBook B1 BM1403CDA S61611W: 18.790.000 VND\n- Laptop Acer Gaming Predator Helios PHN16-73-757W (Ultra 7-255HX/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 52.990.000 VND\n- Laptop Lenovo Legion 5 15IRX10 - 83LY00HWVN (i7-14700HX/ GeForce RTX™ 5060/ 16GB/ 512GB/ Windows 11 + Office): 40.990.000 VND\n- Laptop Asus ROG Strix SCAR 18 G835LW-SA193W (Ultra 9 275HX/ GeForce RTX™ 5080/ 32GB/ 1TB/ Windows 11): 82.990.000 VND\n- Laptop Gigabyte AERO-X16 X161VH93VNC64AH (Ryzen AI 7 350/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 36.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "laptop"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0688,
+          "precision": 0.0597,
+          "recall": 0.1538,
+          "f1": 0.086,
+          "reason": "Precision: 6.0%, Recall: 15.4%"
+        },
+        "faithfulness": {
+          "score": 0.7073,
+          "groundedCount": 58,
+          "totalChecked": 82,
+          "reason": "58/82 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.985,
+          "latencyMs": 1135,
+          "latencySeconds": 1.135,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_9050fec311a763d853bd790ad50fc06f711133cb9ff944ad17a8689ff7bd8898"
+      },
+      "error": null
+    },
+    {
+      "id": "Q072",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Tôi muốn nâng cấp PC cũ, nên thay linh kiện nào trước?",
+      "ground_truth": "Thứ tự nâng cấp hiệu quả nhất: 1) HDD→SSD (tác động lớn nhất), 2) Thêm RAM nếu dưới 8GB, 3) GPU nếu gaming, 4) CPU+Mainboard cuối cùng do tốn kém.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ssd"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.1,
+          "precision": 0.0597,
+          "recall": 0.1379,
+          "f1": 0.0833,
+          "reason": "Precision: 6.0%, Recall: 13.8%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9976,
+          "latencyMs": 1022,
+          "latencySeconds": 1.022,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_5ba944e84774fbc0e205a673d3f44da3dea8fb096164199fcbc9db84e0845c2a"
+      },
+      "error": null
+    },
+    {
+      "id": "Q073",
+      "category": "recommendation",
+      "difficulty": "easy",
+      "question": "Gợi ý tai nghe chống ồn ANC cho người đi làm văn phòng?",
+      "ground_truth": "Tai nghe ANC tốt cho văn phòng: Sony WH-1000XM5 (ANC tốt nhất, giá cao), Bose QuietComfort 45, Anker Soundcore Q45 (ngân sách). Cần pin 20+ giờ.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Tai nghe gaming Logitech G333: 999.000 VND\n- Tai nghe Gaming không dây choàng đầu Logitech G321 981-001570 (Trắng): 1.489.000 VND\n- Tai nghe Gaming không dây choàng đầu Razer Barracuda X Chroma - Phantom White Edition (RZ04-05220400-R3M1): 3.370.000 VND\n- Tai nghe gaming không dây Razer BlackShark V3 X HyperSpeed (Đen): 2.469.000 VND\n- Tai nghe Gaming không dây choàng đầu Razer Barracuda X Chroma RZ04-05220100-R3M1 (Đen): 3.240.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0432,
+          "precision": 0.04,
+          "recall": 0.0833,
+          "f1": 0.0541,
+          "reason": "Precision: 4.0%, Recall: 8.3%"
+        },
+        "faithfulness": {
+          "score": 0.662,
+          "groundedCount": 47,
+          "totalChecked": 71,
+          "reason": "47/71 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9978,
+          "latencyMs": 1020,
+          "latencySeconds": 1.02,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_bed83ecc5f527ef14706afdafb355954391f241b1980becb743d86811c8e6b5f"
+      },
+      "error": null
+    },
+    {
+      "id": "Q074",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Cần bộ phát wifi cho nhà 3 tầng không bị yếu sóng?",
+      "ground_truth": "Router cho nhà 3 tầng: Mesh WiFi ASUS ZenWiFi AX (2-3 node), TP-Link Deco XE75, hoặc router tầm cao ASUS RT-AX88U với extender. WiFi 6 ưu tiên.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0533,
+          "precision": 0.0556,
+          "recall": 0.0833,
+          "f1": 0.0667,
+          "reason": "Precision: 5.6%, Recall: 8.3%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9863,
+          "latencyMs": 1123,
+          "latencySeconds": 1.123,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_870d1a964bc62aabb16a83b032243fd0d0fc4d781873f98567e30ebad73119d3"
+      },
+      "error": null
+    },
+    {
+      "id": "Q075",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Màn hình gaming 240Hz nào tốt nhất hiện tại dưới 10 triệu?",
+      "ground_truth": "Màn hình gaming 240Hz dưới 10 triệu: ASUS TUF Gaming VG259QM (24.5 inch), MSI MAG274QRF-QD (1440p 165Hz combo), LG 27GP850-B (1440p 165Hz).",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.3314,
+          "precision": 0.1406,
+          "recall": 0.45,
+          "f1": 0.2143,
+          "reason": "Precision: 14.1%, Recall: 45.0%"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.997,
+          "latencyMs": 1027,
+          "latencySeconds": 1.027,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_5d90882534d9e4ba39eb2d9b058207e5d4825b8f3cd1dbeb5a885f30a1eebd8f"
+      },
+      "error": null
+    },
+    {
+      "id": "Q076",
+      "category": "recommendation",
+      "difficulty": "easy",
+      "question": "Printer in laser đen trắng cho văn phòng nhỏ dưới 5 triệu?",
+      "ground_truth": "Máy in laser đen trắng văn phòng nhỏ: Brother HL-L2366DW (WiFi, duplex), HP LaserJet Pro M28w, Canon LBP6030w. Giá hộp mực rẻ, tốc độ 30ppm.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9856,
+          "latencyMs": 1130,
+          "latencySeconds": 1.13,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_98a8335ca6127a89e389bba6ebffbcdb403c3488c5000e8917e65eb806469b8f"
+      },
+      "error": null
+    },
+    {
+      "id": "Q077",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Card âm thanh rời có cần thiết cho gaming không?",
+      "ground_truth": "Card âm thanh rời không cần thiết cho gaming thông thường. Onboard sound card mainboard hiện đại đủ tốt. Chỉ cần nếu dùng tai nghe hi-fi hoặc setup recording chuyên nghiệp.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.1318,
+          "precision": 0.1111,
+          "recall": 0.1379,
+          "f1": 0.1231,
+          "reason": "Precision: 11.1%, Recall: 13.8%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9847,
+          "latencyMs": 1138,
+          "latencySeconds": 1.138,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_bd876aab75d7834b76c3215a0beeb5739dbd56837f53e6bb9ef999da3b34110f"
+      },
+      "error": null
+    },
+    {
+      "id": "Q078",
+      "category": "recommendation",
+      "difficulty": "easy",
+      "question": "Cần bàn kẹp màn hình dual monitor tiện lợi cho làm việc?",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "reason": "Missing answer or ground truth"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9968,
+          "latencyMs": 1029,
+          "latencySeconds": 1.029,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_e175da1c29fbf292bc3292146e5ba8b65a8ff932489cc46459346a200b7834c6"
+      },
+      "error": null
+    },
+    {
+      "id": "Q079",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Laptop gaming tầm 18-20 triệu chơi được game AAA không?",
+      "ground_truth": "Laptop gaming 18-20 triệu: Lenovo Legion 5 Gen 8 (RTX 4060), ASUS TUF Gaming A15 (RTX 4060), Acer Nitro 5. Chơi được AAA ở 1080p High settings.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Laptop ASUS ExpertBook B1 BM1403CDA S61611W: 18.790.000 VND\n- Laptop Acer Gaming Predator Helios PHN16-73-757W (Ultra 7-255HX/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 52.990.000 VND\n- Laptop Lenovo Legion 5 15IRX10 - 83LY00HWVN (i7-14700HX/ GeForce RTX™ 5060/ 16GB/ 512GB/ Windows 11 + Office): 40.990.000 VND\n- Laptop Asus ROG Strix SCAR 18 G835LW-SA193W (Ultra 9 275HX/ GeForce RTX™ 5080/ 32GB/ 1TB/ Windows 11): 82.990.000 VND\n- Laptop Gigabyte AERO-X16 X161VH93VNC64AH (Ryzen AI 7 350/ GeForce RTX™ 5060/ 32GB/ 1TB/ Windows 11): 36.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "laptop"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.1578,
+          "precision": 0.1045,
+          "recall": 0.3043,
+          "f1": 0.1556,
+          "reason": "Precision: 10.4%, Recall: 30.4%"
+        },
+        "faithfulness": {
+          "score": 0.7073,
+          "groundedCount": 58,
+          "totalChecked": 82,
+          "reason": "58/82 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9969,
+          "latencyMs": 1028,
+          "latencySeconds": 1.028,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_a479767a13e887b6c95b04bcf33ad882f5470775a80ca87cb95c9261fdca82f9"
+      },
+      "error": null
+    },
+    {
+      "id": "Q080",
+      "category": "recommendation",
+      "difficulty": "medium",
+      "question": "Tôi cần màn hình 4K để edit video chuyên nghiệp?",
+      "ground_truth": "Màn hình 4K edit video chuyên nghiệp: LG 27UK850-W (4K IPS, USB-C), ASUS ProArt PA279CV (99% sRGB, hardware calibration), BenQ PD2700U. Cần sRGB 99%+.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.1513,
+          "precision": 0.0781,
+          "recall": 0.2381,
+          "f1": 0.1176,
+          "reason": "Precision: 7.8%, Recall: 23.8%"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9963,
+          "latencyMs": 1033,
+          "latencySeconds": 1.033,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_8498ae50a922e66df68ea6c7550dadf48a177a6156eabefcb6c1066cd7557a70"
+      },
+      "error": null
+    },
+    {
+      "id": "Q081",
+      "category": "general_technical",
+      "difficulty": "easy",
+      "question": "Nhiệt độ CPU bao nhiêu là an toàn khi gaming?",
+      "ground_truth": "Nhiệt độ CPU an toàn khi gaming: dưới 80°C lý tưởng, 85-90°C chấp nhận được ngắn hạn. Trên 95°C là quá nóng, cần cải thiện tản nhiệt. AMD Ryzen throttle ở 95°C, Intel 100°C.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - CPU AMD Ryzen 9 7900X3D (12 nhân 24 luồng - Boost to 5.6 GHz - 128MB - AM5): 14.859.000 VND\n- CPU AMD Ryzen 9 9950X3D (16C-32T | Up to 5.7GHz | 144MB | Radeon Graphics 2CUs - RDNA 2.0 | No Cooler | AM5): 19.900.000 VND\n- CPU AMD Ryzen 7 7800X3D (8 nhân 16 luồng - Boost to 5.0 GHz - 96MB - AM5): 12.390.000 VND\n- CPU AMD Ryzen 7 9800X3D (8 nhân 16 luồng - Boost to 5.2 GHz - 104MB - AM5): 13.890.000 VND\n- CPU AMD RYZEN™ 5 5600GT (6 Core/12 Threads - 3.6 GHz Boost to 4.6 GHz - 19MB Cache - AM4): 3.900.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "cpu"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0809,
+          "precision": 0.0435,
+          "recall": 0.0938,
+          "f1": 0.0594,
+          "reason": "Precision: 4.3%, Recall: 9.4%"
+        },
+        "faithfulness": {
+          "score": 0.6962,
+          "groundedCount": 55,
+          "totalChecked": 79,
+          "reason": "55/79 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9967,
+          "latencyMs": 1030,
+          "latencySeconds": 1.03,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_e596c73375248febbc99fa5479c19cd360a7a9ed0a1440ac7fa5791750d65d15"
+      },
+      "error": null
+    },
+    {
+      "id": "Q082",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "Làm thế nào để kiểm tra GPU có lỗi không?",
+      "ground_truth": "Kiểm tra GPU: dùng 3DMark (benchmark), FurMark (stress test), GPU-Z (thông tin), Afterburner (theo dõi nhiệt độ). Lỗi thường biểu hiện qua artifact, crash, nhiệt quá cao.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Card màn hình Colorful RTX 5070 Ultra W OC 12GB-V 12GB GDDR7: 18.990.000 VND\n- Card màn hình Asus Astral GeForce RTX™ 5080 16GB GDDR7 WHITE OC Edition 16GB GDDR7 (90YV0LV4-M0NA00): 49.990.000 VND\n- Card màn hình INNO3D GEFORCE RTX 5070 Ti X3 OC 16GB GDDR7 (N507T3-16D7X-176068W): 27.690.000 VND\n- Card màn hình MSI GeForce RTX 5090 32G VANGUARD SOC GDDR7 (912-V530-027): 85.990.000 VND\n- Card màn hình ASUS ROG Astral GeForce RTX 5090 32GB GDDR7 OC Edition (ROG-ASTRAL-RTX5090-O32G-GAMING): 105.000.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.7059,
+          "groundedCount": 60,
+          "totalChecked": 85,
+          "reason": "60/85 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9976,
+          "latencyMs": 1022,
+          "latencySeconds": 1.022,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_4051862c1b0a5d87c1999a82ef16708250ecf6ae90be336e87643524477d6308"
+      },
+      "error": null
+    },
+    {
+      "id": "Q083",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "BSOD màn hình xanh chết chóc thường do nguyên nhân gì?",
+      "ground_truth": "BSOD thường do: driver lỗi (GPU/driver mới), RAM lỗi (test bằng MemTest86), SSD hỏng sector, CPU/RAM overclock không ổn định, hoặc Windows lỗi. Check Event Viewer để đọc error code.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Màn hình Asus TUF Gaming VG259QM5A 24.5\" (FHD 1920 x 1080/ Fast IPS/ 240Hz/ 0.3 ms): 3.890.000 VND\n- Màn hình Msi MAG 275F 27\" (FHD 1920 x 1080/ RAPID IPS/ 180Hz/ 0.5 ms): 3.790.000 VND\n- Màn hình Msi MAG 32CQ6F 31.5\" (WQHD (2K) 2560 x 1440/ Rapid VA/ 180Hz/ 0.5 ms): 5.490.000 VND\n- Màn hình Msi MAG 275UPD E14 27\" (4K UHD 3840 x 2160/ IPS/ 144Hz/ 1 ms): 6.290.000 VND\n- Màn hình Msi G275L E14 27\" (FHD 1920 x 1080/ IPS/ 144Hz/ 1 ms): 2.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0174,
+          "precision": 0.0156,
+          "recall": 0.0357,
+          "f1": 0.0217,
+          "reason": "Precision: 1.6%, Recall: 3.6%"
+        },
+        "faithfulness": {
+          "score": 0.6923,
+          "groundedCount": 54,
+          "totalChecked": 78,
+          "reason": "54/78 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9979,
+          "latencyMs": 1019,
+          "latencySeconds": 1.019,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_a4450b1c58d361c49c288d6f7f8fb3df20d0690baac3da6d0299c528c3ca606d"
+      },
+      "error": null
+    },
+    {
+      "id": "Q084",
+      "category": "general_technical",
+      "difficulty": "hard",
+      "question": "Tại sao PC sau khi build mới không lên nguồn?",
+      "ground_truth": "PC không lên nguồn: kiểm tra 24-pin ATX, 8-pin CPU connector, nguồn điện ON, RAM đúng khe (A2/B2), PSU test bằng paperclip test. Clear CMOS nếu cần.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0172,
+          "precision": 0.0149,
+          "recall": 0.0385,
+          "f1": 0.0215,
+          "reason": "Precision: 1.5%, Recall: 3.8%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9967,
+          "latencyMs": 1030,
+          "latencySeconds": 1.03,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_63cc186a91ad4265e403d481126b1f309fbc08fb7b5944c58d0320de80415516"
+      },
+      "error": null
+    },
+    {
+      "id": "Q085",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "Thermal throttling là gì, cách nhận biết?",
+      "ground_truth": "Thermal throttling là khi CPU/GPU tự giảm clock speed do nhiệt độ quá cao để tự bảo vệ. Nhận biết qua HWiNFO64: CPU frequency giảm đột ngột khi nhiệt lên cao.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0258,
+          "precision": 0.0278,
+          "recall": 0.0385,
+          "f1": 0.0323,
+          "reason": "Precision: 2.8%, Recall: 3.8%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9851,
+          "latencyMs": 1134,
+          "latencySeconds": 1.134,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_d815760babec3ab3817818711ca7368cbc75ec662e7306af152e2f6c99af99fb"
+      },
+      "error": null
+    },
+    {
+      "id": "Q086",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "Cách kiểm tra SSD có sắp hỏng không?",
+      "ground_truth": "Kiểm tra SSD bằng CrystalDiskInfo (đọc SMART data: reallocated sectors, wearout). Nếu health dưới 80% hoặc có bad sector, nên backup ngay và chuẩn bị thay.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0516,
+          "precision": 0.0556,
+          "recall": 0.0769,
+          "f1": 0.0645,
+          "reason": "Precision: 5.6%, Recall: 7.7%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9746,
+          "latencyMs": 1229,
+          "latencySeconds": 1.229,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_eb57dd4b60ed0622fd6df992631219a51fc8bb5f70278fd91c7cec302ac4203e"
+      },
+      "error": null
+    },
+    {
+      "id": "Q087",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "RAM bị lỗi thì triệu chứng gì?",
+      "ground_truth": "RAM lỗi: BSOD ngẫu nhiên, crash game, PC tự restart, Windows không boot. Test bằng MemTest86 (chạy overnight) hoặc Windows Memory Diagnostic. Thử từng thanh RAM riêng.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - RAM desktop G.skill Trident Z5 RGB (2 x 16GB) DDR5 5200MHz (F5-5200J4040A16GX2-TZ5RS): 4.790.000 VND\n- RAM desktop G.skill Trident Z5 RGB (2 x 32GB) DDR5 6400MHz (F5-6400J3239G32GX2-TZ5RK): 28.990.000 VND\n- RAM desktop Corsair Vengeance RGB (2 x 32GB) DDR5 6000MHz: 26.990.000 VND\n- RAM desktop Kingston FURY Beast (1 x 16GB) DDR4 3200MHz (KF432C16BB1/16WP): 3.090.000 VND\n- RAM laptop Adata (1 x 8GB) DDR4 3200MHz (AD4S32008G22-SGN): 1.590.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "ram"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0198,
+          "precision": 0.0179,
+          "recall": 0.04,
+          "f1": 0.0247,
+          "reason": "Precision: 1.8%, Recall: 4.0%"
+        },
+        "faithfulness": {
+          "score": 0.6418,
+          "groundedCount": 43,
+          "totalChecked": 67,
+          "reason": "43/67 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9971,
+          "latencyMs": 1026,
+          "latencySeconds": 1.026,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_0642f344ce7b350159e67030921d30c3da13cca7148a487df70e00d50cef84be"
+      },
+      "error": null
+    },
+    {
+      "id": "Q088",
+      "category": "general_technical",
+      "difficulty": "easy",
+      "question": "GPU temperature 85°C khi gaming có bình thường không?",
+      "ground_truth": "GPU 85°C khi full load là bình thường, nằm trong ngưỡng an toàn của hầu hết GPU. Nhiều GPU throttle ở 83-90°C. Tuy nhiên nên đảm bảo case có airflow tốt để giữ dưới 90°C.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Card màn hình Colorful RTX 5070 Ultra W OC 12GB-V 12GB GDDR7: 18.990.000 VND\n- Card màn hình Asus Astral GeForce RTX™ 5080 16GB GDDR7 WHITE OC Edition 16GB GDDR7 (90YV0LV4-M0NA00): 49.990.000 VND\n- Card màn hình INNO3D GEFORCE RTX 5070 Ti X3 OC 16GB GDDR7 (N507T3-16D7X-176068W): 27.690.000 VND\n- Card màn hình MSI GeForce RTX 5090 32G VANGUARD SOC GDDR7 (912-V530-027): 85.990.000 VND\n- Card màn hình ASUS ROG Astral GeForce RTX 5090 32GB GDDR7 OC Edition (ROG-ASTRAL-RTX5090-O32G-GAMING): 105.000.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0509,
+          "precision": 0.0172,
+          "recall": 0.0303,
+          "f1": 0.022,
+          "reason": "Precision: 1.7%, Recall: 3.0%"
+        },
+        "faithfulness": {
+          "score": 0.7059,
+          "groundedCount": 60,
+          "totalChecked": 85,
+          "reason": "60/85 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9977,
+          "latencyMs": 1021,
+          "latencySeconds": 1.021,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_190ead7f396a54ba43bb00febd935ffefb967e33aed3e32c791af5271cf52300"
+      },
+      "error": null
+    },
+    {
+      "id": "Q089",
+      "category": "general_technical",
+      "difficulty": "easy",
+      "question": "Làm sao tối ưu hóa Windows 11 để gaming nhanh hơn?",
+      "ground_truth": "Tối ưu Windows 11 cho gaming: bật Game Mode, tắt Xbox Game Bar nếu không cần, cập nhật driver GPU mới nhất, tắt transparency effects, dùng High Performance power plan, kiểm tra startup programs.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 1,
+          "reason": "No specific category required"
+        },
+        "answer_correctness": {
+          "score": 0.0706,
+          "precision": 0.0833,
+          "recall": 0.0938,
+          "f1": 0.0882,
+          "reason": "Precision: 8.3%, Recall: 9.4%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9849,
+          "latencyMs": 1136,
+          "latencySeconds": 1.136,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_b19f45acbc81f52b272288964a55054e9e405bb7c81a94342f671c17592d8c7a"
+      },
+      "error": null
+    },
+    {
+      "id": "Q090",
+      "category": "general_technical",
+      "difficulty": "easy",
+      "question": "Defrag SSD có cần thiết không?",
+      "ground_truth": "Không nên defrag SSD. Windows 10/11 tự động TRIM SSD định kỳ. Defrag SSD gây hao mòn TBW không cần thiết. Chỉ defrag HDD mới cần thiết.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.0281,
+          "precision": 0.0278,
+          "recall": 0.0476,
+          "f1": 0.0351,
+          "reason": "Precision: 2.8%, Recall: 4.8%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9742,
+          "latencyMs": 1232,
+          "latencySeconds": 1.232,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_a488f360e2907028f0e8ea3ecc8bd09cd6f9a3e0a4d97ca12d35bd5dcc0fe482"
+      },
+      "error": null
+    },
+    {
+      "id": "Q091",
+      "category": "general_technical",
+      "difficulty": "hard",
+      "question": "Cách test nguồn máy tính PSU có tốt không?",
+      "ground_truth": "Test PSU: dùng PSU tester hoặc paperclip test (short 24-pin PS_ON với Ground để PSU tự khởi động). Dùng multimeter đo rail 12V (11.4-12.6V), 5V (4.75-5.25V), 3.3V.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0.025,
+          "precision": 0.0278,
+          "recall": 0.0357,
+          "f1": 0.0313,
+          "reason": "Precision: 2.8%, Recall: 3.6%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9847,
+          "latencyMs": 1138,
+          "latencySeconds": 1.138,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_84691bef2358f3862ed2a6cd3b5c45d2b5f69271a9c45609340b622aac43623b"
+      },
+      "error": null
+    },
+    {
+      "id": "Q092",
+      "category": "general_technical",
+      "difficulty": "hard",
+      "question": "POST code AA hoặc đèn LED debug ý nghĩa gì?",
+      "ground_truth": "POST code, debug LED trên mainboard chỉ giai đoạn khởi động. Thường: đỏ=CPU lỗi, vàng=DRAM lỗi, trắng=GPU lỗi, xanh=boot device. AA/00 là POST hoàn thành bình thường.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9859,
+          "latencyMs": 1127,
+          "latencySeconds": 1.127,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_2eda3768253954be16b0fc4a225f6da171ba033cffe775fcdecc18fdabe21654"
+      },
+      "error": null
+    },
+    {
+      "id": "Q093",
+      "category": "general_technical",
+      "difficulty": "hard",
+      "question": "Cache L3 của CPU quan trọng không, ảnh hưởng gì đến gaming?",
+      "ground_truth": "Cache L3 quan trọng cho gaming, đặc biệt CPU AMD với 3D V-Cache (96MB L3) tăng FPS 10-15% trong game cache-sensitive. Cache lớn giảm độ trễ truy xuất RAM.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - CPU AMD Ryzen 9 7900X3D (12 nhân 24 luồng - Boost to 5.6 GHz - 128MB - AM5): 14.859.000 VND\n- CPU AMD Ryzen 9 9950X3D (16C-32T | Up to 5.7GHz | 144MB | Radeon Graphics 2CUs - RDNA 2.0 | No Cooler | AM5): 19.900.000 VND\n- CPU AMD Ryzen 7 7800X3D (8 nhân 16 luồng - Boost to 5.0 GHz - 96MB - AM5): 12.390.000 VND\n- CPU AMD Ryzen 7 9800X3D (8 nhân 16 luồng - Boost to 5.2 GHz - 104MB - AM5): 13.890.000 VND\n- CPU AMD RYZEN™ 5 5600GT (6 Core/12 Threads - 3.6 GHz Boost to 4.6 GHz - 19MB Cache - AM4): 3.900.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "cpu"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0.0952,
+          "precision": 0.058,
+          "recall": 0.1481,
+          "f1": 0.0833,
+          "reason": "Precision: 5.8%, Recall: 14.8%"
+        },
+        "faithfulness": {
+          "score": 0.6962,
+          "groundedCount": 55,
+          "totalChecked": 79,
+          "reason": "55/79 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9968,
+          "latencyMs": 1029,
+          "latencySeconds": 1.029,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_cea55f7961aa55d233afeba71d254c88e0fbab094e03842f485adb3415fb12c6"
+      },
+      "error": null
+    },
+    {
+      "id": "Q094",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "Làm thế nào để biết PC bị bottleneck?",
+      "ground_truth": "Kiểm tra bottleneck bằng MSI Afterburner: nếu GPU usage dưới 90% trong game thì CPU có thể bottleneck. Tool online bottleneck calculator cũng hữu ích nhưng chỉ là ước tính.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9974,
+          "latencyMs": 1023,
+          "latencySeconds": 1.023,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_41a194ceac299b85cca9eed44ee3b1bc667edf354909ab69e39319f3e0dc32b3"
+      },
+      "error": null
+    },
+    {
+      "id": "Q095",
+      "category": "general_technical",
+      "difficulty": "easy",
+      "question": "Cách vệ sinh PC đúng cách, bao lâu một lần?",
+      "ground_truth": "Vệ sinh PC 6-12 tháng/lần: dùng bình xịt khí nén thổi bụi, cọ mềm, không dùng máy hút bụi (tĩnh điện). Chú ý quạt, heatsink, khe thông gió. Môi trường bụi thì 3-6 tháng.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 1,
+          "reason": "No specific category required"
+        },
+        "answer_correctness": {
+          "score": 0.066,
+          "precision": 0.0299,
+          "recall": 0.0645,
+          "f1": 0.0408,
+          "reason": "Precision: 3.0%, Recall: 6.5%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9966,
+          "latencyMs": 1031,
+          "latencySeconds": 1.031,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_d1e38ab113dc68b28286ed1b5fb1b0b19232a1a6c041cb6796de22cc3ea6b4f6"
+      },
+      "error": null
+    },
+    {
+      "id": "Q096",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "NVMe SSD nóng có ảnh hưởng hiệu năng không?",
+      "ground_truth": "NVMe SSD throttle nhiệt khi trên 70-80°C, giảm tốc độ đọc ghi đáng kể. Giải pháp: dùng heatsink M.2, đảm bảo airflow case tốt. Mainboard mới thường có heatsink M.2 đi kèm.",
+      "chatbot_answer": "Em chưa đủ dữ liệu để chốt đúng sản phẩm ngay lúc này. Anh/chị cho em thêm 2-3 tiêu chí (ví dụ: chuột gaming dưới 1 triệu, không dây, nhẹ tay) để em lọc chính xác hơn nhé.",
+      "retrieved_product_count": 0,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "reason": "No products retrieved"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.5,
+          "reason": "No retrieved context to verify against"
+        },
+        "latency": {
+          "score": 0.9736,
+          "latencyMs": 1238,
+          "latencySeconds": 1.238,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_ae14ff6b10a615a7b2ebb162924bb2bee4d89503ee36f6c9d43d2f3d0e86999e"
+      },
+      "error": null
+    },
+    {
+      "id": "Q097",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "Tại sao game bị giật lag dù CPU và GPU mạnh?",
+      "ground_truth": "Giật lag dù hardware mạnh: kiểm tra RAM dual channel (single channel gây bottleneck), XMP chưa bật, driver GPU cũ, storage chậm (HDD), nhiệt throttle, hoặc dùng sai power plan.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - CPU AMD Ryzen 9 7900X3D (12 nhân 24 luồng - Boost to 5.6 GHz - 128MB - AM5): 14.859.000 VND\n- CPU AMD Ryzen 9 9950X3D (16C-32T | Up to 5.7GHz | 144MB | Radeon Graphics 2CUs - RDNA 2.0 | No Cooler | AM5): 19.900.000 VND\n- CPU AMD Ryzen 7 7800X3D (8 nhân 16 luồng - Boost to 5.0 GHz - 96MB - AM5): 12.390.000 VND\n- CPU AMD Ryzen 7 9800X3D (8 nhân 16 luồng - Boost to 5.2 GHz - 104MB - AM5): 13.890.000 VND\n- CPU AMD RYZEN™ 5 5600GT (6 Core/12 Threads - 3.6 GHz Boost to 4.6 GHz - 19MB Cache - AM4): 3.900.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0.5,
+          "retrievedCount": 5,
+          "matchedKeywords": [
+            "cpu"
+          ],
+          "reason": "Found 1 matching keywords"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.6962,
+          "groundedCount": 55,
+          "totalChecked": 79,
+          "reason": "55/79 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9972,
+          "latencyMs": 1025,
+          "latencySeconds": 1.025,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_eaa44d99bb3e9587e85bddd45fa02a56789017e8301a059832430638afe70a55"
+      },
+      "error": null
+    },
+    {
+      "id": "Q098",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "Static electricity có phá hỏng linh kiện khi build PC không?",
+      "ground_truth": "Tĩnh điện (ESD) có thể phá hỏng linh kiện nhạy cảm như CPU, RAM, GPU, mainboard. Phòng tránh: đeo vòng đất ESD, thường xuyên chạm vào khung case kim loại có nối đất khi build.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 1,
+          "reason": "No specific category required"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9963,
+          "latencyMs": 1033,
+          "latencySeconds": 1.033,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_c0fa1c506acf31f10d427131d8ed3ae0bd31225d71b54be2951a7001faf3de58"
+      },
+      "error": null
+    },
+    {
+      "id": "Q099",
+      "category": "general_technical",
+      "difficulty": "hard",
+      "question": "PCIe slot x16 và x4 phân biệt thế nào, ảnh hưởng GPU không?",
+      "ground_truth": "PCIe x16 có 16 luồng (lane), x4 có 4 luồng. GPU hiện đại cần PCIe x16 để đạt hiệu năng tối đa. Cắm GPU vào x4 giảm nhẹ hiệu năng (~2-3%) vì băng thông thấp hơn.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - Card màn hình Colorful RTX 5070 Ultra W OC 12GB-V 12GB GDDR7: 18.990.000 VND\n- Card màn hình Asus Astral GeForce RTX™ 5080 16GB GDDR7 WHITE OC Edition 16GB GDDR7 (90YV0LV4-M0NA00): 49.990.000 VND\n- Card màn hình INNO3D GEFORCE RTX 5070 Ti X3 OC 16GB GDDR7 (N507T3-16D7X-176068W): 27.690.000 VND\n- Card màn hình MSI GeForce RTX 5090 32G VANGUARD SOC GDDR7 (912-V530-027): 85.990.000 VND\n- Card màn hình ASUS ROG Astral GeForce RTX 5090 32GB GDDR7 OC Edition (ROG-ASTRAL-RTX5090-O32G-GAMING): 105.000.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0.0186,
+          "precision": 0.0172,
+          "recall": 0.0357,
+          "f1": 0.0233,
+          "reason": "Precision: 1.7%, Recall: 3.6%"
+        },
+        "faithfulness": {
+          "score": 0.7059,
+          "groundedCount": 60,
+          "totalChecked": 85,
+          "reason": "60/85 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9971,
+          "latencyMs": 1026,
+          "latencySeconds": 1.026,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_8156d3be72a7228468af4e039d155f5014d3479af963ff46f912b2eaa334bf23"
+      },
+      "error": null
+    },
+    {
+      "id": "Q100",
+      "category": "general_technical",
+      "difficulty": "medium",
+      "question": "UPS có bảo vệ được PC khỏi sét đánh không?",
+      "ground_truth": "UPS có surge protection bảo vệ khỏi sét gián tiếp (qua đường điện). Sét đánh trực tiếp thì không UPS nào bảo vệ được. Nên dùng thêm thiết bị chống sét chuyên dụng và rút điện khi có bão.",
+      "chatbot_answer": "Em gửi nhanh một số gợi ý phù hợp để anh/chị tham khảo: - PC PV Gaming Apollo E007-3 (Intel Core i3-12100F/ Radeon RX 6500 XT/ 1 x 8GB/ 500GB SSD/ Free DOS): 12.490.000 VND\n- PC PV Gaming Cupid E005-2 (Intel Core i5-12400F/ GeForce RTX 3050/ 1 x 16GB/ 512GB SSD/ Free DOS): 17.990.000 VND\n- PC PV Gaming Apollo M012 (Intel Core i5-12400F/ GeForce RTX 5060/ 1 x 8GB/ 1TB SSD/ Free DOS): 22.490.000 VND\n- PC PV Gaming Cupid H010 (Intel Ultra 7 265K/ GeForce RTX 5070/ 2 x 16GB/ 1TB SSD/ Free DOS): 47.989.999 VND\n- PC PV Gaming Hera H010 (Intel Ultra 9 285K/ GeForce RTX 5090/ 2 x 32GB/ 1TB SSD/ Free DOS): 199.990.000 VND",
+      "retrieved_product_count": 5,
+      "metrics": {
+        "retrieval_accuracy": {
+          "score": 0,
+          "retrievedCount": 5,
+          "matchedKeywords": [],
+          "reason": "No matching product categories"
+        },
+        "answer_correctness": {
+          "score": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "reason": "Precision: 0.0%, Recall: 0.0%"
+        },
+        "faithfulness": {
+          "score": 0.734,
+          "groundedCount": 69,
+          "totalChecked": 94,
+          "reason": "69/94 answer tokens grounded in context"
+        },
+        "latency": {
+          "score": 0.9964,
+          "latencyMs": 1032,
+          "latencySeconds": 1.032,
+          "rating": "Fast"
+        }
+      },
+      "api_metadata": {
+        "sessionId": "guest_dd707e14154b796050cef5f52c535c3dd156f5b8d23e4caef4b3efd64b5cce86"
+      },
+      "error": null
+    }
+  ]
+}

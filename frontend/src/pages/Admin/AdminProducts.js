@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
+import ReactDOM from 'react-dom';
 import { productAPI, adminAPI } from '../../services/api';
 import ImageUpload from '../../components/ImageUpload';
 import CategoryDropdown from '../../components/CategoryDropdown';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import { Editor } from '@tinymce/tinymce-react';
 import Swal from 'sweetalert2';
 import './AdminProducts.css';
 
@@ -22,10 +22,13 @@ const AdminProducts = ({ openAddModal }) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [subcategorySearch, setSubcategorySearch] = useState('');
+  const [priceInput, setPriceInput] = useState('');
+  const [costPriceInput, setCostPriceInput] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: '',
+    price: 0,
+    costPrice: 0,
     category: '',
     subcategory: [],
     brand: '',
@@ -34,30 +37,28 @@ const AdminProducts = ({ openAddModal }) => {
     stock: '',
   });
 
-  // Cấu hình cho React Quill
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-      [{ 'indent': '-1' }, { 'indent': '+1' }],
-      ['link', 'image'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'align': [] }],
-      ['clean'],
-      ['code-block']
-    ],
+  const handleDescriptionChange = (content) => {
+    setFormData((prev) => ({ ...prev, description: content }));
   };
 
-  const quillFormats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'indent',
-    'link', 'image',
-    'color', 'background',
-    'align',
-    'code-block'
-  ];
+  const formatCurrencyValue = (value) => {
+    if (!value || value <= 0) return '';
+    return value.toLocaleString('en-US');
+  };
+
+  const handleCurrencyChange = (field, setDisplay) => (event) => {
+    const digitsOnly = event.target.value.replace(/\D/g, '');
+
+    if (!digitsOnly) {
+      setDisplay('');
+      setFormData((prev) => ({ ...prev, [field]: 0 }));
+      return;
+    }
+
+    const numericValue = Number.parseInt(digitsOnly, 10);
+    setDisplay(formatCurrencyValue(numericValue));
+    setFormData((prev) => ({ ...prev, [field]: numericValue }));
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -76,7 +77,8 @@ const AdminProducts = ({ openAddModal }) => {
       setFormData({
         name: '',
         description: '',
-        price: '',
+        price: 0,
+        costPrice: 0,
         category: '',
         subcategory: [],
         brand: '',
@@ -84,6 +86,8 @@ const AdminProducts = ({ openAddModal }) => {
         images: [],
         stock: '',
       });
+      setPriceInput('');
+      setCostPriceInput('');
       setShowModal(true);
     }
   }, [openAddModal, location.pathname]);
@@ -166,6 +170,9 @@ const AdminProducts = ({ openAddModal }) => {
 
       const productData = {
         ...formData,
+        price: Number(formData.price) || 0,
+        costPrice: Number(formData.costPrice) || 0,
+        stock: Number(formData.stock) || 0,
         description: cleanedDescription || formData.description
       };
 
@@ -190,7 +197,8 @@ const AdminProducts = ({ openAddModal }) => {
     setFormData({
       name: product.name,
       description: product.description,
-      price: product.price,
+      price: Number(product.price) || 0,
+      costPrice: Number(product.costPrice) || 0,
       category: product.category,
       subcategory: Array.isArray(product.subcategory) ? product.subcategory : (product.subcategory ? [product.subcategory] : []),
       brand: product.brand || '',
@@ -198,6 +206,8 @@ const AdminProducts = ({ openAddModal }) => {
       images: product.images || [],
       stock: product.stock,
     });
+    setPriceInput(formatCurrencyValue(Number(product.price) || 0));
+    setCostPriceInput(formatCurrencyValue(Number(product.costPrice) || 0));
     fetchSubcategories(product.category);
     setShowModal(true);
   };
@@ -230,7 +240,8 @@ const AdminProducts = ({ openAddModal }) => {
     setFormData({
       name: '',
       description: '',
-      price: '',
+      price: 0,
+      costPrice: 0,
       category: firstCategory,
       subcategory: [],
       brand: '',
@@ -238,6 +249,8 @@ const AdminProducts = ({ openAddModal }) => {
       images: [],
       stock: '',
     });
+    setPriceInput('');
+    setCostPriceInput('');
     if (firstCategory) {
       fetchSubcategories(firstCategory);
     }
@@ -357,9 +370,9 @@ const AdminProducts = ({ openAddModal }) => {
         </div>
       )}
 
-      {showModal && (
-        <div className="modal-overlay" onClick={() => { handleCloseModal(); resetForm(); }}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      {showModal && ReactDOM.createPortal(
+        <div className="modal-overlay fixed inset-0 z-[99999]" onClick={() => { handleCloseModal(); resetForm(); }}>
+          <div className="modal-content relative z-10" onClick={(e) => e.stopPropagation()}>
             <h2>{editingProduct ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
@@ -457,29 +470,56 @@ const AdminProducts = ({ openAddModal }) => {
               <div className="form-group">
                 <label>Mô tả *</label>
                 <div className="quill-wrapper">
-                  <ReactQuill
-                    theme="snow"
+                  <Editor
+                    apiKey="e9ow8erit3jumxrg2h8hy4e59h6siftbgdhh9s6dls0fyaox"
                     value={formData.description}
-                    onChange={(value) => setFormData({ ...formData, description: value })}
-                    modules={quillModules}
-                    formats={quillFormats}
-                    placeholder="Nhập mô tả sản phẩm... Bạn có thể dán bảng từ Excel/Word hoặc tạo bảng HTML"
+                    onEditorChange={(content) => handleDescriptionChange(content)}
+                    init={{
+                      height: 500,
+                      menubar: true,
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview', 'anchor',
+                        'searchreplace', 'visualblocks', 'code', 'fullscreen', 'insertdatetime', 'media',
+                        'table', 'code', 'help', 'wordcount'
+                      ],
+                      toolbar: 'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | removeformat | help',
+                      content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                    }}
                   />
                 </div>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Giá (VNĐ) *</label>
+                  <label>Giá bán (VNĐ) *</label>
                   <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9,]*"
+                    className="currency-input"
+                    placeholder="Ví dụ: 1,000,000"
+                    value={priceInput}
+                    onChange={handleCurrencyChange('price', setPriceInput)}
                     required
-                    min="0"
                   />
                 </div>
 
+                <div className="form-group">
+                  <label>Giá gốc (VNĐ) *</label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9,]*"
+                    className="currency-input"
+                    placeholder="Ví dụ: 800,000"
+                    value={costPriceInput}
+                    onChange={handleCurrencyChange('costPrice', setCostPriceInput)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
                 <div className="form-group">
                   <label>Tồn kho *</label>
                   <input
@@ -569,7 +609,8 @@ const AdminProducts = ({ openAddModal }) => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
